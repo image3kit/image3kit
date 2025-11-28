@@ -1,4 +1,12 @@
-.PHONY: setup-ide clean
+
+install:
+	pip install .
+
+test:
+	# .venv/bin/pip install pytest numpy
+	python -m pytest
+
+.PHONY: setup-ide clean build tests
 
 
 setup-ide:
