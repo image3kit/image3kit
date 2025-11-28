@@ -1,0 +1,117 @@
+#pragma once
+
+
+#include "InputFile.h"
+#include "voxelImage.h"
+
+using namespace std;
+
+struct medbal;
+
+struct strip {
+  strip(const strip&) = delete;
+  strip() :  iCh0(0), iCh1(0), mb_a(nullptr), mb_b(nullptr) { }
+  strip(int ibgn, unsigned char value) : i0(ibgn), vv(value), iCh0(0), iCh1(0), mb_a(nullptr), mb_b(nullptr) { }
+
+  int            i0; // i0
+  int            i1()  const { return i0+1; }
+  int            nSkip;
+  unsigned char  vv;
+  unsigned char  iCh0; // flag indicating recent change or being adjacent to throat surface
+  unsigned char  iCh1; // flag indicating recent change or being adjacent to throat surface
+  medbal*       mb_a; // set:mb_a=
+  medbal*       mb_b; // set:mb_a=
+};
+
+struct strips  {
+  strips(): sts(nullptr), cnt(0), csh(0) {};
+  void operator =(const strips& c) {
+    sts = new strip[c.cnt+1]; cnt=c.cnt;
+    dAsrt(c.sts);
+    // sV0_=c.sV0_; // or nullptr?
+    std::copy(c.sts, c.sts+cnt+1, sts); };
+  void reSize(int size) { dAsrt(!sts);  sts = new strip[size+1]; cnt=size; }
+
+  ~strips() { if(sts) delete[] sts; sts = nullptr; }
+
+  // const voxel* voxl(int i) const { // obsolete
+    // for (int p=0; p<cnt; ++p)  if (i>=sts[p].i0 && i<sts[p+1].i0)  return sV0_+i-sts[p].nSkip;
+    // return nullptr; }
+
+  const strip* stp0(int i) const {
+    int p = csh; // avoid race condition
+    if (i >= sts[p].i0) {
+      for (; p<cnt; ++p) if (i >= sts[p].i0 && i < sts[p+1].i0)  { csh=p; return sts+p; } }
+    else { --p;
+      for (; p>=0 ; --p) if (i >= sts[p].i0 && i < sts[p+1].i0)  { csh=p; return sts+p; } }
+    return sts+cnt; }
+  strip* stpCh(int i) { return const_cast<strip*>(stp0(i)); }
+
+  strip*       sts; // strips
+  int          cnt; // count
+  mutable volatile int csh; // cache
+  // voxel*       sV0_;// obsolete
+};
+
+
+class VxlStrips : public InputFile  {
+public:
+
+  VxlStrips(const InputFile& inp, bool verbose);
+
+  void readImage();
+  void createStripsX();
+
+public:
+
+  int                    nx, ny, nz;
+  int                    nBP6;
+  double                 vxlSize;
+  dbl3                   X0;
+  string                 imgfrmt;
+  long long              nInside;
+  int                    _1ExtraSegX;
+
+  stvec<stvec<strips>>   segXs_;
+
+  stvec<int>             segValues;
+  stvec<int2>            rockTypes_;
+  stvec<size_t>          nVxlVs;
+  voxelImage             VImage;
+};
+
+class DistMap { //: baseof MedSurf
+public:
+
+  DistMap(VxlStrips& cfg, size_t ivVal);
+
+  friend class VxlStrips; // debugging vtuWriteBSurfAnalyseCrnrs()
+
+  float calc_distmapf(dbl3 mb, int3& dj);
+  float calc_distmap(int i, int j, int k, int3& dj);
+
+
+  bool isInside(int i, int j, int k) const {  return (i>=0 && j>=0 && k>=0 && i<nx && j<ny && k<nz);  }
+
+  bool isJInside(int j) const {  return (j>=0 && j<ny);  }
+
+  bool isInside(int i) const {  return (0<=i && i<nx); }
+
+  const strip& segX0(int i, int j, int k) const { // 0 is for zero-based indexing
+    if (i<0 || j<0 || k<0 || i>=nx || j>=ny || k>=nz)  return invalidSeg;
+    return  *segXs_[k+1][j+1].stp0(i);
+  }
+
+  int nx, ny, nz;
+  const unsigned char    inVxVal_;   // DAR:;
+
+  double _clipROutx;
+  double _clipROutyz;
+
+  int    _nRSmoothing;
+
+  const VxlStrips&       cg_;
+  stvec<stvec<strips>>&  segXs_;
+  strip                  invalidSeg;
+
+};
