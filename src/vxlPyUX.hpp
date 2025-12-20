@@ -28,6 +28,7 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 .def("ny", &voxelImageT<VxTyp>::ny)
 .def("nz", &voxelImageT<VxTyp>::nz)
 .def("printInfo", &voxelImageT<VxTyp>::printInfo)
+.def("shape", [&](voxelImageT<VxTyp> &m) { return py::make_tuple(m.nz(), m.nz(), m.nz()); })
 .def("write", &voxelImageT<VxTyp>::write)
 .def("writeNoHdr", &voxelImageT<VxTyp>::writeNoHdr)
 // .def("writeHeader", &voxelImageT<VxTyp>::writeHeader)
@@ -65,6 +66,8 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
     ::sliceToPng(m, normalAxis, fnam, iSlice, bgnv, endv, color);
     })
 ;
+
+mod.def("readImage", &readImage);
 
 // py::class_<instream>(mod, "instream", py::buffer_protocol())
 // .def(py::init([](py::object kwargs) { return new instream(kwargs); }))
