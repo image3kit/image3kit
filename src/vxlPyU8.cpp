@@ -1,14 +1,16 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 #include "voxelImageI.h"
 #include "shapeToVoxel.h"
-#include "voxelPng_stbi.h"
 #include "InputFile.h"
 
-namespace py = pybind11;
+#include "voxelImageProcess.h"
+#include "voxelNoise.h"
 
+namespace py = pybind11;
 
 inline dbl3 tpl2d3(py::tuple v) { return dbl3(v[0].cast<double>(), v[1].cast<double>(), v[2].cast<double>()); }
 
@@ -22,6 +24,30 @@ InputFile pyCastInput(py::dict dic) {
 
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace MCTProcessing;
+
+    py::class_<var3<int>>(mod, "int3")
+    .def(py::init<>())
+    .def(py::init<int, int, int>())
+    .def(py::init([](py::tuple t) { return var3<int>(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>()); }))
+    .def_readwrite("x", &var3<int>::x)
+    .def_readwrite("y", &var3<int>::y)
+    .def_readwrite("z", &var3<int>::z)
+    .def("__repr__", [](const var3<int> &v) {
+        return "int3(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z) + ")";
+    });
+
+    py::class_<var3<double>>(mod, "dbl3")
+    .def(py::init<>())
+    .def(py::init<double, double, double>())
+    .def(py::init([](py::tuple t) { return var3<double>(t[0].cast<double>(), t[1].cast<double>(), t[2].cast<double>()); }))
+    .def_readwrite("x", &var3<double>::x)
+    .def_readwrite("y", &var3<double>::y)
+    .def_readwrite("z", &var3<double>::z)
+    .def("__repr__", [](const var3<double> &v) {
+        return "dbl3(" + std::to_string(v.x) + ", " + std::to_string(v.y) + ", " + std::to_string(v.z) + ")";
+    });
+
+    py::class_<voxelImageTBase>(mod, "voxelImageTBase");
 
     //py::class_<dbl3>(mod, "dbl3")
     //.def(py::init<double, double, double>())
