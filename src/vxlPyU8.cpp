@@ -89,7 +89,9 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 #define VxTypS "VxlImgU8"
 #include "./vxlPyUX.hpp"
 
-    mod.def("readImage", &readImage, py::arg("filename"), py::arg("processKeys")=1, "Global helper to read an image from a file.");
+    mod.def("readImage", [](py::object filename, int processKeys) {
+        return readImage(py::str(filename).cast<std::string>(), processKeys);
+    }, py::arg("filename"), py::arg("processKeys")=1, "Global helper to read an image from a file.");
 
     mod.def("readImageU8", [](py::dict dic) { return readImageU8(pyCastInput(dic)); }, py::arg("dict"), "Global helper to read an uint8 (3D) image from a file.");
 
