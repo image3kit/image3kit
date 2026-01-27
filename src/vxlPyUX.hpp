@@ -1,7 +1,9 @@
 #ifndef VxTypS
+#include "pybind11/pytypes.h"
 static_assert(false, "please define VxTyp and VxTypS");
 #define VxTyp unsigned char
 #define VxTypS "U8"
+namespace py = pybind11;
 #endif
 
 py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
@@ -16,7 +18,11 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
         );
     })
     .def(py::init([](py::tuple tpl, VxTyp value) { return voxelImageT<VxTyp>(tpl[0].cast<int>(), tpl[1].cast<int>(), tpl[2].cast<int>(), value); }),
-         py::arg("tpl"), py::arg("value") = 0, "Initialize from a size tuple (nz, ny, nx) with an optional fill value.")
+         py::arg("shape")=py::make_tuple(0,0,0), py::arg("value") = 0, "Initialize from a size tuple (nz, ny, nx) with an optional fill value.")
+    .def("__repr__", [](const voxelImageT<VxTyp> &m) {
+        return "<" + std::string(VxTypS) + " shape=(" + 
+               _s(m.size3()) + ")>";
+    })
 //.def(py::init<int, int, int, VxTyp>())
 .def("data", [](voxelImageT<VxTyp> &m) {
     return py::array_t<VxTyp>(py::buffer_info{

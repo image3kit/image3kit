@@ -80,7 +80,7 @@ class VxlImgU8:
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
-    def __init__(self, tpl: tuple, value: typing.SupportsInt = 0) -> None:
+    def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt = 0) -> None:
         """
         Initialize from a size tuple (nz, ny, nx) with an optional fill value.
         """
@@ -88,6 +88,8 @@ class VxlImgU8:
         """
         Release the buffer object that exposes the underlying memory of the object.
         """
+    def __repr__(self) -> str:
+        ...
     def addSurfNoise(self, mask1: typing.SupportsInt, mask2: typing.SupportsInt, threshold: typing.SupportsInt, seed: typing.SupportsInt) -> None:
         """
         Add surface noise.
@@ -341,7 +343,7 @@ class sphere(shape):
         ...
 class voxelImageTBase:
     pass
-def readImage(filename: str, processKeys: typing.SupportsInt = 1) -> voxelImageTBase:
+def readImage(filename: typing.Any, processKeys: typing.SupportsInt = 1) -> voxelImageTBase:
     """
     Global helper to read an image from a file.
     """
