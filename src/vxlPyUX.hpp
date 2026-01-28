@@ -140,9 +140,73 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
     py::arg("gradFactor")=0., py::arg("krnl")=2, py::arg("nItrs")=13, py::arg("writedumps")=0
 )
 .def("plotAll", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::plotAll(ss, m); })
-;
+    .def("mode26", [](voxelImageT<VxTyp> &m, int nMinD) { return mode26(m,nMinD); })
+    .def("growingThreshold", [](voxelImageT<VxTyp> &m, VxTyp t1, VxTyp t2, VxTyp t3, VxTyp t4, int nIter) {
+        ::growingThreshold(m, t1, t2, t3, t4, nIter);
+    }, py::arg("startMin"), py::arg("startMax"), py::arg("finalMin"), py::arg("finalMax"), py::arg("iterations")=4)
+     .def("replaceOutSideValue", [](voxelImageT<VxTyp> &m, int vo, int vnew, int nHoleSize) {
+        return MCTProcessing::replaceOutSideValue(m, vo, vnew, nHoleSize);
+    }, py::arg("val_old")=0, py::arg("val_new")=2, py::arg("hole_size")=5)
+    .def("smooth", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, double sigmavv, double sharpFact) {
+        return MCTProcessing::smooth(m, nItrs, kernRad, sigmavv, sharpFact);
+    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1)
+    .def("svgHistogram", [](voxelImageT<VxTyp> &m, std::string fnam, int nBins, double minV, double maxV) {
+        return MCTProcessing::svgHistogram(m, fnam, nBins, minV, maxV);
+    }, py::arg("filename")="aa.svg", py::arg("bins")=128, py::arg("min_val")=3e38, py::arg("max_val")=-3e38)
+    .def("svgZProfile", [](voxelImageT<VxTyp> &m, std::string fnam, double minV, double maxV) {
+        return MCTProcessing::svgZProfile(m, fnam, VxTyp(minV), VxTyp(maxV));
+    }, py::arg("filename")="aa.svg", py::arg("min_val")=0, py::arg("max_val")=255) // Assuming 255 default for maxV based on typical usage, though maxT(T) is ideal
+    .def("flipEndian", [](voxelImageT<VxTyp> &m) {
+        ::flipEndian(m);
+    })
+    .def("replaceRangeByImage", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
+        if(fnam.empty()) throw std::runtime_error("no image name provided");
+        ::replaceRangeByImage(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam));
+    }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
+    .def("replaceByImageRange", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
+        if(fnam.empty()) throw std::runtime_error("no image name provided");
+        ::replaceByImageRange(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam));
+    }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
+    .def("readFromFloat", [](voxelImageT<VxTyp> &m, std::string header, float scale, float shift) {
+        return MCTProcessing::readFromFloat(m, header, scale, shift);
+    }, py::arg("header"), py::arg("scale")=1.0f, py::arg("shift")=0.0f)
+    .def("bilateralX", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
+         return ::bilateralX(m, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
+    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("x_step")=2, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1, py::arg("sigma_spatial")=2.0)
+    .def("bilateralGauss", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
+         return ::bilateralGauss(m, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
+    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1, py::arg("sigma_spatial")=2.0)
+    .def("meanWide", [](voxelImageT<VxTyp> &m, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
+         return MCTProcessing::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
+    }, py::arg("width")=0, py::arg("noise_val")=4, py::arg("average")=0, py::arg("delta")=20, py::arg("iterations")=15, py::arg("smooth_image")="")
+    .def("otsu_th", [](voxelImageT<VxTyp> &m, int minv, int maxv) {
+         return ::otsu_th(m, minv, maxv);
+    }, py::arg("min_val")=0, py::arg("max_val")=256)
+    .def("segment", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
+         return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
+    }, py::arg("n_segments")=2, py::arg("thresholds"), py::arg("min_sizes"), py::arg("smooth_image")="", py::arg("noise_val")=16.0, py::arg("resolution_sq")=2.0, py::arg("write_dumps")=0)
+    .def("dering", [](voxelImageT<VxTyp> &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
+         return MCTProcessing::dering(m, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
+    }, py::arg("x0"), py::arg("y0"), py::arg("x1"), py::arg("y1"), py::arg("min_val")=0, py::arg("max_val")=255, py::arg("nr")=0, py::arg("ntheta")=18, py::arg("nz")=0)
+    .def("adjustBrightnessWith", [](voxelImageT<VxTyp> &m, std::string imgName) {
+         return MCTProcessing::adjustBrightnessWith(m, imgName);
+    }, py::arg("image_file"))
+    .def("adjustSliceBrightness", [](voxelImageT<VxTyp> &m, voxelImageT<unsigned char>& mskA, voxelImageT<unsigned char>& mskB, voxelImageT<VxTyp>& img2, int nSmoothItr, int nSmoothKrnl) {
+         return MCTProcessing::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
+    }, py::arg("mask_a"), py::arg("mask_b"), py::arg("ref_image"), py::arg("smooth_iter")=3, py::arg("smooth_kernel")=20)
+    .def("cutOutside", [](voxelImageT<VxTyp> &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
+         ::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxTyp(outVal));
+         return true;
+    }, py::arg("axis")='z', py::arg("extra_out")=0, py::arg("threshold")=-1, py::arg("cut_highs")=0, py::arg("shift_x")=0, py::arg("shift_y")=0, py::arg("fill_val")=0)
+    .def("variance", [](voxelImageT<VxTyp> &m, int minV, int maxV) {
+         return ::varianceDbl(m, minV, maxV);
+    }, py::arg("min_val")=0, py::arg("max_val")=255)
+    ;
 
-// py::class_<instream>(mod, "instream", py::buffer_protocol())
-// .def(py::init([](py::object kwargs) { return new instream(kwargs); }))
-// ;
+    mod.def("labelImage", [](const voxelImageT<VxTyp> &m, double minvv, double maxvv) {
+        auto lbls = labelImage(m, VxTyp(minvv), VxTyp(maxvv));
+	    compressLabelImage(lbls);
+        return lbls;
+    });
+
 }

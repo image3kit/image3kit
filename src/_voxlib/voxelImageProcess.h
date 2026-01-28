@@ -19,6 +19,7 @@ Developed by:
 #include "voxelImageCutOutside.h"
 #include "voxelRegions.h"
 #include "voxelPng_stbi.h"
+#include "voxelEndian.h"
 
 #ifdef SVG
 #include "svplot.hpp"
@@ -35,17 +36,13 @@ Developed by:
 								namespace MCTProcessing _begins_
 
 
-template<typename T>  bool averageWith( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("img2Nam img2Nam2...");
-	int nImgs=1;
 
+template<typename T>  bool averageWith(voxelImageT<T>& vImg, const std::vector<std::string>& imgNames) {
+	int nImgs=1;
 	voxelField<double> sumImgs(vImg.size3(),0.);
 	forAlliii_(sumImgs) sumImgs(iii)=vImg(iii);
 	cout<<" Averaging  images, ";
-	while(true)
-	{
-		string img2Nam;
-		ins>>img2Nam;
+	for(const auto& img2Nam : imgNames) {
 		if(img2Nam.size()>4)
 		{
 			cout<<"  with image  "<<img2Nam<<":  "<<endl;
@@ -59,7 +56,6 @@ template<typename T>  bool averageWith( stringstream& ins, voxelImageT<T>& vImg)
 			++nImgs;
 		}
 		else if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl;
-		else break;
 	}
 
 	vImg.reset(sumImgs.size3());
@@ -68,24 +64,18 @@ template<typename T>  bool averageWith( stringstream& ins, voxelImageT<T>& vImg)
 	return true;
 }
 
-template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("img2Nam img2Nam2..., except begin and end vals");
-
-	vector<string> img2Nams;
-	cout<<" averaging mBE, images : "<<endl;
-	while(true)
-	{
-		string img2Nam;
-		ins>>img2Nam;
-		if(img2Nam.size()>4)
-		{
-			cout<<"  with image  "<<img2Nam<<":  "<<endl;
-			img2Nams.push_back(img2Nam);
-		}
-		else if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl;
-		else break;
+template<typename T>  bool averageWith( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("img2Nam img2Nam2...");
+	std::vector<std::string> imgNames;
+	while(ins)	{
+		string img2Nam;  ins>>img2Nam;
+		if(img2Nam.size()>4) imgNames.push_back(img2Nam);
+		else { if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl; break; }
 	}
+	return averageWith(vImg, imgNames);
+}
 
+template<typename T>  bool averageWith_mBE(voxelImageT<T>& vImg, const std::vector<std::string>& img2Nams) {
 	if (img2Nams.size()<2) { cout<<"\n\n  Error: need more than 2 images "<<endl;  return false; }
 
 	const int nImg2s=img2Nams.size();
@@ -95,7 +85,7 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
 	for(int i=0; i<nImg2s; ++i)
 	{
 		voxelImageT<T>& image2 = image2s[i];
-		string& img2Nam = img2Nams[i];
+		const string& img2Nam = img2Nams[i];
 
 		if (hasExt(img2Nam,".tif")) {
 			image2.reset(vImg.size3(),0);
@@ -116,13 +106,29 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
 	return true;
 }
 
-template<typename T>  bool adjustBrightnessWith( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("img2Nam ");
+template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("img2Nam img2Nam2..., except begin and end vals");
+	vector<string> img2Nams;
+	cout<<" averaging mBE, images : "<<endl;
+	while(ins)
+	{
+		string img2Nam;
+		ins>>img2Nam;
+		if(img2Nam.size()>4)
+		{
+			cout<<"  with image  "<<img2Nam<<":  "<<endl;
+			img2Nams.push_back(img2Nam);
+		}
+		else { if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl; break; }
+	}
+	return averageWith_mBE(vImg, img2Nams);
+}
+
+template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, std::string img2Nam) {
 	cout<<"   adjasting contrast,  ";
 	int meanvimg = otsu_th(vImg,1,imaxT(T)-1,0.2)[3] ;
 	int meantovxls = meanvimg;
 
-	string img2Nam;  ins>>img2Nam;
 	_dbgetOrReadImg(T,image2,img2Nam);
 
 	meantovxls= otsu_th(image2,1,maxT(T)-1,0.2)[3];
@@ -134,15 +140,15 @@ template<typename T>  bool adjustBrightnessWith( stringstream& ins, voxelImageT<
 	return true;
 }
 
-template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("....");
-	cout<<"  adjusting Slice RegBrightness  ";
-	int nSmoothItr(3), nSmoothKrnl(20);
-	string img2Nam, mskNamRegA, mskNamRegB;  ins>>img2Nam>>mskNamRegA>>mskNamRegB>>nSmoothItr>>nSmoothKrnl;
-	cout<<"  with "+img2Nam+", using masks "+mskNamRegA+" and"+mskNamRegB+" nSmoothItr:"; cout<<nSmoothItr<<"  nSmoothKrnl:"<<nSmoothKrnl<<"   ";
+template<typename T>  bool adjustBrightnessWith( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("img2Nam ");
+	string img2Nam;  ins>>img2Nam;
+	return adjustBrightnessWith(vImg, img2Nam);
+}
 
-	#ifdef _STOR_PUB
 
+template<typename T> bool adjustSliceBrightness(voxelImageT<T>& vImg, voxelImage& mskRegA, voxelImage& mskRegB, voxelImageT<T>& img2, int nSmoothItr, int nSmoothKrnl)
+{
 		dbls mu1sRegA(vImg.nz(), 0.); //mean at region RegA of img1
 		dbls mu2sRegA(vImg.nz(), 0.);
 		dbls mu1sRegB(vImg.nz(), 0.);
@@ -150,15 +156,12 @@ template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT
 		//dbls cov11s(vImg.nz(), 0.); // variance img1
 		//dbls cov12s(vImg.nz(), 0.);// covariance img1-2
 		//https://en.wikipedia.org/wiki/Simple_linear_regression
-		_dbgetOrReadImg(unsigned char, mskRegA, mskNamRegA);
-		_dbgetOrReadImg(unsigned char, mskRegB, mskNamRegB);
-		_dbgetOrReadImg(T,             img2   , img2Nam   );
 		mskRegA.printInfo();
 		mskRegB.printInfo();
 		long long avgv=0;
 		forAllcp(mskRegA) avgv += (*cp!=0);
 		forAllcp(mskRegB) avgv += (*cp!=0);
-		ensure(avgv < 1.1*mskRegA.nxy()*mskRegA.nz(), "Too much mask overlap, between "+mskNamRegA+" and "+mskNamRegB, -1);
+		ensure(avgv < 1.1*mskRegA.nxy()*mskRegA.nz(), "Too much mask overlap", -1);
 
 		OMPFor()
 		for (int k=0; k<mskRegA.nz(); ++k)
@@ -232,6 +235,21 @@ template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT
 		{
 			forAlliii_k(vImg) vImg(iii)=std::max(dminT(T),std::min(vImg(iii)*slops[k]+shifs[k],dmaxT(T)));
 		}
+	return true;
+}
+
+template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("....");
+	cout<<"  adjusting Slice RegBrightness  ";
+	int nSmoothItr(3), nSmoothKrnl(20);
+	string img2Nam, mskNamRegA, mskNamRegB;  ins>>img2Nam>>mskNamRegA>>mskNamRegB>>nSmoothItr>>nSmoothKrnl;
+	cout<<"  with "+img2Nam+", using masks "+mskNamRegA+" and"+mskNamRegB+" nSmoothItr:"; cout<<nSmoothItr<<"  nSmoothKrnl:"<<nSmoothKrnl<<"   ";
+
+	#ifdef _STOR_PUB
+		_dbgetOrReadImg(unsigned char, mskRegA, mskNamRegA);
+		_dbgetOrReadImg(unsigned char, mskRegB, mskNamRegB);
+		_dbgetOrReadImg(T,             img2   , img2Nam   );
+		adjustSliceBrightness(vImg, mskRegA, mskRegB, img2, nSmoothItr, nSmoothKrnl);
 	#else
 		ensure(0,"adjustSliceBrightness not supported",-1);
 	#endif
@@ -255,24 +273,14 @@ template<typename T>  bool growingThreshold( stringstream& ins, voxelImageT<T>& 
 	cout<<"   "<<(int)StartThreshold1<<"  and "<<(int)StartThreshold2<<"  inclusive."<<endl;
 	cout<<"   growing to voxels  with values between:";
 	cout<<"   "<<(int)finalThreshold1<<"  and "<<(int)finalThreshold2<<", in "<<nIter<<" iterations."<<endl;
-	growingThreshold(
-		vImg,
-		T(StartThreshold1),
-		T(StartThreshold2),
-		T(finalThreshold1),
-		T(finalThreshold2),
-		nIter
-	);
+
+	growingThreshold(vImg, T(StartThreshold1), T(StartThreshold2), T(finalThreshold1), T(finalThreshold2), nIter);
+
 	return true;
 }
 
 
-template<typename T>  bool bilateralX( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nItrs   kernRad    Xstp   sigmavv   sharpFact   sigmadd");
-	double sigmavv(16.*maxT(T)/256.), sigmadd(2.), sharpFact(0.1); int nItrs(1), Xstp(2), kernRad(1);
-	ins >>nItrs >> kernRad >>  Xstp >> sigmavv >> sharpFact >> sigmadd;
-	// voxelImageT<T> grads=magGradient(vImg,4);
-	//grads.write("gradsDump.mhd");
+template<typename T>  bool bilateralX(voxelImageT<T>& vImg, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
 	cout<<"\n bilateralX    nIterations  kernRad, Xstp/2   sigmavv,   sharpFact,  sigmadd  \n";
 	cout<<"\n bilateralX    "<<nItrs <<"  "<<kernRad<<" "<<Xstp<<"  "<<sigmavv <<" "<<sharpFact<<" "<<sigmadd<<"\n";
 	vImg.growBox(kernRad*Xstp+4);
@@ -287,12 +295,15 @@ template<typename T>  bool bilateralX( stringstream& ins, voxelImageT<T>& vImg) 
 	return true;
 }
 
+template<typename T>  bool bilateralX( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs   kernRad    Xstp   sigmavv   sharpFact   sigmadd");
+	double sigmavv(16.*maxT(T)/256.), sigmadd(2.), sharpFact(0.1); int nItrs(1), Xstp(2), kernRad(1);
+	ins >>nItrs >> kernRad >>  Xstp >> sigmavv >> sharpFact >> sigmadd;
+	return bilateralX(vImg, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
+}
 
-template<typename T>  bool bilateralGauss( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nItrs   kernRad   sigmavv   sharpFact   sigmadd");
-	 int nItrs(1), kernRad(1); double sigmavv(16.), sigmadd(2.), sharpFact(0.1);
-	ins >> nItrs >> kernRad >> sigmavv >> sharpFact >> sigmadd;
 
+template<typename T>  bool bilateralGauss(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
 	cout<<"\nsmoothing:   nIterations:"<<nItrs <<", kernRad:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<"\n";
 	vImg.growBox(kernRad+2);
 	for (int i=0; i<nItrs; ++i)  {
@@ -305,11 +316,14 @@ template<typename T>  bool bilateralGauss( stringstream& ins, voxelImageT<T>& vI
 	return true;
 }
 
-template<typename T>  bool smooth( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nItrs  kernRad  sigmavv  sharpFact");
-	double sigmavv(16.), sharpFact(0.1); int nItrs(1), kernRad(1);
-	ins >> nItrs >> kernRad >> sigmavv >> sharpFact;
+template<typename T>  bool bilateralGauss( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs   kernRad   sigmavv   sharpFact   sigmadd");
+	 int nItrs(1), kernRad(1); double sigmavv(16.), sigmadd(2.), sharpFact(0.1);
+	ins >> nItrs >> kernRad >> sigmavv >> sharpFact >> sigmadd;
+	return bilateralGauss(vImg, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
+}
 
+template<typename T>  bool smooth(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact) {
 	cout<<"\nsmoothing:   nIterations:"<<nItrs <<", kernRad:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<"\n";
 	vImg.growBox(kernRad+2);
 	for (int i=0; i<nItrs; ++i)
@@ -322,6 +336,13 @@ template<typename T>  bool smooth( stringstream& ins, voxelImageT<T>& vImg)  {
 
 	cout<<endl;
 	return true;
+}
+
+template<typename T>  bool smooth( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs  kernRad  sigmavv  sharpFact");
+	double sigmavv(16.), sharpFact(0.1); int nItrs(1), kernRad(1);
+	ins >> nItrs >> kernRad >> sigmavv >> sharpFact;
+	return smooth(vImg, nItrs, kernRad, sigmavv, sharpFact);
 }
 
 
@@ -372,16 +393,20 @@ template<typename T>  bool medianTime( stringstream& ins, voxelImageT<T>& vImg) 
 
 
 
-template<typename T>  bool mode26( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nItrs nMinD");
-	int nItrs(1), nMinD(2);
-	ins >> nItrs>> nMinD;
+template<typename T>  bool mode26(voxelImageT<T>& vImg, int nItrs, int nMinD) {
 	cout<<" mode26 "<<nItrs<<" itrs,  minDif:"<<nMinD<<"  ";
 	vImg.growBox(1);
 	for (int i=0; i<nItrs; ++i)
 		mode26(vImg,nMinD);
 	vImg.shrinkBox(1);
 	return true;
+}
+
+template<typename T>  bool mode26( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nItrs nMinD");
+	int nItrs=1, nMinD=2;
+	ins >> nItrs>> nMinD;
+	return mode26(vImg, nItrs, nMinD);
 }
 
 
@@ -557,16 +582,7 @@ template<typename T>  bool print_otsu( stringstream& ins, voxelImageT<T>& vImg) 
 }
 
 //template<typename T>  bool registerToImage( stringstream& ins, voxelImageT<T>& vImg);
-template<typename T>  bool dering( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("X0  Y0  X1 Y1 minV maxV nr ntheta nz // Fix ring effects");
-
-	int X0,Y0,X1,Y1, nr=0.2*(vImg.ny()+vImg.nx()), ntheta=18, nz=vImg.nz();
-	ins >> X0>> Y0;
-	X1=X0;Y1=Y0;
-	ins >> X1>> Y1;
-	int minV(0),maxV(maxT(T));
-	ins >> minV>> maxV;
-	ins >> nr>> ntheta>> nz;
+template<typename T>  bool dering(voxelImageT<T>& vImg, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
 	cout<<"\n  dering:   range:"<<minV <<"-"<<maxV<<"  XY0: "<<X0 <<" "<<Y0 <<"   XY1: "<<X1 <<" "<<Y1<<"  nr:"<<nr<<"  ntheta:"<<ntheta<<"  nz:"<<nz <<endl;
 
 	vImg.growBox(0+10);
@@ -577,33 +593,23 @@ template<typename T>  bool dering( stringstream& ins, voxelImageT<T>& vImg)  {
 	return true;
 }
 
-template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint(" nSegs(2) t_i(1 128 254) minSizes_i(1 1)  smoothimg(\"\") \\\n\
-				   noisev(16) resolutionSqr(2) writedumps(0)\n\t example:\n\t segment 2 1 60 255\n\t  (OUTDATED)");
+template<typename T>  bool dering( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("X0  Y0  X1 Y1 minV maxV nr ntheta nz // Fix ring effects");
 
+	int X0,Y0,X1,Y1, nr=0.2*(vImg.ny()+vImg.nx()), ntheta=18, nz=vImg.nz();
+	ins >> X0>> Y0;
+	X1=X0;Y1=Y0;
+	ins >> X1>> Y1;
+	int minV(0),maxV(maxT(T));
+	ins >> minV>> maxV;
+	ins >> nr>> ntheta>> nz;
+	return dering(vImg, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
+}
+
+template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
 	cout<<"\n  segmenting, ";
 	cerr<<"\n  Outdated, use segment2 instead";
 
-	double noisev(16.), resolutionSqr(2);
-	int nSegs(2), writedumps(0);
-	ins >> nSegs ;
-	string smoot;
-
-	//segment nSeg  t0 med t1 med  t2   minsiz0(2)  minsiz1(2)  noisev(16.)  resolutionSqr(2)  readdumps
-
-	vector<int> trshlds(nSegs+1,-1);
-
-
-   for (int i=0; i<=nSegs; ++i)   ins>>trshlds[i];
-	cout<<"  Ranges: ";		for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
-
-
-	vector<int> minSizs(nSegs, 1); *minSizs.rbegin()=1;   *minSizs.begin()=1;
-	cout<<"  minSizs: ";
-	for (int i=0; i<nSegs; ++i)  {  ins>> minSizs[i];  (cout<<" "<<int(minSizs[i])).flush(); }
-
-   ins >> smoot;
-	ins >> noisev >> resolutionSqr >> writedumps;
 	resolutionSqr=max(resolutionSqr,1.);
 	cout<<",  noiseAmp: "<<noisev<<",  diffuseL: "<<resolutionSqr;
 	if (writedumps) cout<<"\n  **** writingdumps **** \n"<<endl;
@@ -611,9 +617,8 @@ template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
 	cout<<":"<<endl;
 
 
-
-
-
+	ensure(trshlds.size() > nSegs, "threshold array less than nSegs, <" + _s(nSegs), -1);
+	ensure(nSegs>1, "nSegs  shall be at least 2", -1);
 	if(trshlds[0]<0) {
 		dbls hist(maxT(T),0.);
 		{
@@ -672,6 +677,33 @@ template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
 
 	cout<<endl;
 	return true;
+}
+
+template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint(" nSegs(2) t_i(1 128 254) minSizes_i(1 1)  smoothimg(\"\") \\\n\
+				   noisev(16) resolutionSqr(2) writedumps(0)\n\t example:\n\t segment 2 1 60 255\n\t  (OUTDATED)");
+
+	double noisev(16.), resolutionSqr(2);
+	int nSegs(2), writedumps(0);
+	ins >> nSegs ;
+	string smoot;
+
+	//segment nSeg  t0 med t1 med  t2   minsiz0(2)  minsiz1(2)  noisev(16.)  resolutionSqr(2)  readdumps
+
+	vector<int> trshlds(nSegs+1,-1);
+
+
+   for (int i=0; i<=nSegs; ++i)   ins>>trshlds[i];
+	cout<<"  Ranges: ";		for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
+
+
+	vector<int> minSizs(nSegs, 1); *minSizs.rbegin()=1;   *minSizs.begin()=1;
+	cout<<"  minSizs: ";
+	for (int i=0; i<nSegs; ++i)  {  ins>> minSizs[i];  (cout<<" "<<int(minSizs[i])).flush(); }
+
+   ins >> smoot;
+	ins >> noisev >> resolutionSqr >> writedumps;
+	return segment(vImg, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
 }
 
 
@@ -736,10 +768,7 @@ template<typename T>  bool replaceRangeByImage( stringstream& ins, voxelImageT<T
 }
 
 
-template<typename T>  bool replaceOutSideValue( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("vv_old vv_new nHoleSize ");
-	int vo = 0, vnew = 2, nHoleSize=5;
-	ins >> vo>> vnew>> nHoleSize;
+template<typename T> bool replaceOutSideValue(voxelImageT<T>& vImg, int vo, int vnew, int nHoleSize) {
 	//forAllvp_(vImg) if(*vp == vo) *vp=vnew;	//replaceRange(vo,vo,vnew);
 	int3 nn = vImg.size3();
 	voxelImageT<T> vxls = vImg;
@@ -767,13 +796,14 @@ template<typename T>  bool replaceOutSideValue( stringstream& ins, voxelImageT<T
 	return true;
 }
 
-template<typename T>  bool meanWide( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("nW  noisev  avg  delta  nItrs  smoothImg");
+template<typename T>  bool replaceOutSideValue( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("vv_old vv_new nHoleSize ");
+	int vo = 0, vnew = 2, nHoleSize=5;
+	ins >> vo>> vnew>> nHoleSize;
+	return replaceOutSideValue(vImg, vo, vnew, nHoleSize);
+}
 
-	int nW=0, noisev=4, avg=0, delta=20; //noisev is a scale factor
-	int nItrs = 15;
-	string smoothImg;
-	ins >>nW >>noisev>>avg>>delta>>nItrs>>smoothImg;
+template<typename T>  bool meanWide(voxelImageT<T>& vImg, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
 	std::cout<<"  meanWide:  nW:"<<nW<<"  noisev:"<<noisev<<"  avg:"<<avg <<"  delta:"<<delta <<"  nIterations:"<<nItrs<<"  smoothImg:"<<smoothImg<<std::endl;
 
 	if(avg==0)
@@ -853,6 +883,16 @@ template<typename T>  bool meanWide( stringstream& ins, voxelImageT<T>& vImg)  {
 	return true;
 }
 
+template<typename T>  bool meanWide( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("nW  noisev  avg  delta  nItrs  smoothImg");
+
+	int nW=0, noisev=4, avg=0, delta=20; //noisev is a scale factor
+	int nItrs = 15;
+	string smoothImg;
+	ins >>nW >>noisev>>avg>>delta>>nItrs>>smoothImg;
+	return meanWide(vImg, nW, noisev, avg, delta, nItrs, smoothImg);
+}
+
 template<typename T>  bool labelImage( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("minvv  maxvv  outnam");
 
@@ -868,19 +908,23 @@ template<typename T>  bool labelImage( stringstream& ins, voxelImageT<T>& vImg) 
 	return true;
 }
 
-template<typename T>  bool readFromFloat( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("imageName scale shift");
-		vImg.reset(0,0,0,0);
-		string header;  float aa=1, bb=0;
-		ins>>header >>aa>>bb; //!readFromFloat
 
-		cout<<" Reading data from header "<<header<<" converting to T (short),  d = "<<aa<<"*x+"<<bb<<endl;
-		voxelImageT<float> vImgf(header);
-		vImg=voxelImageT<T>(vImgf.size3(), vImgf.dx(), vImgf.X0(), 0);
-		forAlliii_(vImg)  vImg(iii) = max(minT(T),T(min(fmaxT(T), aa*vImgf(iii)+bb)));
+template<typename T> bool readFromFloat(voxelImageT<T>& vImg, std::string header, float aa, float bb) {
+	cout<<" Reading data from header "<<header<<" converting to T (short),  d = "<<aa<<"*x+"<<bb<<endl;
+	voxelImageT<float> vImgf(header);
+	vImg=voxelImageT<T>(vImgf.size3(), vImgf.dx(), vImgf.X0(), 0);
+	forAlliii_(vImg)  vImg(iii) = max(minT(T),T(min(fmaxT(T), aa*vImgf(iii)+bb)));
 
 	(std::cout<<".").flush();
 	return true;
+}
+
+template<typename T>  bool readFromFloat( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("imageName scale shift");
+	vImg.reset(0,0,0,0);
+	string header;  float aa=1, bb=0;
+	ins>>header >>aa>>bb; //!readFromFloat
+	return readFromFloat(vImg, header, aa, bb);
 }
 
 

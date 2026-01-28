@@ -914,8 +914,8 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 
 	int n3=vImg.nz(),n2=vImg.ny(),n1=vImg.nx();
 	voxelImageT<T> radimag(nr, nth+6, nz,0);
-	int  nrCrs=1.01+(n2+n1)/4/nr;
-	int  nzCrs=(n3)/nz;
+	int  nrCrs = 1.01 + (n2+n1)*0.25/nr;
+	int  nzCrs = n3/nz;
 	for (int z=0; z<int(radimag.nz()) ; z++)
 	{
 		int k = z*nzCrs;
