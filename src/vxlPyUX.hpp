@@ -1,10 +1,32 @@
-#ifndef VxTypS
-#include "pybind11/pytypes.h"
-static_assert(false, "please define VxTyp and VxTypS");
-#define VxTyp unsigned char
-#define VxTypS "U8"
+
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+#include <pybind11/stl.h>
+#include "voxelImageI.h"
+#include "shapeToVoxel.h"
+#include "InputFile.h"
+#include "VxlStrips.h"
+#include "voxelImageProcess.h"
+#include "voxelNoise.h"
+
+ 
+
 namespace py = pybind11;
-#endif
+
+using namespace VoxLib;
+
+
+inline InputFile pyCastInput(py::dict dic) {
+    InputFile inp;
+    for (const auto &kv : dic) {
+        inp.add(kv.first.cast<std::string>(), py::str(kv.second).cast<std::string>());
+    }
+    return inp;
+}
+
+
+template<typename VxTyp> 
+void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
 py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 .def_buffer([](voxelImageT<VxTyp> &m) -> py::buffer_info {
@@ -19,7 +41,7 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
     })
     .def(py::init([](py::tuple tpl, VxTyp value) { return voxelImageT<VxTyp>(tpl[0].cast<int>(), tpl[1].cast<int>(), tpl[2].cast<int>(), value); }),
          py::arg("shape")=py::make_tuple(0,0,0), py::arg("value") = 0, "Initialize from a size tuple (nz, ny, nx) with an optional fill value.")
-    .def("__repr__", [](const voxelImageT<VxTyp> &m) {
+    .def("__repr__", [VxTypS](const voxelImageT<VxTyp> &m) {
         return "<" + std::string(VxTypS) + " shape=(" + 
                _s(m.size3()) + ")>";
     })
@@ -41,7 +63,7 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 .def("write", &voxelImageT<VxTyp>::write, py::arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
 .def("writeNoHdr", &voxelImageT<VxTyp>::writeNoHdr, py::arg("filename"), "Write the raw image data without a header.")
 // .def("writeHeader", &voxelImageT<VxTyp>::writeHeader)
-.def("readFromHeader", &voxelImageT<VxTyp>::readFromHeader, py::arg("header_file"), py::arg("processKeys")=1, "Read image dimensions/metadata from a header file.")
+.def("readFromHeader", &voxelImageT<VxTyp>::readFromHeader, py::arg("filename"), py::arg("processKeys")=1, "Read image dimensions/metadata from a header file.")
 .def("readAscii", &voxelImageT<VxTyp>::readAscii, py::arg("filename"), "Read image data from an ASCII file.")
 // .def("readRLE", &voxelImageT<VxTyp>::readRLE)
 .def("cropD", &voxelImageT<VxTyp>::cropD, py::arg("begin"), py::arg("end"), py::arg("emptyLayers")=0, py::arg("emptyLayersValue")=1, py::arg("verbose")=false, "Crop the image by a specified depth.")
@@ -123,3 +145,4 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 // py::class_<instream>(mod, "instream", py::buffer_protocol())
 // .def(py::init([](py::object kwargs) { return new instream(kwargs); }))
 // ;
+}

@@ -1,3 +1,4 @@
+#pragma once
 
 /*-------------------------------------------------------------------------*\
 
@@ -23,7 +24,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 #include <functional>   // std::mem_fn
 
-								namespace MCTProcessing _begins_
+namespace VoxLib  {
 using namespace std;
 
 struct shape {
@@ -277,6 +278,12 @@ class roughSphere : public shape {
 		return (magSqr(ij-p1)<r2+delRough)  ?  insidev : shape::invalidv;  }
 };
 
+} //namespace VoxLib
+
+namespace MCTProcessing {
+using namespace std;
+using namespace VoxLib;
+
 //template<typename T, typename _operate_>
 //void applyShapeOper(voxelImageT<T> & vImg, const shape& sh, _operate_& func) {
 #define _SHAPERATEPy(vImg, sh, _operate_)  \
@@ -338,4 +345,4 @@ template<typename T>  bool PaintAddAfter( stringstream& ins, voxelImageT<T> & vI
 	return true;
 }
 
-								_end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing
