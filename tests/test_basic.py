@@ -14,15 +14,6 @@ def test_voxlibI():
     assert np.array(img, copy=False)[0,0,0] == 22
     assert ik.VxlImgU8((20, 20, 1), 22).data()[0,0,0] == 22
 
-    numpy_array = np.ones((3, 3, 3))
-    print(numpy_array)
-    img = ik.VxlImgU8((20, 20, 1), 22)
-    print(img.data())
-
-    assert np.array(img, copy=False)[0, 0, 0] == 22
-    assert ik.VxlImgU8((20, 20, 1), 22).data()[0, 0, 0] == 22
-
-
 def test_writePng():
     lnt, rad = 128, 16
     img = ik.VxlImgU8((lnt, rad * 2, rad * 2), 1)
