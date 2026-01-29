@@ -2,6 +2,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
+#include "pybind11/pytypes.h"
+#include "voxelImage.h"
 #include "voxelImageI.h"
 #include "shapeToVoxel.h"
 #include "InputFile.h"
@@ -25,10 +27,46 @@ inline InputFile pyCastInput(py::dict dic) {
 }
 
 
+template<typename VxTyp>
+void addDodgyFuncsInt(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)>=3) {}
+
+template<typename VxTyp> 
+void addDodgyFuncsInt(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)<=2) {
+    m.def("segment2", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<intOr<VxTyp>> th, std::vector<int> minSizs,
+                        double noisev, double localF, double flatnes, double resolution, double gradFactor,
+                        int krnl, int nItrs, int writedumps) {
+            return segment2(m, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
+        },
+        py::arg("nSegs")=2, py::arg("th")=std::vector<int>(), py::arg("minSizs")=std::vector<int>(),
+        py::arg("noisev")=2., py::arg("localF")=800., py::arg("flatnes")=0.1, py::arg("resolution")=2.,
+        py::arg("gradFactor")=0., py::arg("krnl")=2, py::arg("nItrs")=13, py::arg("writedumps")=0
+    )
+    .def("segment", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
+         return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
+        }, py::arg("n_segments")=2, py::arg("thresholds"), py::arg("min_sizes"), py::arg("smooth_image")="", 
+        py::arg("noise_val")=16.0, py::arg("resolution_sq")=2.0, py::arg("write_dumps")=0
+    )
+    ;
+}
+
+template<typename VxTyp>
+void addDodgyFuncsU8(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)>=2) {
+}
+template<typename VxTyp> 
+void addDodgyFuncsU8(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)<=1) {
+    m
+    .def("distMapExtrude", [](voxelImageT<VxTyp> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
+        m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR, true); },
+        py::arg("distMapDict")=py::dict(), py::arg("offset")=0.5, py::arg("scale")=1.0, py::arg("power")=1.0,
+        "Extrude proportional to distance map"
+    )
+    ;
+}
+
 template<typename VxTyp> 
 void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
-py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
+auto clas = py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 .def_buffer([](voxelImageT<VxTyp> &m) -> py::buffer_info {
         return py::buffer_info(
             m.data(),                             // Pointer to buffer
@@ -46,6 +84,9 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
                _s(m.size3()) + ")>";
     })
 //.def(py::init<int, int, int, VxTyp>())
+    .def(py::init(
+        [](py::object filepath, bool processKeys)  { return voxelImageT<VxTyp>(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }), 
+        py::arg("filepath"), py::arg("processKeys")=true, "Read image dimensions/metadata from a (header) file.") // readConvertFromHeader
 .def("data", [](voxelImageT<VxTyp> &m) {
     return py::array_t<VxTyp>(py::buffer_info{
         m.data(),
@@ -63,7 +104,6 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 .def("write", &voxelImageT<VxTyp>::write, py::arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
 .def("writeNoHdr", &voxelImageT<VxTyp>::writeNoHdr, py::arg("filename"), "Write the raw image data without a header.")
 // .def("writeHeader", &voxelImageT<VxTyp>::writeHeader)
-.def("readFromHeader", &voxelImageT<VxTyp>::readFromHeader, py::arg("filename"), py::arg("processKeys")=1, "Read image dimensions/metadata from a header file.")
 .def("readAscii", &voxelImageT<VxTyp>::readAscii, py::arg("filename"), "Read image data from an ASCII file.")
 // .def("readRLE", &voxelImageT<VxTyp>::readRLE)
 .def("cropD", &voxelImageT<VxTyp>::cropD, py::arg("begin"), py::arg("end"), py::arg("emptyLayers")=0, py::arg("emptyLayersValue")=1, py::arg("verbose")=false, "Crop the image by a specified depth.")
@@ -124,22 +164,21 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
 //.def("maskWriteFraction", &voxelImageT<VxTyp>::maskWriteFraction)
 .def("mapFrom", [](voxelImageT<VxTyp>& m, const voxelImageT<VxTyp>& vimg2, VxTyp vmin, VxTyp vmax, double scale, double shift) { mapToFrom(m, vimg2, vmin, vmax, scale, shift); }, py::arg("sourceImage"), py::arg("vmin"), py::arg("vmax"), py::arg("scale"), py::arg("shift"), "Map values from another image.") 
 .def("addSurfNoise", [](voxelImageT<VxTyp> &m, const int randMask1, const int randMask2, int trsh, int randseed) { addSurfNoise(m, randMask1, randMask2, trsh, randseed); }, py::arg("mask1"), py::arg("mask2"), py::arg("threshold"), py::arg("seed"), "Add surface noise.")
-.def("distMapExtrude", [](voxelImageT<VxTyp> &m, py::dict dic) { m = distMapExtrude(m, pyCastInput(dic), true); }, py::arg("distMapDict"), "Extrude proportional to distance map.")
-// // Process wrappers (string interface)
 
 // // Individual bindings for convenience
 .def("averageWith", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith(ss, m); })
 .def("averageWith_mBE", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith_mBE(ss, m); })
-.def("segment2", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<int> th, std::vector<int> minSizs,
-                    double noisev, double localF, double flatnes, double resolution, double gradFactor,
-                    int krnl, int nItrs, int writedumps) {
-        return segment2(m, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
-    },
-    py::arg("nSegs")=2, py::arg("th")=std::vector<int>(), py::arg("minSizs")=std::vector<int>(),
-    py::arg("noisev")=2., py::arg("localF")=800., py::arg("flatnes")=0.1, py::arg("resolution")=2.,
-    py::arg("gradFactor")=0., py::arg("krnl")=2, py::arg("nItrs")=13, py::arg("writedumps")=0
-)
-.def("plotAll", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::plotAll(ss, m); })
+    .def("plotAll", [](voxelImageT<VxTyp> &m, std::string fnam_, int minv, int maxv, int iSlice_, int nBins,
+                        std::string normalAxis, bool grey, bool color, bool histogram, bool zProfile,
+                        voxelImageT<VxTyp>* img2Ptr, int mina, int maxa) {
+        int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
+        return MCTProcessing::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
+    },  py::arg("name")="pltAll",
+        py::arg("minv")=0, py::arg("maxv")=-1000001, py::arg("sliceIndex")=-1000000, py::arg("nBins")=128,
+        py::arg("normalAxis")="xyz",
+        py::arg("grey")=true, py::arg("color")=true, py::arg("histogram")=true, py::arg("zProfile")=true,
+        py::arg("alphaImage")=nullptr, py::arg("alphaMin")=0, py::arg("alphaMax")=-1000001,
+        "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
     .def("mode26", [](voxelImageT<VxTyp> &m, int nMinD) { return mode26(m,nMinD); })
     .def("growingThreshold", [](voxelImageT<VxTyp> &m, VxTyp t1, VxTyp t2, VxTyp t3, VxTyp t4, int nIter) {
         ::growingThreshold(m, t1, t2, t3, t4, nIter);
@@ -161,11 +200,11 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
     })
     .def("replaceRangeByImage", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
         if(fnam.empty()) throw std::runtime_error("no image name provided");
-        ::replaceRangeByImage(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam));
+        ::replaceRangeByImage(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam, readOpt::procAndConvert));
     }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
     .def("replaceByImageRange", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
         if(fnam.empty()) throw std::runtime_error("no image name provided");
-        ::replaceByImageRange(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam));
+        ::replaceByImageRange(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam, readOpt::procAndConvert));
     }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
     .def("readFromFloat", [](voxelImageT<VxTyp> &m, std::string header, float scale, float shift) {
         return MCTProcessing::readFromFloat(m, header, scale, shift);
@@ -182,9 +221,6 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
     .def("otsu_th", [](voxelImageT<VxTyp> &m, int minv, int maxv) {
          return ::otsu_th(m, minv, maxv);
     }, py::arg("min_val")=0, py::arg("max_val")=256)
-    .def("segment", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
-         return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
-    }, py::arg("n_segments")=2, py::arg("thresholds"), py::arg("min_sizes"), py::arg("smooth_image")="", py::arg("noise_val")=16.0, py::arg("resolution_sq")=2.0, py::arg("write_dumps")=0)
     .def("dering", [](voxelImageT<VxTyp> &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
          return MCTProcessing::dering(m, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
     }, py::arg("x0"), py::arg("y0"), py::arg("x1"), py::arg("y1"), py::arg("min_val")=0, py::arg("max_val")=255, py::arg("nr")=0, py::arg("ntheta")=18, py::arg("nz")=0)
@@ -202,11 +238,6 @@ py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
          return ::varianceDbl(m, minV, maxV);
     }, py::arg("min_val")=0, py::arg("max_val")=255)
     ;
-
-    mod.def("labelImage", [](const voxelImageT<VxTyp> &m, double minvv, double maxvv) {
-        auto lbls = labelImage(m, VxTyp(minvv), VxTyp(maxvv));
-	    compressLabelImage(lbls);
-        return lbls;
-    });
-
+    addDodgyFuncsInt(clas);
+    addDodgyFuncsU8(clas);
 }

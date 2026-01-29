@@ -75,14 +75,22 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
         return kube(tpl2d3(p1), tpl2d3(size), val); }))
     ;
 
+    // TODO switch to int32_t...
     bind_VxlImg<unsigned char>(voxlib, "VxlImgU8");
+    bind_VxlImg<unsigned short>(voxlib, "VxlImgU16");
+    bind_VxlImg<int>(voxlib, "VxlImgI32");
+    bind_VxlImg<float>(voxlib, "VxlImgF32");
 
-    voxlib.def("readImage", [](py::object filename, int processKeys) {
+    voxlib.def("labelImage", [](voxelImage &m, double minvv, double maxvv) {
+        auto lbls = labelImage(m, (unsigned char)(minvv), (unsigned char)(maxvv));
+	    compressLabelImage(lbls);
+        return lbls;
+    });
+
+    voxlib.def("readImageBase", [](py::object filename, int processKeys) {
         return readImage(py::str(filename).cast<std::string>(), processKeys);
     }, py::arg("filename"), py::arg("processKeys")=1, "Global helper to read an image from a file.");
 
-    voxlib.def("readImageU8", [](py::dict dic) { return readImageU8(pyCastInput(dic)); },
-        py::arg("dict"), "Global helper to read an uint8 (3D) image from a file.");
 
 
     // Bind docstrings or versions to the main module or submodules as needed

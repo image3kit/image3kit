@@ -49,7 +49,7 @@ int main(int argc, char** argv)  {
 	string RqfileName = (argc>5) ? string(argv[5]): "";
 
 
-	voxelImage vimage("vxlImage.mhd");
+	voxelImage vimage("vxlImage.mhd", readOpt::procOnly);
 
 
 
@@ -125,7 +125,7 @@ int main(int argc, char** argv)  {
 
 
 	if(RqfileName.size())  {
-		voxelImage rockLabels(RqfileName);
+		voxelImage rockLabels(RqfileName, readOpt::procOnly);
 		rockLabels.growBox(1);
 
 		cout<< "Reading " << RqfileName <<":"<<std::endl;

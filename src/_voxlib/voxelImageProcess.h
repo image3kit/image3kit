@@ -11,6 +11,7 @@ Developed by:
 \*-------------------------------------------------------------------------*/
 
 #include "SiRun.h"
+#include "typses.h"
 #include "voxelImage.h"
 #include "InputFile.h"
 
@@ -20,6 +21,8 @@ Developed by:
 #include "voxelRegions.h"
 #include "voxelPng_stbi.h"
 #include "voxelEndian.h"
+#include <algorithm>
+#include <limits>
 
 #ifdef SVG
 #include "svplot.hpp"
@@ -85,13 +88,7 @@ template<typename T>  bool averageWith_mBE(voxelImageT<T>& vImg, const std::vect
 	for(int i=0; i<nImg2s; ++i)
 	{
 		voxelImageT<T>& image2 = image2s[i];
-		const string& img2Nam = img2Nams[i];
-
-		if (hasExt(img2Nam,".tif")) {
-			image2.reset(vImg.size3(),0);
-			image2.readBin(img2Nam);
-		}
-		else image2.readFromHeader(img2Nam);
+		image2 = voxelImageT<T>(img2Nams[i], readOpt::procOnly);
 		if(image2.nx()!=vImg.nx()) cout<<"\n\n  Error bad size\n"<<endl;
 
 	}
@@ -126,16 +123,18 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
 
 template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, std::string img2Nam) {
 	cout<<"   adjasting contrast,  ";
-	int meanvimg = otsu_th(vImg,1,imaxT(T)-1,0.2)[3] ;
+	int meanvimg = otsu_th(vImg, 1, imaxT(T)-1, 0.2)[3];
 	int meantovxls = meanvimg;
 
 	_dbgetOrReadImg(T,image2,img2Nam);
 
-	meantovxls= otsu_th(image2,1,maxT(T)-1,0.2)[3];
+	meantovxls= otsu_th(image2, 1 , maxT(T)-1 , 0.2)[3];
 
 	int delC = meantovxls; delC-=meanvimg;
 	cout<<"  adjust contrast by:  "<<int(meantovxls)<<" - "<<int(meanvimg)<<" = "<<delC<<",  "; cout.flush();
-	forAllvp_(vImg) if(0<(*vp) && (*vp)<maxT(T)) *vp=max(1,min(int(*vp)+delC,imaxT(T)-1));;
+	forAllvp_(vImg)
+		if(0<(*vp) && (*vp)<maxT(T))
+			*vp = max(1, min(int(*vp)+delC, imaxT(T)-1));;
 
 	return true;
 }
@@ -444,9 +443,9 @@ template<typename T> int svgZProfile(const voxelImageT<T>& vImg, const string& f
 	OMPFor()
 	for (int k=0; k<vImg.nz(); ++k)  {
 		double sum=0.; size_t cnt=0;
-		forAlliii_k(vImg) {  T vv=vImg(iii); if(minv<vv && vv<maxv)  { sum+=vv; ++cnt; } }
+		forAlliii_k(vImg) {  T vv=vImg(iii); if(minv<=vv && vv<=maxv)  { sum+=vv; ++cnt; } }
 		datas[0][k]=k;
-		datas[1][k]=sum/cnt;
+		datas[1][k]=sum/std::max(cnt, 1ul);
 		datas[2][k]=cnt;
 	}
 	my_plot.plot(datas[0], datas[1],"").line_on(true).shape(svg::no_point);
@@ -458,7 +457,7 @@ template<typename T> int svgZProfile(const voxelImageT<T>& vImg, const string& f
 }
 
 template<typename T> int svgHistogram(const voxelImageT<T>& vImg, const string& fnam, int nBins, double minV, double maxV)  {
-	ensure(maxV<-1e38 || maxV>minV,"Wrong  range");
+	ensure(maxV<-1e38 || maxV>minV,"Wrong  range", -1);
 	svg::svgraphic my_svg;
 	svg::svplot& my_plot = my_svg.subplot<svg::svplot>(0);
 	vars<dbls> datas = vxlDist(vImg,nBins,minV,maxV);
@@ -496,32 +495,22 @@ template<typename T>  bool svgZProfile( stringstream& ins, voxelImageT<T>& vImg)
 }
 
 
-template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
-	KeyHint("fileName  minv maxv nBins normalAxes iSlice_ alphaImg // histogram and intensity-vs-z profile");
-	int minv(0); int maxv(-1000001); int iSlice_(-1000000), nBins(128);
-	string normalAxis=plotAll_normalAxis;//="xyz"
-	int colrGrey=plotAll_colrGrey;//=15
-	string fnam_("aa.png"); string alphaImg;
-	ins >> fnam_ >> minv >> maxv >> nBins >> colrGrey >> normalAxis >> iSlice_ >> alphaImg;
+template<typename T>  bool plotAll(voxelImageT<T>& vImg,  int minv=0, int maxv=-1000001, int iSlice_=-1000000, int nBins=128,
+	string normalAxis="xyz", string fnam_="pltAll", int colrGreyHistZprofile=15,
+	voxelImageT<T>* img2Ptr=nullptr, int mina=0, int maxa=-1000001 // transparency
+)  {
 	if(hasExt(fnam_,".png")) fnam_=fnam_.substr(0,fnam_.size()-4);
-	if(maxv==-1000001)  { minv = accumulate(vImg,(std::min<T>));   maxv = accumulate(vImg,(std::max<T>));  }
+	if(maxv==-1000001)  { minv = accumulate(vImg,std::min<T>, std::numeric_limits<T>::max());   maxv = accumulate(vImg,std::max<T>, std::numeric_limits<T>::min());  }
 	(cout<<"slice2: "<<fnam_<<"*, minmaxv: "<<minv<<" "<<maxv<<" ... "<<nBins).flush();
+	ensure (maxv>minv, "error maxv shall be bigger than minv, hint: the image may be empty, or has a single value");
 
 		if (fnam_.find('/')==std::string::npos) { mkdirs("fig"); fnam_="fig/"+fnam_; }
 
-	if(colrGrey&4) svgHistogram(vImg,fnam_+"Dist.svg",nBins,(minv),(maxv));
-	if(colrGrey&8) svgZProfile( vImg,fnam_+"ZProfile.svg"  ,T(minv),T(maxv));
+	if(colrGreyHistZprofile&4 && vImg.nz()>1) // FIXME: nz==1 breakes svgplot
+		svgHistogram(vImg,fnam_+"Dist.svg",nBins,(minv),(maxv));
+	if(colrGreyHistZprofile&8) svgZProfile( vImg,fnam_+"ZProfile.svg"  ,T(minv),T(maxv));
+	(cout<<".... ").flush();
 
-	#ifdef _STOR_PUB
-	voxelImageT<T>* img2Ptr=nullptr;
-	int mina(0); int maxa(-1000001);
-	if(len(alphaImg)) {
-		ins  >> mina >> maxa;
-		img2Ptr=vxlCast<T>(dbget(_STOR,alphaImg));
-		if(maxa==-1000001)  { mina = accumulate(*img2Ptr,(std::min<T>));   maxa = accumulate(*img2Ptr,(std::max<T>));  }
-		(cout<<" alpha: "<<alphaImg<<"  minmaxa: "<<mina<<" "<<maxa).flush();
-	}
-	#endif
 	#ifdef LPNG
 	for(char Ax:normalAxis)  {
 		int iSlice = iSlice_;
@@ -533,13 +522,11 @@ template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
 
 
 		(cout<<" "<<Ax<<""<<iSlice<<" ").flush();
-		#ifdef _STOR_PUB
-		if(len(alphaImg)) {
+		if(img2Ptr) {
 			slice2RGBAPng(vImg,Ax,fnam+"_rgba.png", iSlice,T(minv),T(maxv),*img2Ptr,T(mina),T(maxa));
 		} //else
-		#endif
-		if(colrGrey&2) slice2RGBPng    (vImg,Ax,fnam+"_rgb.png", iSlice,T(minv),T(maxv));
-		if(colrGrey&1) slice2GrayPng   (vImg,Ax,fnam+"_grey.png", iSlice,T(minv),T(maxv)); // grey_ is at begin for image slide-show order
+		if(colrGreyHistZprofile&2) slice2RGBPng    (vImg,Ax,fnam+"_rgb.png", iSlice,T(minv),T(maxv));
+		if(colrGreyHistZprofile&1) slice2GrayPng   (vImg,Ax,fnam+"_grey.png", iSlice,T(minv),T(maxv)); // grey_ is at begin for image slide-show order
 		(cout<<" .").flush();
 	}
 
@@ -548,6 +535,26 @@ template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
 	return true;
 }
 
+template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
+	KeyHint("fileName  minv maxv nBins normalAxes iSlice_ alphaImg // histogram and intensity-vs-z profile");
+	int minv(0); int maxv(-1000001); int iSlice_(-1000000), nBins(128);
+	string normalAxis="xyz";
+	int colrGrey=15;
+	string fnam_("pltAll"),  alphaImg;
+	int mina(0); int maxa(-1000001);
+	ins >> fnam_ >> minv >> maxv >> nBins >> colrGrey >> normalAxis >> iSlice_ >> alphaImg >> mina >> maxa;
+	voxelImageT<T>* img2Ptr=nullptr;
+	if(len(alphaImg)) {
+		#ifdef _STOR_PUB
+			img2Ptr=vxlCast<T>(dbget(_STOR,alphaImg));
+			if(maxa==-1000001)  { mina = accumulate(*img2Ptr,(std::min<T>));   maxa = accumulate(*img2Ptr,(std::max<T>));  }
+			(cout<<" alpha: "<<alphaImg<<"  minmaxa: "<<mina<<" "<<maxa).flush();
+		#else
+			(cout<<" alpha image not supported "<<maxa).flush();
+		#endif
+	}
+	return plotAll(vImg,  minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGrey, img2Ptr, mina, maxa);
+}
 #endif
 
 template<typename T>  bool end_here( stringstream& ins, voxelImageT<T>& vImg)  {
@@ -619,25 +626,29 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
 
 	ensure(trshlds.size() > nSegs, "threshold array less than nSegs, <" + _s(nSegs), -1);
 	ensure(nSegs>1, "nSegs  shall be at least 2", -1);
+	constexpr int nHist = std::min(Tint(maxT(T)), Tint(2<<12)-1);
+	constexpr Tint delta = maxT(T)/nHist;
+	static_assert(delta>=1, "wrong algorithm");
+
 	if(trshlds[0]<0) {
-		dbls hist(maxT(T),0.);
+		dbls hist;
 		{
 			cout<<"  calculating histogram: ";
 			voxelImageT<T> voxls = vImg;
 			//bilateralGauss(voxls, 2, noisev, 0.00, (resolutionSqr+1.), 1,254);
-			array<long long,maxT(T)> histi{{0}};
+			array<long long, nHist+1> histi{{0}};
 			voxls = median(median(median(median(median(vImg)))));
 			//voxls.write("dumpmedian.mhd");
-			voxelImageT<T> grad=magGradient(voxls, resolutionSqr);
+			// voxelImageT<T> grad = magGradient(voxls, resolutionSqr);
 			//grad.write("dumpGrad5.mhd");
-			array<double,5> otst = otsu_th(grad,0,maxT(T)-1);
+			// array<double,5> otst = otsu_th(grad, 0, maxT(T)-1);
 
-			forAlliii_seq(vImg)
-			{	int vv = vImg(iii);
-				if (1<=vv && vv<maxT(T))  hist[vv]+=1./(max(double(grad(iii))-otst[1],0.)+0.1*otst[2]);
-			}
-			forAllvv_seq(voxls)  { if (1<=vv && vv<maxT(T)) { ++histi[vv]; } }
-			for (int ii = 0; ii < maxT(T); ++ii) hist[ii]=histi[ii];
+			// forAlliii_seq(vImg) {
+			// 	int vv = vImg(iii);
+			// 	if (1<=vv && vv<maxT(T))  hist[vv/delta] += 1./(max(double(grad(iii))-otst[1],0.)+0.1*otst[2]);
+			// }
+			forAllvv_seq(voxls)  { if (1<=vv && vv<maxT(T)) { ++histi[vv/delta]; } }
+			hist = convertToDbls(allof(histi));
 		}
 
 
@@ -653,7 +664,7 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
 			{
 
 				for (int iSg=1; iSg<nSegs; ++iSg)
-					trshlds[iSg] = otsu_th(hist,trshlds[iSg-1],trshlds[iSg+1])[2]+0.5;
+					trshlds[iSg] = otsu_threshold(hist, trshlds[iSg-1], trshlds[iSg+1], 0, delta).first;
 
 
 				cout<<"  New ranges: ";		for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
@@ -661,7 +672,7 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
 		}
 		else  {
 			trshlds[0]=1; trshlds[nSegs]=254;
-			trshlds[1] = otsu_th(hist,trshlds[0],trshlds[2])[2]+0.5;
+			trshlds[1] = otsu_threshold(hist, trshlds[0], trshlds[2], 0, delta).first;
 
 			cout<<"  New ranges: ";		for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
 
@@ -713,7 +724,7 @@ template<typename T>  bool segment2( stringstream& ins, voxelImageT<T>& vImg)  {
 
 	int nSegs(2);  ins >> nSegs ;
 
-	vars<int> th;  ins >> th;//- thresholds.  NB! using vars<T> does not read ascii as number
+	vars<Tint> th;  ins >> th;//- thresholds.  NB! using vars<T> does not read ascii as number
 	vars<int> minSizs;  ins >> minSizs;   //NOT USED
 
 	double noisev(2.),localF(800), flatnes(0.1), resolution(2), gradFactor(0); int krnl(2), nItrs(13), writedumps(0);
@@ -746,7 +757,7 @@ template<typename T>  bool replaceByImageRange( stringstream& ins, voxelImageT<T
 	cout<<" Replacing  with "<<fnam<<" range [ "<<thresholdMin<<"  "<<thresholdMax<<"];   ";
 	ensure(thresholdMin<=thresholdMax,"wrong thresholds",-1);
 	if(fnam.size())
-		replaceByImageRange(vImg,T(thresholdMin),T(thresholdMax),voxelImageT<T>(fnam));
+		replaceByImageRange(vImg, T(thresholdMin), T(thresholdMax), voxelImageT<T>(fnam, readOpt::procOnly));
 	else  alert("no image name provided",-1);
 	(cout<<".").flush();
 	return true;
@@ -761,7 +772,7 @@ template<typename T>  bool replaceRangeByImage( stringstream& ins, voxelImageT<T
 
 	string fnam;   ins >> fnam;
 	cout<<" Replacing range  ["<<thresholdMin<<"  "<<thresholdMax<<"] with "<<fnam<<";   ";
-	if(fnam.size()) replaceRangeByImage(vImg,T(thresholdMin),T(thresholdMax),voxelImageT<T>(fnam));
+	if(fnam.size()) replaceRangeByImage(vImg, T(thresholdMin), T(thresholdMax), voxelImageT<T>(fnam, readOpt::procOnly));
 	else              alert("no image name provided");
 	(cout<<".").flush();
 	return true;
@@ -831,7 +842,7 @@ template<typename T>  bool meanWide(voxelImageT<T>& vImg, int nW, int noisev, in
 	T maxvnrw = min(avg+delta/2,imaxT(T)-2);
 	voxelImageT<T> orig = vImg;
 	if(smoothImg.empty()) bilateralX(vImg, 6,3, noisev*noisev, 0.05, 12);
-	voxelImageT<T> grad = smoothImg.size() ? magGradient(voxelImageT<T>(smoothImg), 16) : magGradient(median(mean(median(vImg))), 16);
+	voxelImageT<T> grad = smoothImg.size() ? magGradient(voxelImageT<T>(smoothImg, readOpt::procOnly), 16) : magGradient(median(mean(median(vImg))), 16);
 	grad=median(grad);
 	grad.write("dumpGrad5.raw");
 	//threshGrad = otsu_th(grad,0,254)[1]*0.6+0.5;
@@ -911,7 +922,7 @@ template<typename T>  bool labelImage( stringstream& ins, voxelImageT<T>& vImg) 
 
 template<typename T> bool readFromFloat(voxelImageT<T>& vImg, std::string header, float aa, float bb) {
 	cout<<" Reading data from header "<<header<<" converting to T (short),  d = "<<aa<<"*x+"<<bb<<endl;
-	voxelImageT<float> vImgf(header);
+	voxelImageT<float> vImgf(header, readOpt::procOnly); // readFromHeaderT
 	vImg=voxelImageT<T>(vImgf.size3(), vImgf.dx(), vImgf.X0(), 0);
 	forAlliii_(vImg)  vImg(iii) = max(minT(T),T(min(fmaxT(T), aa*vImgf(iii)+bb)));
 

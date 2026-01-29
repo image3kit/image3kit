@@ -508,8 +508,7 @@ template<typename T>  bool readTransFrom( stringstream& ins, voxelImageT<T>& vIm
 	if(img2Nam.size()>4)
 	{
 		cout<<" trans: "<<trans<<",  rotat: "<< rotat<<endl;
-		voxelImageT<T> image2;
-		readConvertFromHeader(image2,img2Nam);//,0
+		voxelImageT<T> image2(img2Nam, readOpt::procOnly);
 		cout<<" OrigInfo: "<<endl;  vImg.printInfo();
 		cout<<" Img2Info: "<<endl;  image2.printInfo();
 		resetTransform(vImg,trans,rotat,image2);

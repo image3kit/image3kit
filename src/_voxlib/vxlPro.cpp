@@ -223,7 +223,7 @@ template<typename T> bool readAtZ( stringstream& ins, voxelImageT<T>& vImg)  {//
 	int3 nnn = vImg.size3();
 	size_t iSlic=0;	string fnam;	ins>>fnam>>iSlic;
 	cout<<"  reading from  image "<<fnam<<", assigning to slices after "<<iSlic<<endl;
-	voxelImageT<T> img(fnam);
+	voxelImageT<T> img(fnam, readOpt::procOnly);
 	ensure(img.nx()==nnn.x);	ensure(img.ny()==nnn.y);
 	std::copy(img.begin(),img.end(),vImg.begin()+iSlic*nnn[0]*nnn[1]);
 	return 0;
@@ -424,7 +424,7 @@ bool mapFrom( stringstream& ins, voxelImageT<T>& vImg)  {
 	ins>>image2name>>minv>>maxv;
 	ensure(maxv>=minv);
 	cout<<"\n{  mapping from image "<<image2name<<", assigning to values originally in range: ["<<minv<<" "<<maxv<<"], by "; if(scale>1e-16) { cout<<shift<<"+"<<scale<<"*"; } cout<<image2name<<endl;
-	voxelImageT<T> image2(image2name);
+	voxelImageT<T> image2(image2name, readOpt::procOnly);
 
 	mapToFrom(vImg,image2,T(minv),T(maxv), scale, shift);
 

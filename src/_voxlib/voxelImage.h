@@ -69,9 +69,13 @@ using intOr = typename std::conditional<(sizeof(T) > sizeof(short)),T,int>::type
 #define Tint  intOr<T> // cast to int or larger type
 
 extern int maxNz;
-extern std::string plotAll_normalAxis;
-extern int plotAll_colrGrey;
 
+enum class readOpt {
+	procAndConvert = 1,
+	convertOnly = 2,
+	procOnly = 3,
+	justRead = 4
+};
 
 //! 3D voxel data, on Cartesian uniform grids, with efficient access functions, and I/O into  .tif, .raw.gz .am, .raw, .dat file formats.
 template <typename T>
@@ -182,13 +186,13 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
 	voxelImageT(int3 n, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.), T value=0)
 	: voxelField<T>( n.x,  n.y,  n.z,  value), X0_(xmin),dx_(dx) {}
 
-	voxelImageT(const std::string& fileName, int processKeys=1)
-	:	X0_(0.,0.,0.),dx_(1,1,1)  { readFromHeader(fileName, processKeys); }
+	voxelImageT(const std::string& fileName, readOpt procConvert); // readConvertFromHeader
 
 	void readFromHeader(const std::string& fileName, int processKeys=1);
 
+	template<typename T2> void resetFrom(const voxelImageT<T2>&Values);
+	void setFrom(const voxelImageT<T>&Values, int n1, int n2, int n3);
 	bool readAscii(std::string fileName);
-	void readRLE(std::string fileName);//! For Avizo format
 
 	std::unique_ptr<voxelImageTBase> copy() const { return std::make_unique<voxelImageT<T>>(*this); }
 
@@ -222,8 +226,6 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
 	void threshold101(T theresholdMin,T theresholdMax);
 
 	void writeAConnectedPoreVoxel(std::string fileName) const;
-	template<typename T2> void resetFrom(const voxelImageT<T2>&Values); // See also: readConvertFromHeader resetFromImageT
-	void setFrom(const voxelImageT<T>&Values, int n1, int n2, int n3);
 	void growBox(int nlyr);
 	void shrinkBox(int nlyr) {  int3 bgn(nlyr,nlyr,nlyr);  cropD(bgn,this->size3()-bgn);  }
 
@@ -296,7 +298,7 @@ voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
 	}
 	else
 	#endif
-		return  voxelImageT<T>(hdrNam);
+		return  voxelImageT<T>(hdrNam, readOpt::procOnly);
 }
 
 #ifdef _STOR_PUB
@@ -307,7 +309,7 @@ voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
 			ensure(_img##Ptr, "wrong image type", -1);  \
 			const voxelImageT<_T>& _img = *_img##Ptr;
 #else
-	#define _dbgetOrReadImg(_T, _img,_hdrNam) voxelImageT<_T> _img(_hdrNam)
+	#define _dbgetOrReadImg(_T, _img,_hdrNam) voxelImageT<_T> _img(_hdrNam, readOpt::procOnly)
 #endif
 
 typedef voxelImageT<unsigned char> voxelImage;   //! default image type

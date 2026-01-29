@@ -114,5 +114,4 @@ public:
 
 };
 
-voxelImage readImageU8(const InputFile& inp);
-voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, bool verbose);
+voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR, bool verbose);

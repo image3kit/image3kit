@@ -301,13 +301,12 @@ float  DistMap::calc_distmapf(dbl3 mb, int3& dj) {
 }
 
 voxelImage readImageU8(const InputFile& inp) {
-	voxelImage VImage;
 
 	string fnam(inp.fileName());
 	if(fnam.empty()) { inp.giv("ElementDataFile", fnam) || inp.giv("read", fnam); }
 	cout<<" Image file: "<<fnam<<endl;
 
-	readConvertFromHeader(VImage, fnam);
+	voxelImage VImage(fnam,readOpt::procAndConvert);
 
 	if(string vxlkys=inp.kwrd("VxlPro"); vxlkys.size())
 		vxlProcess(vxlkys, VImage,"MSE:VxlPro");
@@ -315,7 +314,7 @@ voxelImage readImageU8(const InputFile& inp) {
 	return VImage;
 }
 
-voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, bool verbose)  {
+voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR, bool verbose)  {
 
 	VxlStrips cfg(inp, verbose);
 
@@ -340,6 +339,7 @@ voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, bool v
 		int3 neilian{-nx,-ny,-nz1};
 		for (int ix = 0; ix<nx; ++ix)  if (VImage(ix,iy,0)==0) {
 			float rr = srf.calc_distmap(ix, iy, iz, neilian);
+			rr = std::pow(scaleR * rr, powerR);
 			maxrrr = max(rr,maxrrr);
 			rads(ix,iy,iz) = rr;
 		}
@@ -349,11 +349,14 @@ voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, bool v
 
 	voxelImage vxls(int3{nx,ny,int(maxrrr+0.5)+2},dbl3{cfg.vxlSize},dbl3{0.},255);
 
+	int offCenter = maxrrr*offsetR + 1.501;
 	OMPFor()
 	for (int iy = 0; iy<ny; ++iy)
 		for (int ix = 0; ix<nx; ++ix) {
-			int nr = rads(ix,iy,iz)+0.51;
-			for (int ir = 0; ir<nr; ++ir)  vxls(ix,iy,ir+1)=0;
+			double rr = rads(ix,iy,iz);
+			int nr = rr+0.9;
+			int offset = offCenter - nr*offsetR;
+			for (int ir=0; ir<nr; ++ir)  vxls(ix,iy,ir+offset)=0;
 		}
 
 	// vxls.write(fnam+"3D"+cfg.imgfrmt);

@@ -199,7 +199,7 @@ int slice2GrayPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int
 			size_t ind=0;
 			switch (axis) { // move out of the loop
 				case 'z': ind=vImage.index(x,y,iSlice);  break;
-				case 'x': ind=vImage.index(iSlice,x,y);  break;
+				case 'x': ind=vImage.index(iSlice,y,x);  break;
 				case 'y': ind=vImage.index(x,iSlice,y);  break;
 			}
 			row[x] = (float(std::min(std::max(minvv,vImage(ind)),maxvv))-bgnv)*ZdelV;
@@ -223,8 +223,8 @@ int sliceFromPng(voxelImageT<T>& vImage, std::string normalAxis, std::string fna
 	int code = 0;
 
 	int width, height, channels;
-	// force 1 channel (grayscale)
-	unsigned char *data = stbi_load(fnam.c_str(), &width, &height, &channels, 1);
+	// force 4 channel (rgba)
+	unsigned char *data = stbi_load(fnam.c_str(), &width, &height, &channels, 4);
 	ensure(data, "Could not load file " + fnam, -1);
 
 	if (vImage.nz()==0) {
@@ -260,7 +260,11 @@ int sliceFromPng(voxelImageT<T>& vImage, std::string normalAxis, std::string fna
 
 			size_t ix = std::min(int(x * wFact+0.5), width-1);
 			size_t iy = std::min(int(y * hFact+0.5), height-1);
-			vImage(ind) = (T)(data[iy*width+ix]*invZ + bgnv);
+			unsigned char* rgba = data + 4*(iy*width+ix);
+			int r=rgba[0], g=rgba[1], b=rgba[2], a=rgba[3];
+			int vv = std::max(((r*77) + (g*150) +  (29*b))*a + (255-a)*256*256, 0) >> 16;
+			// std::cout<<vv<<" "<<r<<" "<<g<<" "<<b<<" "<<a<<std::endl;
+			vImage(ind) = (T)(vv*invZ + bgnv);
 		}
 	}
 

@@ -776,15 +776,22 @@ int resetFromImageT(voxelImageT<T>& vImg, const voxelImageTBase* imgPtr) { //! c
 }
 
 template<typename T>
-void readConvertFromHeader( voxelImageT<T>& vImg, std::string hdrNam, int procesKeys=1)  { //! read image and if needed convert its type
+voxelImageT<T>::voxelImageT(const std::string& hdrNam, readOpt procConvert)
+: X0_(0.,0.,0.),dx_(1,1,1) 
+{ //! read image and if needed convert its type // readConvertFromHeader
 	#ifdef _VoxBasic8
 	static_assert(sizeof(T)<=1);
 	#endif
-	std::unique_ptr<voxelImageTBase> vImgUptr = readImage(hdrNam,procesKeys);
+
+	std::unique_ptr<voxelImageTBase> vImgUptr = readImage(hdrNam, procConvert != readOpt::justRead);
 	voxelImageTBase* imgPtr = vImgUptr.get();
-	if  (auto img = dynamic_cast<voxelImageT<T>*>(imgPtr)) { vImg = std::move(*img); } //TODO ensure use swap
+	if  (auto img = dynamic_cast<voxelImageT<T>*>(imgPtr)) {
+		*this = std::move(*img);
+	}
 	else  {
-		int erc = resetFromImageT<T,SupportedVoxTyps>(vImg, imgPtr);  ensure(  erc==0, "can not convert image", -1); }
+		int erc = resetFromImageT<T,SupportedVoxTyps>(*this, imgPtr);
+		ensure(  erc==0, "can not convert image", -1); 
+	}
 }
 
 template<typename T>
@@ -1608,7 +1615,7 @@ void circleOut(voxelImageT<T>& vImage, int X0,int Y0,int R, char dir='z', T outV
 template<typename T>
 void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string fnam, unsigned char maskvv, T minIelm, T maxIelm) {
 	//  TODO to be tested
-	voxelImageT<unsigned char> mask(maskname);
+	voxelImageT<unsigned char> mask(maskname, readOpt::procAndConvert);
 	T maxvv = std::min(maxIelm, accumulate(vImage,(std::max<T>)));//(const T& (*)(const T&, const T&))(std::max<T>)
 	std::cout<<"  maxvv:"<<maxvv<<std::endl;
 	std::vector<int> nMasked(maxvv+3,0);

@@ -30,9 +30,6 @@ using namespace std; //cin cout endl string stringstream  istream istringstream 
 
 int maxNz = 500, _maxNz = 500|12; // FIXME: #LICENSEPROBLEM add license check to skelor etc and make default license invalid
 
-string plotAll_normalAxis="xyz";
-int    plotAll_colrGrey=15;
-
 
 namespace MCTProcessing{
 	template<typename T>  VxlFuncs<T> namedProcesses();
@@ -289,6 +286,14 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys)  {
 	cout<<"."<<endl;
 }
 
+template<class T>
+std::unique_ptr<voxelImageTBase> readToUnique(const string& hdrNam, int procesKeys) {
+	// NB! this is also called from voxelImage read constructor, please avoid syclic dependency
+	voxelImageT<T> vImg;
+	vImg.readFromHeader(hdrNam, procesKeys);
+	return make_unique<voxelImageT<T>>(std::move(vImg));
+}
+
 
 std::unique_ptr<voxelImageTBase> readImage(string hdrNam,	int procesKeys)  {
 	//! read or create image
@@ -306,13 +311,13 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,	int procesKeys)  {
 		cout<<"reading '"<<vtype<<"'s from .am file"<<endl;
 
 		#ifndef _VoxBasic8
-		if (vtype=="int")       return make_unique<voxelImageT<int>>(hdrNam,0);
+		if (vtype=="int")       return readToUnique<int>(hdrNam,0);
 #ifdef _ExtraVxlTypes
-		if (vtype=="short")     return make_unique<voxelImageT<short>>(hdrNam,0);
+		if (vtype=="short")     return readToUnique<short>(hdrNam,0);
 #endif
-		if (vtype=="ushort")    return make_unique<voxelImageT<unsigned short>>(hdrNam,0);
+		if (vtype=="ushort")    return readToUnique<unsigned short>(hdrNam,0);
 		#endif
-		if (vtype=="byte")      return make_unique<voxelImageT<unsigned char>>(hdrNam,0);
+		if (vtype=="byte")      return readToUnique<unsigned char>(hdrNam,0);
 
 		alert("data type "+vtype+" not supported, when reading "+hdrNam, -1);
 	}
@@ -339,20 +344,20 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,	int procesKeys)  {
 	}
 	fil.close();
 
-	if (typ=="MET_UCHAR")        return make_unique<voxelImageT<unsigned char>>(hdrNam, procesKeys);
+	if (typ=="MET_UCHAR")        return readToUnique<unsigned char >(hdrNam, procesKeys);
 	#ifndef _VoxBasic8
-	if (typ=="MET_USHORT")       return make_unique<voxelImageT<unsigned short>>(hdrNam, procesKeys);
-	if (typ=="MET_INT")          return make_unique<voxelImageT<int>>           (hdrNam, procesKeys);
-	if (typ=="MET_FLOAT")        return make_unique<voxelImageT<float>>         (hdrNam, procesKeys);
+	if (typ=="MET_USHORT")       return readToUnique<unsigned short>(hdrNam, procesKeys);
+	if (typ=="MET_INT")          return readToUnique<int>           (hdrNam, procesKeys);
+	if (typ=="MET_FLOAT")        return readToUnique<float>         (hdrNam, procesKeys);
 	#endif
 #ifdef _ExtraVxlTypes
-	if (typ=="MET_CHAR")         return make_unique<voxelImageT<char>>          (hdrNam, procesKeys);
-	if (typ=="MET_SHORT")        return make_unique<voxelImageT<short>>         (hdrNam, procesKeys);
-	if (typ=="MET_UINT")         return make_unique<voxelImageT<unsigned int>>  (hdrNam, procesKeys);
-	if (typ=="MET_DOUBLE")       return make_unique<voxelImageT<double>>        (hdrNam, procesKeys);
-	if (typ=="MET_FLOAT_ARRAY")  return make_unique<voxelImageT<float3>>        (hdrNam, procesKeys);
-	if (typ=="MET_DOUBLE_ARRAY") return make_unique<voxelImageT<dbl3>>          (hdrNam, procesKeys);
+	if (typ=="MET_CHAR")         return readToUnique<char>          (hdrNam, procesKeys);
+	if (typ=="MET_SHORT")        return readToUnique<short>         (hdrNam, procesKeys);
+	if (typ=="MET_UINT")         return readToUnique<unsigned int>  (hdrNam, procesKeys);
+	if (typ=="MET_DOUBLE")       return readToUnique<double>        (hdrNam, procesKeys);
+	if (typ=="MET_FLOAT_ARRAY")  return readToUnique<float3>        (hdrNam, procesKeys);
+	if (typ=="MET_DOUBLE_ARRAY") return readToUnique<dbl3>          (hdrNam, procesKeys);
 #endif //_ExtraVxlTypes
-	return                              make_unique<voxelImage>(hdrNam, procesKeys);
+	return                              readToUnique<unsigned char> (hdrNam, procesKeys);
 
 }

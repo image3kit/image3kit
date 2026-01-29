@@ -745,18 +745,28 @@ voxelImageT<T> meanWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB, 
 //}
 */
 
-inline array<double,5> otsu_th(const piece<double>& hist, int  minv, int  maxv) {
+template <typename T>
+dbls convertToDbls(piece<T> hist) {
+	int nHist = len(hist);
+	dbls histd(nHist);  
+	for (int i = 0; i<nHist; i++) histd[i]=hist[i];
+	return histd;
+}
+
+
+template<typename OtT>
+inline pair<OtT, array<double,5>> otsu_threshold(const piece<double>& hist, int  ibgn, int  iend, OtT shift, OtT scale) {
 	/* binarization by Otsu's method based on maximization of inter-class variance */
 	double sumw(0), sumiw(0);
-	for (int i = minv; i <= maxv; ++i) { sumw+=hist[i];  sumiw+=hist[i]*i; }
+	for (int i = ibgn; i <= iend; ++i) { sumw+=hist[i];  sumiw+=hist[i]*i; }
 
 	double sumB = 0;
 	double wB = 0;
 	double max_sigma = 0;
-	int level=1;
+	int ilevel=1;
 	double wL=1;
 	double sunL=1;
-	for (int ii = minv; ii <= maxv; ii++) {
+	for (int ii = ibgn; ii <= iend; ii++) {
 		wB += hist[ii];
 		if (wB == 0 || wB == sumw)        continue;
 		sumB +=  ii * hist[ii];
@@ -765,13 +775,16 @@ inline array<double,5> otsu_th(const piece<double>& hist, int  minv, int  maxv) 
 		double dif = sumB*sumw  -  sumiw*wB   ; ///. <= sumB /wB  -  (sumiw-sumB) /(sumw-wB);
 		double  sigma =  dif * dif / (wB * (sumw-wB) ); ///. division is to componsate for above line
 		if ( sigma > max_sigma) {
-			level = ii;
+			ilevel = ii;
 			max_sigma = sigma;
 			sunL=sumB;
 			wL=wB;
 		}
 	}
 
+	OtT level = shift + ilevel*scale;
+	OtT minv = shift + minv*scale;
+	OtT maxv = shift + iend*scale;
 
 	double  avgs[2] = {sunL/wL, (sumB-sunL)/(wB-wL)};
 	cout<<"   Otsu: ** "<< level<<" **  N: "<< sumw<<",  cdf_"<<level<<": "<< std::setprecision(3)<<wL<<"  cdf_"<<maxv<<": "<< std::setprecision(3)<<wB;
@@ -780,7 +793,7 @@ inline array<double,5> otsu_th(const piece<double>& hist, int  minv, int  maxv) 
 
 	array<double,5> levels{{0.}};
 	levels[0]=minv; 	levels[1]=avgs[0]; 	levels[2]=level; 	levels[3]=avgs[1]; 	levels[4]=maxv;
-	return levels;
+	return {level, levels};
 
 	/*
 	const int MaxVV = 256 ; // No. of gray levels
@@ -831,17 +844,19 @@ array<double,5> otsu_th(const voxelImageT<T>& vImg, int  minvi, int  maxvi, doub
 	int3 nnn2=(1.000000000001-skipFrac)*vImg.size3();
 	T  minv=minvi, maxv=maxvi;
 
-	vars<long long> hist(maxvi,0l);
+	const int nHist = std::min(minvi-maxvi, 65536/10);
+	int delta = std::max((maxvi-minvi)/ nHist, 1);
+
+	vars<long long> hist(nHist+1, 0l);
 
 	for (int k=nnn1[2]; k<nnn2[2]; ++k)
-	for (int j=nnn1[1]; j<nnn2[1]; ++j)
-	for (int i=nnn1[0]; i<nnn2[0]; ++i)
-	{	T vv = vImg(i,j,k);
-		if (minv<=vv && vv<maxv)  ++hist[vv];
-	}
-	dbls histd(maxT(T),0.);
-	for (int ii = 0; ii < maxT(T); ii++) histd[ii]=hist[ii];
-	return otsu_th(histd, minvi, maxvi);
+		for (int j=nnn1[1]; j<nnn2[1]; ++j)
+			for (int i=nnn1[0]; i<nnn2[0]; ++i) {
+				T vv = vImg(i,j,k);
+				if (minv<=vv && vv<maxv)  ++hist[(vv-minv)/delta];
+			}
+	dbls histd = convertToDbls(hist);
+	return otsu_threshold(histd, 0, nHist, minvi, delta).second;
 }
 
 template<typename T>
@@ -1217,13 +1232,13 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
 
 
 template<typename T>
-void  multiSegment2(voxelImageT<T>& vImg, vars<int> trshlds, vars<int> minSizs, double resolutionSqr, double noisv, double localF, int krnl, double flatnes, double gradFactor, int nItrs, bool writeDumps)
+void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs, double resolutionSqr, double noisv, double localF, int krnl, double flatnes, double gradFactor, int nItrs, bool writeDumps)
 {
 
 
 	const int nSegs=minSizs.size();
-	const int capmin =trshlds[0];
-	const int capmax =trshlds[nSegs];
+	const Tint capmin =trshlds[0];
+	const Tint capmax =trshlds[nSegs];
 
 	(std::cout<<"\n  "<< __FUNCTION__<< " resolutionSqr:"<<resolutionSqr<<" noisv:"<<noisv<<" localF:"<<localF<<" krnl:"<<krnl<<" flatnes:"<<flatnes<<" gradFactor:"<<gradFactor<<"  ").flush();
 	(std::cout<<"  analysing range ["<<capmin<<" "<<capmax<<"], ").flush();
@@ -1236,7 +1251,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<int> trshlds, vars<int> minSizs, 
 		array<double,maxT(T)> histi{{0}};
 		forAllvv_seq(vxls)  { if (1<=vv && vv<maxT(T)) { histi[vv]+=1.;} }
 		double myu[imaxT(T)+1], cdf[imaxT(T)+1];   // mean value for separation, omega is CDF
-		int minv=trshlds[0], maxv=trshlds[nSegs];
+		Tint minv=trshlds[0], maxv=trshlds[nSegs];
 		cdf[minv] = histi[minv];
 		myu[minv] = minv*histi[minv];       // 0. times prob[0] equals zero
 		for (int i = max(minv,1); i <= maxv; ++i) {   cdf[i] = cdf[i-1] + histi[i];   myu[i] = myu[i-1] + i*histi[i];  }
@@ -1379,7 +1394,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<int> trshlds, vars<int> minSizs, 
 }
 
 
-template<typename T>  bool segment2(voxelImageT<T>& vImg, int nSegs, vars<int> th, vars<int> minSizs,
+template<typename T>  bool segment2(voxelImageT<T>& vImg, int nSegs, vars<Tint> th, vars<int> minSizs,
 double noisev, double localF, double flatnes, double resolution, double gradFactor, int krnl, int nItrs, int writedumps
 ) {
 	cout<<"{ \n  segmenting";
@@ -1387,7 +1402,7 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
 	ensure( localF<0.1, "localF should be < 0.1");			    ensure( nItrs>5, "nItrs should be > 5 ");
 	ensure( krnl,"wrong kernel  in segment2",-1);
 	resolution=max(resolution,1.);
-	if (th.empty()) th = vars<int>(nSegs + 1, -1);
+	if (th.empty()) th = vars<Tint>(nSegs + 1, -1);
 	if (minSizs.empty()) { minSizs = vars<int>(nSegs, 2); minSizs[0] = 1; }
 
 	(cout<<", nSegs: "<<nSegs).flush();
@@ -1395,8 +1410,8 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
 	cout<<"  Noise(x): "<<noisev<<"  "<<localF<<",  krnl: "<<krnl<<",  flatnes: "<<flatnes<<",  diffuseL: "<<resolution<<",  gradFactor: "<<gradFactor<<":"<<endl;
 	if (writedumps) cout<<"\n  **** writingdumps **** \n"<<endl;
 
-	constexpr int i254 = maxT(T)-1;
-	constexpr int i1=minT(T)+1;
+	constexpr Tint i254 = maxT(T)-1;
+	constexpr Tint i1=minT(T)+1;
 	if(th[0]<i1)        { th[0]=i1;       forAllvp_(vImg)  if(*vp<i1)  *vp=i1;  }
 	ensure( th[nSegs]<=maxT(T), "incompatible threshold value and image type", -1);
 	if(th[nSegs]>i254)  { th[nSegs]=i254; forAllvp_(vImg)  if (*vp>i254) *vp=i254;  }
@@ -1406,7 +1421,10 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
 	{
 		cout<<" trying to figure out threshold (outdated) "<<endl;
 
-		dbls hist(maxT(T),0.);
+		constexpr int nHist = std::min(Tint(maxT(T)), Tint(2<<12)-1);
+		constexpr Tint delta = maxT(T) / nHist;
+		static_assert(delta>=1);
+		dbls hist(nHist+1, 0.);
 		{
 			cout<<"  calculating histogram: ";
 			voxelImageT<T> voxls = vImg;
@@ -1421,22 +1439,22 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
 			{	int vv = vImg(iii);
 				if (0<vv && vv<maxT(T))  hist[vv]+=1./(max(grad(iii)-otst[1],0.)+0.1*otst[2]);
 			}
-			forAllvv_seq(voxls)  { if (1<=vv && vv<maxT(T)) { hist[vv]+=1.; } }
+			forAllvv_seq(voxls)  { if (1<=vv && vv<maxT(T)) { hist[vv/delta]+=1.; } }
 		}
 
 		if(nSegs>2)
 		{	th[0]=1; th[nSegs]=maxT(T)-1;
-			for_i_(1,nSegs)  if(th[i]<=0)  th[i]=th[i-1]+(i254-th[i-1])/(nSegs-i);
+			for_i_(1,nSegs)  if(th[i]<=0)  th[i] = th[i-1]+(i254-th[i-1])/(nSegs-i);
 			cout<<"  Ges ranges: " <<th<<endl;
 			for_i_(0,10)
 			{
-				for_i_(1,nSegs)  th[i] = otsu_th(hist,th[i-1],th[i+1])[2]+0.5;
+				for_i_(1,nSegs)  th[i] = otsu_threshold(hist, th[i-1]/delta, th[i+1]/delta, 0, delta).first;
 				cout<<"  New ranges: "  <<th<<endl;
 			}
 		}
 		else
 		{	th[0]=1; th[nSegs]=i254;
-			th[1] = otsu_th(hist,th[0],th[2])[2]+0.5;
+			th[1] = otsu_threshold(hist, th[0]/delta, th[2]/delta, 0, delta).first;
 			cout<<"  New ranges: " <<th<<endl;
 		}
 	}

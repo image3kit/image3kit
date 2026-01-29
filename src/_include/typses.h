@@ -225,6 +225,7 @@ struct piece  {
 
 
 template<class T>  piece<T> rang(T* t, sizt n) { return piece<T>(t, n); }
+template<class T, size_t N>  piece<T> allof(std::array<T, N>& vs) { return piece<T>(&*vs.begin(), &*vs.end()); }
 template<class T, template<class ...> class C>  piece<T> allof(C<T>& vs) { return piece<T>(&*vs.begin(), &*vs.end()); }
 template<class T, template<class ...> class C>  piece<T const> allof(const C<T>& vs) { return piece<T const>(&*vs.cbegin(), &*vs.cend()); }
 
