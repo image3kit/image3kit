@@ -12,6 +12,7 @@ namespace py = pybind11;
 inline dbl3 tpl2d3(py::tuple v) { return dbl3(v[0].cast<double>(), v[1].cast<double>(), v[2].cast<double>()); }
 
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
+    using namespace VxlPy;
 
     // **************** sirun submodule ***************
 

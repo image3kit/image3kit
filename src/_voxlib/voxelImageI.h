@@ -1186,9 +1186,7 @@ voxelImageT<T> medianx(const voxelImageT<T>& vImage)  {
 	(std::cout<<"  median ").flush();
 	voxelImageT<T> vxls=vImage;
 	forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
-		std::array<T,3> vvs={{ *vp,
-								vImage.v_i(-1,vp), vImage.v_i( 1,vp)
-								}};
+		std::array<T,3> vvs={{ *vp, vImage.v_i(-1,vp), vImage.v_i( 1,vp) }};
 
 		std::nth_element(vvs.begin(),vvs.begin()+1,vvs.end());
 		//nChanges+=vxls(i,j,k) != vvs[3];
@@ -1581,7 +1579,7 @@ voxelImageT<T> median(const voxelImageT<T>& vImage)  {
 								vImage.v_i(-1,vp), vImage.v_i( 1,vp),
 								vImage.v_j(-1,vp), vImage.v_j( 1,vp),
 								vImage.v_k(-1,vp), vImage.v_k( 1,vp)
-								}};
+							}};
 
 		std::nth_element(vvs.begin(),vvs.begin()+3,vvs.end());
 		//nChanges+=vxls(i,j,k) != vvs[3];

@@ -12,9 +12,9 @@
 #include "voxelNoise.h"
 
  
-
+namespace VxlPy {
 namespace py = pybind11;
-
+using py::arg;
 using namespace VoxLib;
 
 
@@ -27,217 +27,218 @@ inline InputFile pyCastInput(py::dict dic) {
 }
 
 
-template<typename VxTyp>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)>=3) {}
+template<typename VxT>
+void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)>=3) {}
 
-template<typename VxTyp> 
-void addDodgyFuncsInt(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)<=2) {
-    m.def("segment2", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<intOr<VxTyp>> th, std::vector<int> minSizs,
+template<typename VxT> 
+void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) {
+    m.def("segment2", [](voxelImageT<VxT> &m, int nSegs, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
                         double noisev, double localF, double flatnes, double resolution, double gradFactor,
                         int krnl, int nItrs, int writedumps) {
             return segment2(m, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
         },
-        py::arg("nSegs")=2, py::arg("th")=std::vector<int>(), py::arg("minSizs")=std::vector<int>(),
-        py::arg("noisev")=2., py::arg("localF")=800., py::arg("flatnes")=0.1, py::arg("resolution")=2.,
-        py::arg("gradFactor")=0., py::arg("krnl")=2, py::arg("nItrs")=13, py::arg("writedumps")=0
+        arg("nSegs")=2, arg("th")=std::vector<int>(), arg("minSizs")=std::vector<int>(),
+        arg("noisev")=2., arg("localF")=800., arg("flatnes")=0.1, arg("resolution")=2.,
+        arg("gradFactor")=0., arg("krnl")=2, arg("nItrs")=13, arg("writedumps")=0
     )
-    .def("segment", [](voxelImageT<VxTyp> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
+    .def("segment", [](voxelImageT<VxT> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
          return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
-        }, py::arg("n_segments")=2, py::arg("thresholds"), py::arg("min_sizes"), py::arg("smooth_image")="", 
-        py::arg("noise_val")=16.0, py::arg("resolution_sq")=2.0, py::arg("write_dumps")=0
+        }, arg("n_segments")=2, arg("thresholds"), arg("min_sizes"), arg("smooth_image")="", 
+        arg("noise_val")=16.0, arg("resolution_sq")=2.0, arg("write_dumps")=0
     )
     ;
 }
 
-template<typename VxTyp>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)>=2) {
+template<typename VxT>
+void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)>=2) {
 }
-template<typename VxTyp> 
-void addDodgyFuncsU8(py::class_<voxelImageT<VxTyp>> &m) requires(sizeof(VxTyp)<=1) {
+template<typename VxT> 
+void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=1) {
     m
-    .def("distMapExtrude", [](voxelImageT<VxTyp> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
+    .def("distMapExtrude", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
         m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR, true); },
-        py::arg("distMapDict")=py::dict(), py::arg("offset")=0.5, py::arg("scale")=1.0, py::arg("power")=1.0,
+        arg("distMapDict")=py::dict(), arg("offset")=0.5, arg("scale")=1.0, arg("power")=1.0,
         "Extrude proportional to distance map"
     )
     ;
 }
 
-template<typename VxTyp> 
+template<typename VxT> 
 void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
-auto clas = py::class_<voxelImageT<VxTyp>>(mod, VxTypS, py::buffer_protocol())
-.def_buffer([](voxelImageT<VxTyp> &m) -> py::buffer_info {
+using SelfT = voxelImageT<VxT>;
+
+auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
+.def_buffer([](SelfT &m) -> py::buffer_info {
         return py::buffer_info(
-            m.data(),                             // Pointer to buffer
-            sizeof(VxTyp),                          // Size of one scalar
-            py::format_descriptor<VxTyp>::format(), // Python struct-style format descriptor
-            3,                                    // Number of dimensions
-            { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
-            { long(sizeof(VxTyp)), long(sizeof(VxTyp) *m.nx()), long(sizeof(VxTyp) * m.nxy()) } // Strides (in bytes)
+            m.data(), sizeof(VxT),  py::format_descriptor<VxT>::format(),
+            3, { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
+            { long(sizeof(VxT)), long(sizeof(VxT)*m.nx()), long(sizeof(VxT) * m.nxy()) } // Strides (in bytes)
         );
     })
-    .def(py::init([](py::tuple tpl, VxTyp value) { return voxelImageT<VxTyp>(tpl[0].cast<int>(), tpl[1].cast<int>(), tpl[2].cast<int>(), value); }),
-         py::arg("shape")=py::make_tuple(0,0,0), py::arg("value") = 0, "Initialize from a size tuple (nz, ny, nx) with an optional fill value.")
-    .def("__repr__", [VxTypS](const voxelImageT<VxTyp> &m) {
-        return "<" + std::string(VxTypS) + " shape=(" + 
-               _s(m.size3()) + ")>";
+    .def(py::init([](py::tuple tpl, VxT value) { return SelfT(tpl[0].cast<int>(), tpl[1].cast<int>(), tpl[2].cast<int>(), value); }),
+         arg("shape")=py::make_tuple(0,0,0), arg("value") = 0, "Initialize a new image of size tuple (nx, ny, nz) with the fill value.")
+    .def("__repr__", [VxTypS](const SelfT &m) {
+        return "<" + std::string(VxTypS) + " shape=("+_s(m.size3())+")>";
     })
-//.def(py::init<int, int, int, VxTyp>())
-    .def(py::init(
-        [](py::object filepath, bool processKeys)  { return voxelImageT<VxTyp>(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }), 
-        py::arg("filepath"), py::arg("processKeys")=true, "Read image dimensions/metadata from a (header) file.") // readConvertFromHeader
-.def("data", [](voxelImageT<VxTyp> &m) {
-    return py::array_t<VxTyp>(py::buffer_info{
-        m.data(),
-        sizeof(VxTyp),
-        py::format_descriptor<VxTyp>::format(),
-        3,
-        { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
-        { long(sizeof(VxTyp)), long(sizeof(VxTyp) *m.nx()), long(sizeof(VxTyp) * m.nxy()) } // Strides (in bytes)
-    }); }, "Get the raw data buffer as a numpy array.")
-.def("nx", &voxelImageT<VxTyp>::nx)
-.def("ny", &voxelImageT<VxTyp>::ny)
-.def("nz", &voxelImageT<VxTyp>::nz)
-.def("printInfo", &voxelImageT<VxTyp>::printInfo)
-.def("shape", [&](voxelImageT<VxTyp> &m) { return py::make_tuple(m.nx(), m.ny(), m.nz()); })
-.def("write", &voxelImageT<VxTyp>::write, py::arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
-.def("writeNoHdr", &voxelImageT<VxTyp>::writeNoHdr, py::arg("filename"), "Write the raw image data without a header.")
-// .def("writeHeader", &voxelImageT<VxTyp>::writeHeader)
-.def("readAscii", &voxelImageT<VxTyp>::readAscii, py::arg("filename"), "Read image data from an ASCII file.")
-// .def("readRLE", &voxelImageT<VxTyp>::readRLE)
-.def("cropD", &voxelImageT<VxTyp>::cropD, py::arg("begin"), py::arg("end"), py::arg("emptyLayers")=0, py::arg("emptyLayersValue")=1, py::arg("verbose")=false, "Crop the image by a specified depth.")
-.def("growBox", &voxelImageT<VxTyp>::growBox, py::arg("layers"), "Expand the image boundaries.")
-.def("shrinkBox", &voxelImageT<VxTyp>::shrinkBox, py::arg("layers"), "Shrink the image boundaries.")
-.def("shrinkBox", &voxelImageT<VxTyp>::shrinkBox, py::arg("layers"), "Shrink the image boundaries.")
-.def("fillHoles", &voxelImageT<VxTyp>::fillHoles, py::arg("maxHoleRadius"), "Fill closed holes in the image.")
-.def("threshold101", &voxelImageT<VxTyp>::threshold101, py::arg("min"), py::arg("max"), "Apply a threshold to convert to 0/1.")
-.def("writeAConnectedPoreVoxel", &voxelImageT<VxTyp>::writeAConnectedPoreVoxel, py::arg("filename"), "Write a specific connected pore voxel to file.")
-.def("AND", &voxelImageT<VxTyp>::AND, py::arg("other"), "Pixel-wise AND operation.")
-.def("NOT", &voxelImageT<VxTyp>::NOT, "Pixel-wise NOT operation.")
-.def("OR", &voxelImageT<VxTyp>::OR, py::arg("other"), "Pixel-wise OR operation.")
-.def("XOR", &voxelImageT<VxTyp>::XOR, py::arg("other"), "Pixel-wise XOR operation.")
-.def("resampleMode", [&](voxelImageT<VxTyp> &m, double nReSampleNotSafe) { return resampleMode(m,nReSampleNotSafe); }, py::arg("rate"), "Resample the image using mode interpolation.")
-.def("resampleMax", [&](voxelImageT<VxTyp> &m, double nReSampleNotSafe) { return resampleMax(m,nReSampleNotSafe); }, py::arg("rate"), "Resample the image using max interpolation.")
-.def("resampleMean", [&](voxelImageT<VxTyp> &m, double nReSampleNotSafe) { return resampleMean(m,nReSampleNotSafe); }, py::arg("rate"), "Resample the image using mean interpolation.")
-.def("resliceZ", [&](voxelImageT<VxTyp> &m, double nReSampleNotSafe) { return resliceZ(m,nReSampleNotSafe); }, py::arg("rate"), "Reslice along Z axis.")
-.def("Paint"         , [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, setIn); }, py::arg("shape"), "Paint a shape into the image.")
-.def("PaintAdd"      , [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, addTo); }, py::arg("shape"), "Add a shape's values to the image.")
-.def("PaintBefore"   , [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, setBefor); }, py::arg("shape"), "Paint before...?")
-.def("PaintAfter"    , [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, setAfter); }, py::arg("shape"), "Paint after...?")
-.def("PaintAddBefore", [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, addBefor); }, py::arg("shape"), "Add paint before...?")
-.def("PaintAddAfter" , [&](voxelImageT<VxTyp> &m, const shape& sh) { _SHAPERATEPy(m, sh, addAfter); }, py::arg("shape"), "Add paint after...?")
-.def("writeContour"  , [&](voxelImageT<VxTyp> &m, const string& outSurf) { // TODO
-    InputFile inp;
-    if (outSurf.size())  inp.set("outputSurface", outSurf);
-    // vxlToSurfWrite(m, inp);
-    }, py::arg("outSurf"), "Write contour extraction to a surface file.")
-.def("sliceToPng"    , [&](voxelImageT<VxTyp> &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv, const string& color) {
-    ::sliceToPng(m, normalAxis, fnam, iSlice, bgnv, endv, color);
-    }, py::arg("normalAxis"), py::arg("filename"), py::arg("sliceIndex"), py::arg("val_min"), py::arg("val_max"), py::arg("color_map")="gray", "Save a 2D slice as a PNG image.")
-.def("sliceFromPng"    , [&](voxelImageT<VxTyp> &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv) {
-    ::sliceFromPng(m, normalAxis, fnam, iSlice, bgnv, endv);
-    }, py::arg("normalAxis"), py::arg("filename"), py::arg("sliceIndex"), py::arg("val_min"), py::arg("val_max"), "Read a slice from a Png image")
-// Member functions and wrappers
-.def("rescaleValues", [](voxelImageT<VxTyp> &m, VxTyp min, VxTyp max) { rescaleValues(m, min, max); }, py::arg("min"), py::arg("max"), "Rescale image values to [min, max].")
-.def("setOffset", [](voxelImageT<VxTyp> &m, dbl3 off) { m.X0Ch() = off; }, py::arg("offset"), "Set the spatial offset (origin).")
-.def("redirect", &voxelImageT<VxTyp>::rotate, "Rotate/Redirect image.")
-.def("direction", &voxelImageT<VxTyp>::rotate, "Get direction?")
-.def("grow0", &voxelImageT<VxTyp>::growPore, "Grow pore phase (0).")
-.def("shrink0", &voxelImageT<VxTyp>::shrinkPore, "Shrink pore phase (0).")
-.def("resample", [](voxelImageT<VxTyp> &m, double f) { m = resampleMean(m, f); }, py::arg("factor"), "Resample image by factor f.")
-.def("rangeTo", [](voxelImageT<VxTyp> &m, VxTyp min, VxTyp max, VxTyp v) { replaceRange(m, min, max, v); }, py::arg("min"), py::arg("max"), py::arg("val"), "Set values in range [min, max] to val.")
-.def("replaceRange", [](voxelImageT<VxTyp> &m, VxTyp min, VxTyp max, VxTyp v) { replaceRange(m, min, max, v); }, py::arg("min"), py::arg("max"), py::arg("val"), "Replace values in range [min, max] with val.")
-.def("write8bit", [](voxelImageT<VxTyp> &m, std::string outName, double minv, double maxv) { _write8bit(m, outName, minv, maxv); }, py::arg("filename"), py::arg("min"), py::arg("max"), "Write as 8-bit image scaled between min and max.")
-.def("read", [](voxelImageT<VxTyp> &m, std::string s) { m.reset(int3(0), 0); m.readFromHeader(s); }, py::arg("filename"), "Read image from file.")
-// //.def("readAtZ", &voxelImageT<VxTyp>::readAtZ)
-.def("modeNSames", [](voxelImageT<VxTyp> &m, const short nSameNei) { return modeNSames(m, nSameNei); }, py::arg("nSameNeighbors"), "Apply mode filter based on neighbor count.")
-.def("medianFilter", [](voxelImageT<VxTyp> &m) { m = median(m); }, "Apply median filter.")
-.def("medianX", [](voxelImageT<VxTyp> &m) { m = medianx(m); }, "Apply median X filter.")
-.def("FaceMedian06", &voxelImageT<VxTyp>::FaceMedian06)
-.def("PointMedian032", &voxelImageT<VxTyp>::PointMedian032)
-.def("faceMedNgrowToFrom", [](voxelImageT<VxTyp> &m, VxTyp lblTo, VxTyp lblFrm, int ndif) { FaceMedGrowToFrom(m, lblTo, lblFrm, ndif); }, py::arg("labelTo"), py::arg("labelFrom"), py::arg("nDiff"), "Face median grow to/from labels.")
-.def("delense032", [](voxelImageT<VxTyp> &m, int x, int y, int r, char d, VxTyp v) { _delense032(m, x, y, r, d, v); }, py::arg("x"), py::arg("y"), py::arg("r"), py::arg("d"), py::arg("val"), "Delense operation.")
-.def("circleOut", [](voxelImageT<VxTyp> &m, int x, int y, int r, char d, VxTyp v) { circleOut(m, x, y, r, d, v); }, py::arg("x"), py::arg("y"), py::arg("r"), py::arg("d"), py::arg("val"), "Circle out operation.")
-.def("growLabel", &voxelImageT<VxTyp>::growLabel)
-.def("keepLargest0", [](voxelImageT<VxTyp> &m) { keepLargest0(m); })
-//.def("maskWriteFraction", &voxelImageT<VxTyp>::maskWriteFraction)
-.def("mapFrom", [](voxelImageT<VxTyp>& m, const voxelImageT<VxTyp>& vimg2, VxTyp vmin, VxTyp vmax, double scale, double shift) { mapToFrom(m, vimg2, vmin, vmax, scale, shift); }, py::arg("sourceImage"), py::arg("vmin"), py::arg("vmax"), py::arg("scale"), py::arg("shift"), "Map values from another image.") 
-.def("addSurfNoise", [](voxelImageT<VxTyp> &m, const int randMask1, const int randMask2, int trsh, int randseed) { addSurfNoise(m, randMask1, randMask2, trsh, randseed); }, py::arg("mask1"), py::arg("mask2"), py::arg("threshold"), py::arg("seed"), "Add surface noise.")
+    .def(py::init( // readConvertFromHeader
+        [](py::object filepath, bool processKeys)  { return SelfT(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }), 
+        arg("filepath"), arg("processKeys")=true, 
+        "Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw")
+    .def("data", [](SelfT &m) {
+        return py::array_t<VxT>(py::buffer_info{
+            m.data(), sizeof(VxT), py::format_descriptor<VxT>::format(), 3,
+            { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
+            { long(sizeof(VxT)), long(sizeof(VxT) *m.nx()), long(sizeof(VxT) * m.nxy()) } // Strides (in bytes)
+        }); }, "Get the raw data buffer as a numpy array.")
+    .def("nx", &SelfT::nx)
+    .def("ny", &SelfT::ny)
+    .def("nz", &SelfT::nz)
+    .def("printInfo", &SelfT::printInfo)
+    .def("shape", [&](SelfT &m) { return py::make_tuple(m.nx(), m.ny(), m.nz()); })
+    .def("write", &SelfT::write, arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
+    .def("writeNoHeader", &SelfT::writeNoHdr, arg("filename"), "Write the raw image data without a header.")
+    // .def("writeHeader", &SelfT::writeHeader)
+    .def("readAscii", &SelfT::readAscii, arg("filename"), "Read image data from an ASCII file.")
+    // .def("readRLE", &SelfT::readRLE)
+    .def("cropD", &SelfT::cropD, arg("begin"), arg("end"), arg("emptyLayers")=0, arg("emptyLayersValue")=1, arg("verbose")=false, 
+         "Crop the image (inplace) from begin index tupe ix,iy,iz (inclusive) to and end index tuple.")
+    .def("growBox", &SelfT::growBox, arg("num_layers"), 
+         "Expand the image boundaries, increasing its size by `num_layers` in all directions")
+    .def("shrinkBox", &SelfT::shrinkBox, arg("num_layers"), 
+         "Shrink the image boundaries, decreasing its size by the given num_layers in all directions")
+    .def("fillHoles", &SelfT::fillHoles, arg("maxHoleRadius"), "Fill closed holes in the image.")
+    .def("threshold101", &SelfT::threshold101, arg("min"), arg("max"),
+         "Apply a threshold to binarize the image, set voxel-values to convert to 0 in between the min and max thresholds and 1 outside of it")
+    .def("writeAConnectedPoreVoxel", &SelfT::writeAConnectedPoreVoxel, arg("filename"), "Write a specific connected pore voxel to file.")
+    .def("AND", &SelfT::AND, arg("other"), "Voxel-by-voxel AND operation.")
+    .def("NOT", &SelfT::NOT, "Voxel-by-voxel NOT operation.")
+    .def("OR", &SelfT::OR, arg("other"), "Voxel-by-voxel OR operation.")
+    .def("XOR", &SelfT::XOR, arg("other"), "Voxel-by-voxel XOR operation.")
+    .def("resampleMode", [&](SelfT &m, double nReSampleNotSafe) { return resampleMode(m,nReSampleNotSafe); }, arg("factor"), 
+        "Downsample the image, setting voxel values to mode of original encompassing voxel values.")
+    .def("resampleMax", [&](SelfT &m, double nReSampleNotSafe) { return resampleMax(m,nReSampleNotSafe); }, arg("factor"), 
+        "Downsample the image, setting voxel values to maximum of original encompassing voxel values.")
+    .def("resampleMean", [&](SelfT &m, double nReSampleNotSafe) { return resampleMean(m,nReSampleNotSafe); }, arg("factor"), "Resample the image using mean interpolation.")
+    .def("resliceZ", [&](SelfT &m, double nReSampleNotSafe) { return resliceZ(m,nReSampleNotSafe); }, arg("factor"), "Reslice along the Z axis.")
+    .def("Paint"         , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setIn);    }, arg("shape"), "Paint (set values of) a shape into the image.")
+    .def("PaintAdd"      , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addTo);    }, arg("shape"), "Add (+) a shape's value to the image.")
+    .def("PaintBefore"   , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setBefor); }, arg("shape"), "Paint before the shape (plane...)")
+    .def("PaintAfter"    , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setAfter); }, arg("shape"), "Paint after the shape (plane...)")
+    .def("PaintAddBefore", [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addBefor); }, arg("shape"), "Add (+) a shape's value before the shape (plane...)")
+    .def("PaintAddAfter" , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addAfter); }, arg("shape"), "Add (+) a shape's value after the shape (plane...)")
+    .def("writeContour"  , [&](SelfT &m, const string& outSurf) { // TODO
+        InputFile inp;
+        if (outSurf.size())  inp.set("outputSurface", outSurf);
+        // vxlToSurfWrite(m, inp);
+        }, arg("outSurf"), "Write contour extraction to a surface file.")
+    .def("sliceToPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv, const string& color) {
+        ::sliceToPng(m, normalAxis, fnam, iSlice, bgnv, endv, color);
+        }, arg("normalAxis"), arg("filename"), arg("sliceIndex"), arg("val_min"), arg("val_max"), arg("color_map")="gray",
+        "Save a 2D slice as a PNG image, color_map can be 'gray' or 'RGB'")
+    .def("sliceFromPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv) {
+        ::sliceFromPng(m, normalAxis, fnam, iSlice, bgnv, endv);
+        }, arg("normalAxis"), arg("filename"), arg("sliceIndex"), arg("val_min"), arg("val_max"), "Read a slice from a Png image")
+    // Member functions and wrappers
+    .def("rescaleValues", [](SelfT &m, VxT min, VxT max) { rescaleValues(m, min, max); }, arg("min"), arg("max"), "Rescale image values to [min, max].")
+    .def("setOffset", [](SelfT &m, dbl3 off) { m.X0Ch() = off; }, arg("offset"), "Set the spatial offset (origin).")
+    .def("redirect", &SelfT::rotate, "Swap X axis with the given axis (y or z).")
+    .def("direction", &SelfT::rotate, "Get direction?")
+    .def("grow0", &SelfT::growPore, "Grow pore phase (voxel values of 0).")
+    .def("shrink0", &SelfT::shrinkPore, "Shrink pore phase (voxel values of 0).")
+    .def("resample", [](SelfT &m, double f) { m = resampleMean(m, f); }, arg("factor"), 
+         "Resample image by factor f, using averaging (downsampling, f>1) or nearest when upsampling (f<1)")
+    .def("rangeTo", [](SelfT &m, VxT min, VxT max, VxT val) { replaceRange(m, min, max, val); }, arg("min"), arg("max"), arg("val"), 
+         "Set values in range [min, max] to val.")
+    .def("replaceRange", [](SelfT &m, VxT min, VxT max, VxT val) { replaceRange(m, min, max, val); }, arg("min"), arg("max"), arg("val"),
+         "Replace values in range [min, max] with val.")
+    .def("write8bit", [](SelfT &m, std::string outName, double minv, double maxv) { _write8bit(m, outName, minv, maxv); }, arg("filename"), arg("min"), arg("max"),
+         "Write as 8-bit image scaled between min and max.")
+    .def("read", [](SelfT &m, std::string s) { m.reset(int3(0), 0); m.readFromHeader(s); }, arg("filename"), "Read image from file.")
+    // //.def("readAtZ", &SelfT::readAtZ)
+    .def("modeNSames", [](SelfT &m, const short nSameNei) { return modeNSames(m, nSameNei); }, arg("nSameNeighbors"), 
+         "Apply mode filter based on nearest 6 neighbor voxels.")
+    .def("medianFilter", [](SelfT &m) { m = median(m); }, "Apply a 1+6-neighbour median filter.")
+    .def("medianX", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 in x-direction to reduce compressed file size")
+    .def("FaceMedian06", &SelfT::FaceMedian06, arg("nAdj0"), arg("nAdj1"), 
+         "Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels")
+    .def("PointMedian032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"), 
+         "Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels")
+    .def("faceMedNgrowToFrom", [](SelfT &m, VxT lblTo, VxT lblFrm, int ndif) { FaceMedGrowToFrom(m, lblTo, lblFrm, ndif); }, arg("labelTo"), arg("labelFrom"), arg("nDiff"), 
+         "Face median grow to/from labels.")
+    .def("delense032", [](SelfT &m, int x, int y, int r, char d, VxT v) { _delense032(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Delense operation.")
+    .def("circleOut", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Circle out operation.")
+    .def("growLabel", &SelfT::growLabel)
+    .def("keepLargest0", [](SelfT &m) { keepLargest0(m); })
+    //.def("maskWriteFraction", &SelfT::maskWriteFraction)
+    .def("mapFrom", [](SelfT& m, const SelfT& vimg2, VxT vmin, VxT vmax, double scale, double shift) { mapToFrom(m, vimg2, vmin, vmax, scale, shift); }, arg("sourceImage"), arg("vmin"), arg("vmax"), arg("scale"), arg("shift"), "Map values from another image.") 
+    .def("addSurfNoise", [](SelfT &m, const int randMask1, const int randMask2, int trsh, int randseed) { addSurfNoise(m, randMask1, randMask2, trsh, randseed); }, arg("mask1"), arg("mask2"), arg("threshold"), arg("seed"), "Add surface noise.")
 
-// // Individual bindings for convenience
-.def("averageWith", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith(ss, m); })
-.def("averageWith_mBE", [](voxelImageT<VxTyp> &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith_mBE(ss, m); })
-    .def("plotAll", [](voxelImageT<VxTyp> &m, std::string fnam_, int minv, int maxv, int iSlice_, int nBins,
+    // // Individual bindings for convenience
+    .def("averageWith", [](SelfT &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith(ss, m); })
+    .def("averageWith_mBE", [](SelfT &m, std::string args) { std::stringstream ss(args); return MCTProcessing::averageWith_mBE(ss, m); })
+    .def("plotAll", [](SelfT &m, std::string fnam_, int minv, int maxv, int iSlice_, int nBins,
                         std::string normalAxis, bool grey, bool color, bool histogram, bool zProfile,
-                        voxelImageT<VxTyp>* img2Ptr, int mina, int maxa) {
-        int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
-        return MCTProcessing::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
-    },  py::arg("name")="pltAll",
-        py::arg("minv")=0, py::arg("maxv")=-1000001, py::arg("sliceIndex")=-1000000, py::arg("nBins")=128,
-        py::arg("normalAxis")="xyz",
-        py::arg("grey")=true, py::arg("color")=true, py::arg("histogram")=true, py::arg("zProfile")=true,
-        py::arg("alphaImage")=nullptr, py::arg("alphaMin")=0, py::arg("alphaMax")=-1000001,
-        "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
-    .def("mode26", [](voxelImageT<VxTyp> &m, int nMinD) { return mode26(m,nMinD); })
-    .def("growingThreshold", [](voxelImageT<VxTyp> &m, VxTyp t1, VxTyp t2, VxTyp t3, VxTyp t4, int nIter) {
+                        SelfT* img2Ptr, int mina, int maxa) {
+                        int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
+                        return MCTProcessing::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
+                    },  
+        arg("name")="pltAll", arg("minv")=0, arg("maxv")=-1000001, arg("sliceIndex")=-1000000, arg("nBins")=128,
+        arg("normalAxis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("zProfile")=true,
+        arg("alphaImage")=nullptr, arg("alphaMin")=0, arg("alphaMax")=-1000001,
+        "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging, all args except are optional")
+    .def("mode26", [](SelfT &m, int nMinD) { return mode26(m,nMinD); })
+    .def("growingThreshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) {
         ::growingThreshold(m, t1, t2, t3, t4, nIter);
-    }, py::arg("startMin"), py::arg("startMax"), py::arg("finalMin"), py::arg("finalMax"), py::arg("iterations")=4)
-     .def("replaceOutSideValue", [](voxelImageT<VxTyp> &m, int vo, int vnew, int nHoleSize) {
+    }, arg("startMin"), arg("startMax"), arg("finalMin"), arg("finalMax"), arg("iterations")=4)
+    .def("replaceOutSideValue", [](SelfT &m, int vo, int vnew, int nHoleSize) {
         return MCTProcessing::replaceOutSideValue(m, vo, vnew, nHoleSize);
-    }, py::arg("val_old")=0, py::arg("val_new")=2, py::arg("hole_size")=5)
-    .def("smooth", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, double sigmavv, double sharpFact) {
+    }, arg("val_old")=0, arg("val_new")=2, arg("hole_size")=5)
+    .def("smooth", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact) {
         return MCTProcessing::smooth(m, nItrs, kernRad, sigmavv, sharpFact);
-    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1)
-    .def("svgHistogram", [](voxelImageT<VxTyp> &m, std::string fnam, int nBins, double minV, double maxV) {
+    }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1)
+    .def("svgHistogram", [](SelfT &m, std::string fnam, int nBins, double minV, double maxV) {
         return MCTProcessing::svgHistogram(m, fnam, nBins, minV, maxV);
-    }, py::arg("filename")="aa.svg", py::arg("bins")=128, py::arg("min_val")=3e38, py::arg("max_val")=-3e38)
-    .def("svgZProfile", [](voxelImageT<VxTyp> &m, std::string fnam, double minV, double maxV) {
-        return MCTProcessing::svgZProfile(m, fnam, VxTyp(minV), VxTyp(maxV));
-    }, py::arg("filename")="aa.svg", py::arg("min_val")=0, py::arg("max_val")=255) // Assuming 255 default for maxV based on typical usage, though maxT(T) is ideal
-    .def("flipEndian", [](voxelImageT<VxTyp> &m) {
-        ::flipEndian(m);
-    })
-    .def("replaceRangeByImage", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
+    }, arg("filename")="aa.svg", arg("bins")=128, arg("min_val")=3e38, arg("max_val")=-3e38)
+    .def("svgZProfile", [](SelfT &m, std::string fnam, double minV, double maxV) {
+            return MCTProcessing::svgZProfile(m, fnam, VxT(minV), VxT(maxV));
+        }, arg("filename")="aa.svg", arg("min_val")=0, arg("max_val")=255) // Assuming 255 default for maxV based on typical usage, though maxT(T) is ideal
+    .def("flipEndian", [](SelfT &m) { ::flipEndian(m); })
+    .def("replaceRangeByImage", [](SelfT &m, double minv, double maxv, std::string fnam) {
         if(fnam.empty()) throw std::runtime_error("no image name provided");
-        ::replaceRangeByImage(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam, readOpt::procAndConvert));
-    }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
-    .def("replaceByImageRange", [](voxelImageT<VxTyp> &m, double minv, double maxv, std::string fnam) {
+        ::replaceRangeByImage(m, VxT(minv), VxT(maxv), SelfT(fnam, readOpt::procAndConvert));
+    }, arg("min_val"), arg("max_val"), arg("image_file"))
+    .def("replaceByImageRange", [](SelfT &m, double minv, double maxv, std::string fnam) {
         if(fnam.empty()) throw std::runtime_error("no image name provided");
-        ::replaceByImageRange(m, VxTyp(minv), VxTyp(maxv), voxelImageT<VxTyp>(fnam, readOpt::procAndConvert));
-    }, py::arg("min_val"), py::arg("max_val"), py::arg("image_file"))
-    .def("readFromFloat", [](voxelImageT<VxTyp> &m, std::string header, float scale, float shift) {
+        ::replaceByImageRange(m, VxT(minv), VxT(maxv), SelfT(fnam, readOpt::procAndConvert));
+    }, arg("min_val"), arg("max_val"), arg("image_file"))
+    .def("readFromFloat", [](SelfT &m, std::string header, float scale, float shift) {
         return MCTProcessing::readFromFloat(m, header, scale, shift);
-    }, py::arg("header"), py::arg("scale")=1.0f, py::arg("shift")=0.0f)
-    .def("bilateralX", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
+    }, arg("header"), arg("scale")=1.0f, arg("shift")=0.0f)
+    .def("bilateralX", [](SelfT &m, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
          return ::bilateralX(m, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
-    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("x_step")=2, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1, py::arg("sigma_spatial")=2.0)
-    .def("bilateralGauss", [](voxelImageT<VxTyp> &m, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
+    }, arg("iterations")=1, arg("kernel_radius")=1, arg("x_step")=2, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0)
+    .def("bilateralGauss", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
          return ::bilateralGauss(m, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
-    }, py::arg("iterations")=1, py::arg("kernel_radius")=1, py::arg("sigma_val")=16.0, py::arg("sharpness")=0.1, py::arg("sigma_spatial")=2.0)
-    .def("meanWide", [](voxelImageT<VxTyp> &m, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
+    }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0)
+    .def("meanWide", [](SelfT &m, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
          return MCTProcessing::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
-    }, py::arg("width")=0, py::arg("noise_val")=4, py::arg("average")=0, py::arg("delta")=20, py::arg("iterations")=15, py::arg("smooth_image")="")
-    .def("otsu_th", [](voxelImageT<VxTyp> &m, int minv, int maxv) {
-         return ::otsu_th(m, minv, maxv);
-    }, py::arg("min_val")=0, py::arg("max_val")=256)
-    .def("dering", [](voxelImageT<VxTyp> &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
+    }, arg("width")=0, arg("noise_val")=4, arg("average")=0, arg("delta")=20, arg("iterations")=15, arg("smooth_image")="")
+    .def("otsu_threshold", [](SelfT &m, int minv, int maxv) { return ::otsu_th(m, minv, maxv); }, arg("min_val")=0, arg("max_val")=256)
+    .def("dering", [](SelfT &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
          return MCTProcessing::dering(m, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
-    }, py::arg("x0"), py::arg("y0"), py::arg("x1"), py::arg("y1"), py::arg("min_val")=0, py::arg("max_val")=255, py::arg("nr")=0, py::arg("ntheta")=18, py::arg("nz")=0)
-    .def("adjustBrightnessWith", [](voxelImageT<VxTyp> &m, std::string imgName) {
-         return MCTProcessing::adjustBrightnessWith(m, imgName);
-    }, py::arg("image_file"))
-    .def("adjustSliceBrightness", [](voxelImageT<VxTyp> &m, voxelImageT<unsigned char>& mskA, voxelImageT<unsigned char>& mskB, voxelImageT<VxTyp>& img2, int nSmoothItr, int nSmoothKrnl) {
+    }, arg("x0"), arg("y0"), arg("x1"), arg("y1"), arg("min_val")=0, arg("max_val")=255, arg("nr")=0, arg("ntheta")=18, arg("nz")=0)
+    .def("adjustBrightnessWith", [](SelfT &m, std::string imgName) { return MCTProcessing::adjustBrightnessWith(m, imgName); }, arg("image_file"))
+    .def("adjustSliceBrightness", [](SelfT &m, voxelImage& mskA, voxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
          return MCTProcessing::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
-    }, py::arg("mask_a"), py::arg("mask_b"), py::arg("ref_image"), py::arg("smooth_iter")=3, py::arg("smooth_kernel")=20)
-    .def("cutOutside", [](voxelImageT<VxTyp> &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
-         ::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxTyp(outVal));
-         return true;
-    }, py::arg("axis")='z', py::arg("extra_out")=0, py::arg("threshold")=-1, py::arg("cut_highs")=0, py::arg("shift_x")=0, py::arg("shift_y")=0, py::arg("fill_val")=0)
-    .def("variance", [](voxelImageT<VxTyp> &m, int minV, int maxV) {
-         return ::varianceDbl(m, minV, maxV);
-    }, py::arg("min_val")=0, py::arg("max_val")=255)
+    }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
+    .def("cutOutside", [](SelfT &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
+            ::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal));  }, 
+         arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=0, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
+    .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255)
     ;
     addDodgyFuncsInt(clas);
     addDodgyFuncsU8(clas);
 }
+
+} // namespace VxlPy 
