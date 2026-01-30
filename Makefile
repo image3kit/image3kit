@@ -1,4 +1,15 @@
 
+help:
+	@echo "Install prerequisite using commands:"
+	@echo "  python -m venv ./.venv"
+	@echo "  source .venv/bin/activate"
+	@echo "  pip install pybind11-stubgen numpy  pytest"
+	@echo
+	@echo "Available target commands:"
+	@echo "  make all # Install and update pybind11 stubs"
+	@echo "  make install      # Install the package"
+	@echo "  make test         # Run tests"
+
 all:
 	pip install .
 	pybind11-stubgen image3kit --output-dir src
