@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <map>
+#include "globals.h"
 
 // see performance.cpp for high resolution clock
 

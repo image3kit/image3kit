@@ -44,6 +44,8 @@ target_compile_definitions(_core PRIVATE
     LPNG
     TIFLIB
     ZLIB
+    OpenMP
+    VMMLIB
     DUMMY=1
 )
 # find_package(pybind11 CONFIG REQUIRED PATHS ./build)
