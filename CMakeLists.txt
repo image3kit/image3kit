@@ -16,7 +16,7 @@ find_package(ZLIB REQUIRED)
 
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 file(GLOB PyBind_SRCS CONFIGURE_DEPENDS "src/*.cpp")
-set(VOXLIB_SRC 
+set(VOXLIB_SRC
    src/_voxlib/voxelImage.cpp
    src/_voxlib/vxlPro2.cpp
    src/_voxlib/voxelGrad.cpp
