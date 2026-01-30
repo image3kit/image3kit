@@ -14,6 +14,20 @@ find_package(pybind11 CONFIG REQUIRED)
 
 find_package(ZLIB REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(
+  TIFF
+  URL https://gitlab.com/libtiff/libtiff/-/archive/v4.6.0/libtiff-v4.6.0.tar.gz
+  EXCLUDE_FROM_ALL
+)
+set(tiff-tools OFF CACHE BOOL "Build libtiff tools")
+set(tiff-tests OFF CACHE BOOL "Build libtiff tests")
+set(tiff-contrib OFF CACHE BOOL "Build libtiff contrib")
+set(tiff-docs OFF CACHE BOOL "Build libtiff docs")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+FetchContent_MakeAvailable(TIFF)
+
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 file(GLOB PyBind_SRCS CONFIGURE_DEPENDS "src/*.cpp")
 set(VOXLIB_SRC
@@ -28,6 +42,7 @@ python_add_library(_core MODULE ${VOXLIB_SRC} ${PyBind_SRCS} WITH_SOABI)
 target_compile_definitions(_core PRIVATE
     SVG
     LPNG
+    TIFLIB
     ZLIB
     DUMMY=1
 )
@@ -49,7 +64,7 @@ set_property(TARGET _core PROPERTY CXX_STANDARD 23)
 # Toolset: gcc-linux:
 set(CMAKE_CXX_FLAGS_INIT "-Werror -Wall -Wextra -Wpedantic")
 # target_link_options(_core PRIVATE "-Wl,-z,defs")
-target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB)
+target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB TIFF::tiff)
 
 # The install directory is the output (wheel) directory
 install(TARGETS _core DESTINATION image3kit)

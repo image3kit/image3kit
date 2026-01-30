@@ -19,6 +19,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 #include "voxelImageI.h"
 #include "voxelEndian.h"
 #include "voxelPng_stbi.h"
+#include "voxelTiff.h"
 
 #ifdef _WBASM // work around CLang bugs complaining about undefined function
 #include "vxlPro1.cpp"
@@ -323,7 +324,7 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,	int procesKeys)  {
 	}
 
 	#ifdef TIFLIB
-	if (hasExt(hdrNam,".tif"))  return readTif(hdrNam);
+	if (hasExt(hdrNam,".tif"))  return readTifAnyT(hdrNam);
 	#endif
 
 	string typ;

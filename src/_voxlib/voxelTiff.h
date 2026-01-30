@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <typeinfo>
 #include <typeindex>
 #include <unordered_map>
 #include <string.h>
@@ -169,11 +168,17 @@ int writeTif(const voxelField<T>&  aa, std::string fnam, int iStart,int iEnd , i
 	// (specifically because Avizo does not support inflate algorithm).
 }
 
+template<class T>
+std::unique_ptr<voxelImageTBase> _readTiffToPtr(const std::string& fnam) {
+	voxelImageT<T> vImg;
+	readTif(vImg, fnam);
+	return std::make_unique<voxelImageT<T>>(std::move(vImg));
+}
 
-inline std::unique_ptr<voxelImageTBase>  readTif(std::string fnam) {
+inline std::unique_ptr<voxelImageTBase>  readTifAnyT(std::string fnam) {
 	TIFF *tif = (TIFF *) NULL;
 	tif = TIFFOpen(fnam.c_str(), "r");
-	if (tif == NULL)  return std::unique_ptr<voxelImageTBase>();
+	if (tif == NULL)  return std::unique_ptr<voxelImageTBase>(nullptr);
 	uint16_t frmt = SAMPLEFORMAT_UINT,   nbits = 8;
 	TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &frmt);
 	TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &nbits);
@@ -183,25 +188,25 @@ inline std::unique_ptr<voxelImageTBase>  readTif(std::string fnam) {
 	switch (frmt) {
 		case SAMPLEFORMAT_UINT:
 		default:
-			if (nbits==8)  return std::make_unique<voxelImageT<unsigned char>>(fnam);
+			if (nbits==8)  return _readTiffToPtr<unsigned char>(fnam);
 	#ifndef _VoxBasic8
-			if (nbits==16) return std::make_unique<voxelImageT<unsigned short>>(fnam);
+			if (nbits==16) return _readTiffToPtr<unsigned short>(fnam);
 #ifdef _ExtraVxlTypes
-			if (nbits==32) return std::make_unique<voxelImageT<unsigned int>>(fnam);
+			if (nbits==32) return _readTiffToPtr<unsigned int>(fnam);
 #endif
 		  break;
 		case SAMPLEFORMAT_INT:
 #ifdef _ExtraVxlTypes
-			if (nbits==16) return std::make_unique<voxelImageT<short>>(fnam);
-			if (nbits==8)  return std::make_unique<voxelImageT<char>>(fnam);
+			if (nbits==16) return _readTiffToPtr<short>(fnam);
+			if (nbits==8)  return _readTiffToPtr<char>(fnam);
 #endif
-			if (nbits==32) return std::make_unique<voxelImageT<int>>(fnam);
+			if (nbits==32) return _readTiffToPtr<int>(fnam);
 		  break;
 		case SAMPLEFORMAT_IEEEFP:
 #ifdef _ExtraVxlTypes
-			if (nbits==64) return std::make_unique<voxelImageT<double>>(fnam);
+			if (nbits==64) return _readTiffToPtr<double>(fnam);
 #endif
-			if (nbits==32) return std::make_unique<voxelImageT<float>>(fnam);
+			if (nbits==32) return _readTiffToPtr<float>(fnam);
 			break;
 	#endif
 		}
