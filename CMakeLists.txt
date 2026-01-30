@@ -12,6 +12,8 @@ project(
 # Find pybind11 and Python
 find_package(pybind11 CONFIG REQUIRED)
 
+find_package(ZLIB REQUIRED)
+
 # Add a library using FindPython's tooling (pybind11 also provides a helper like this)
 file(GLOB PyBind_SRCS CONFIGURE_DEPENDS "src/*.cpp")
 set(VOXLIB_SRC 
@@ -26,6 +28,7 @@ python_add_library(_core MODULE ${VOXLIB_SRC} ${PyBind_SRCS} WITH_SOABI)
 target_compile_definitions(_core PRIVATE
     SVG
     LPNG
+    ZLIB
     DUMMY=1
 )
 # find_package(pybind11 CONFIG REQUIRED PATHS ./build)
@@ -46,7 +49,7 @@ set_property(TARGET _core PROPERTY CXX_STANDARD 23)
 # Toolset: gcc-linux:
 set(CMAKE_CXX_FLAGS_INIT "-Werror -Wall -Wextra -Wpedantic")
 # target_link_options(_core PRIVATE "-Wl,-z,defs")
-target_link_libraries(_core PRIVATE Python::Module)
+target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB)
 
 # The install directory is the output (wheel) directory
 install(TARGETS _core DESTINATION image3kit)
