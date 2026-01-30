@@ -4,8 +4,7 @@
 #include <pybind11/stl.h>
 
 #include "shapeToVoxel.h"
-#include "InputFile.h"
-#include "vxlPyUX.hpp"
+#include "VxlImgXX.hpp"
 
 namespace py = pybind11;
 
