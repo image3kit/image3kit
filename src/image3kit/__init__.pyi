@@ -9,8 +9,7 @@ from image3kit._core.voxlib import VxlImgU16
 from image3kit._core.voxlib import VxlImgU8
 from image3kit._core.voxlib import cube
 from image3kit._core.voxlib import cylinder
-from image3kit._core.voxlib import readImageBase
 from image3kit._core.voxlib import sphere
 from . import _core
-__all__: list = ['__doc__', '__version__', 'VxlImgU8', 'VxlImgU16', 'VxlImgI32', 'VxlImgF32', 'Input', 'cube', 'cylinder', 'sphere', 'readImageBase']
+__all__: list = ['__doc__', '__version__', 'VxlImgU8', 'VxlImgU16', 'VxlImgI32', 'VxlImgF32', 'Input', 'cube', 'cylinder', 'sphere']
 __version__: str = '0.0.1'
