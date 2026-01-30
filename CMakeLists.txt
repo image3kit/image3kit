@@ -33,9 +33,11 @@ target_link_libraries(_core PRIVATE pybind11::headers)
 
 target_include_directories(_core PRIVATE src/_include)
 target_include_directories(_core PRIVATE src/_voxlib)
-target_include_directories(_core PRIVATE src/_optim)
-target_include_directories(_core PRIVATE src/_optim/primitives)
-target_include_directories(_core PRIVATE src/_svplot)
+target_include_directories(_core PRIVATE pkgs/optim)
+target_include_directories(_core PRIVATE pkgs/optim/primitives)
+target_include_directories(_core PRIVATE pkgs/stb)
+target_include_directories(_core PRIVATE pkgs/zlib)
+target_include_directories(_core PRIVATE pkgs/svplot)
 
 # This is passing in the version as a define just as an example
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
