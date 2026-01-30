@@ -1,15 +1,15 @@
 /*
  * A C++ I/O streams interface to the zlib gz* functions
  *
+ * Origin: https://github.com/ImageMagick/zlib/tree/main/contrib/iostream/
+ *
+ * Ali Q Raeini (2019): merged zfstream.cc with this .h file, to make it header only. 
+ * The .cc file contents are added in the end to be able to recover the original structure
+ *
  * by Ludwig Schwardt <schwardt@sun.ac.za>
  * original version by Kevin Ruland <kevin@rodin.wustl.edu>
- *
- * This version is standard-compliant and compatible with gcc 3.x.
  */
 
-
-// Ali Q Raeini (2019), merged zfstream.cc with this .h file, to make it header only. 
-//The .cc file contents are added in the end to be able to recover the original structure
 
 
 #ifndef ZFSTREAM_H
