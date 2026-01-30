@@ -55,10 +55,10 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     auto voxlib = mod.def_submodule("voxlib", "The VxlImg template classes");
 
-    py::class_<voxelImageTBase>(voxlib, "voxelImageTBase")
+    auto _voxelImageTBase = py::class_<voxelImageTBase>(voxlib, "voxelImageTBase")
     ;
 
-    py::class_<shape>(voxlib, "shape");
+    auto _shape = py::class_<shape>(voxlib, "shape");
 
     py::class_<sphere,shape>(voxlib, "sphere")
     .def(py::init([](py::tuple tpl, double r, int val) {

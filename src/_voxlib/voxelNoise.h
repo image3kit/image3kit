@@ -7,8 +7,9 @@ Developed by:
  - Luke Giudici (2021)
 \*-------------------------------------------------------------------------*/
 
-#include <map>
-#include <array>
+#include <cstdint>
+#include "globals.h"
+#include "voxelImage.h"
 
 #define forAll_kji_m_seq(_nNei,_vxls)   \
  	for (int k=(_vxls).nz()-_nNei-1; k>=_nNei; --k)   \
@@ -109,10 +110,10 @@ size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask
 }
 
 
-								namespace MCTProcessing _begins_
+namespace MCTProcessing {
 
 	template<typename T>
-	bool addSurfNoise( stringstream& ins, voxelImageT<T>& vImg)  {
+	bool addSurfNoise( std::stringstream& ins, voxelImageT<T>& vImg)  {
 		KeyHint("randMask1 randMask2 nSam40Trsh nItr randSeed");
 		int randMask1=0x00000003; ins>>randMask1; //!< mask of random number controlling probability
 		int randMask2=randMask1;     ins>>randMask2;
@@ -129,4 +130,4 @@ size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask
 	}
 
 
-								_end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing

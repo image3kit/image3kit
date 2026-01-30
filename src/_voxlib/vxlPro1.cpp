@@ -14,24 +14,14 @@ Ali Q Raeini: a.q.raeini@gmail.com
 #ifndef _VoxBasic
 #include "voxelImageRegister.h" // order is important for typses.h
 #endif //_VoxBasic
-#include "voxelImageProcess.h" // EXP:;
-#include <memory>
-#include <sstream>
-
-#include "globals.h"  // ensure...
 
 #include "voxelImage.h"
-#include "voxelImageI.h"
 using namespace std; //cin cout endl string stringstream  istream istringstream regex*
-
-#include "voxelEndian.h"
 
 #include "voxelImageProcess.h" // EXP:;
 
-#include "voxelNoise.h"
-#include "voxelRegions.h"
-
-								namespace MCTProcessing _begins_
+namespace MCTProcessing {
+using namespace VoxLib;
 
 //EXP_1:
 template<typename T>
@@ -71,7 +61,7 @@ void addFuncs(VxlFuncs<T>& key_funs) requires(sizeof(T)<=2) {
 	key_funs.insert({"dering"       , dering});
 	key_funs.insert({"adjustBrightnessWith"  , adjustBrightnessWith});
 	key_funs.insert({"adjustSliceBrightness" , adjustSliceBrightness});
-	key_funs.insert({"cutOutside"   , cutOutside});
+	key_funs.insert({"cutOutside"   , vxlProCutOutside});
 	key_funs.insert({"variance" , variance});
 	key_funs.insert({"end"   , end_here});
 }
@@ -83,4 +73,5 @@ void addFuncs(VxlFuncs<T>& key_funs) requires(sizeof(T)<=2) {
  template void addFuncs(VxlFuncs<float>&);
  template void addFuncs(VxlFuncs<unsigned char>&);
 #endif
-								_end_of_(namespace MCTProcessing)
+
+} // namespace MCTProcessing

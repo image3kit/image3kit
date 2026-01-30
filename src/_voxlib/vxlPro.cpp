@@ -1,4 +1,3 @@
-#include <memory>
 #include <sstream>
 #include "voxelImage.h"
 #include "voxelImageI.h"
@@ -361,7 +360,7 @@ template<typename T> bool Offset( stringstream& ins, voxelImageT<T>& vImg)  {
 
 template<typename T>  bool keepLargest0( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("// sets smaller isolated regions (of value 0) to 254, computationally expensive");
-	keepLargest0(vImg); //! CtrlF:isolated=254
+	keepLargestvv(vImg, T(0), T(0)); //! CtrlF:isolated=254
 	(cout<<".").flush();
 	return 0;
 }

@@ -20,7 +20,14 @@
 #include <regex>
 #include <numeric>
 
+#include "globals.h" // TOSTRING
+
 #define sizt size_t  // temp, was = int
+
+#ifdef VMMLIB
+#include "Vctr.h" // order is important for typse.h
+#endif
+
 
 template<typename T> T strTo(const std::string &s){  std::istringstream ss(s);  T t;  ss>>t;  return t; }
 
@@ -33,6 +40,7 @@ template<typename T> T strTo(const std::string &s){  std::istringstream ss(s);  
 	#define  imaxT(Typ) (int   (std::numeric_limits<Typ>::max()))
 	#define  fmaxT(Typ) (float (std::numeric_limits<Typ>::max()))
 	#define  dmaxT(Typ) (double(std::numeric_limits<Typ>::max()))
+	#define  TImax(Typ)   (Tint(std::numeric_limits<Typ>::max()))
 	#define  epsT(Typ)          std::numeric_limits<Typ>::epsilon()
 #endif
 

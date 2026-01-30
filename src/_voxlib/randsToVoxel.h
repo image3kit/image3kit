@@ -14,16 +14,11 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 \*-------------------------------------------------------------------------*/
 
 #include <math.h>
-#include <fstream>
 #include <assert.h>
-#include <algorithm>
-#include <vector>
-#include <iostream>
 #include "voxelImage.h"
 
-#include <functional>   // std::mem_fn
 
-								namespace MCTProcessing _begins_
+namespace MCTProcessing {
 using namespace std;
 
 
@@ -34,4 +29,4 @@ using namespace std;
  }
 
 
-								_end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing

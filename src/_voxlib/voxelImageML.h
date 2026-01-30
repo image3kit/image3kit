@@ -504,24 +504,16 @@ void shrink(voxelImageT<T>& seged, T min,  T maks, const voxelImageT<T>& vImg) {
 
 
 	OMPragma("omp parallel for")
-	for (int k=0; k<vImg.nz(); ++k)
-	for (int j=0; j<vImg.ny(); ++j)
-	for (int i=1; i<vImg.nx(); ++i)
-	{
-		if (vxls(i,j,k) != vxls(i-1,j,k))
-		{
+	forkji_be (1,0,0, vImg.nx(),vImg.ny(),vImg.nz()) {
+		if (vxls(i,j,k) != vxls(i-1,j,k)) {
 			if(seged(i-1,j,k)<=maks && seged(i-1,j,k)>=min ) seged(i-1,j,k)=vImg(i-1,j,k);
 			if(seged(i,j,k)<=maks && seged(i,j,k)>=min ) seged(i,j,k)=vImg(i,j,k);
 		}
 	}
 
 	OMPragma("omp parallel for")
-	for (int k=0; k<vImg.nz(); ++k)
-	for (int j=1; j<vImg.ny(); ++j)
-	for (int i=0; i<vImg.nx(); ++i)
-	{
-        if (vxls(i,j,k) != vxls(i,j-1,k))
-        {
+	forkji_be (0,1,0, vImg.nx(),vImg.ny(),vImg.nz()) {
+        if (vxls(i,j,k) != vxls(i,j-1,k)) {
 			if(seged(i,j-1,k)<=maks && seged(i,j-1,k)>=min ) seged(i,j-1,k)=vImg(i,j-1,k);
 			if(seged(i,j,k)<=maks && seged(i,j,k)>=min ) seged(i,j,k)=vImg(i,j,k);
 		}
@@ -529,12 +521,8 @@ void shrink(voxelImageT<T>& seged, T min,  T maks, const voxelImageT<T>& vImg) {
 
 
 	 OMPragma("omp parallel for")
-    for (int j=0; j<vImg.ny(); ++j)
-    for (int k=1; k<vImg.nz(); ++k)
-    for (int i=0; i<vImg.nx(); ++i)
-    {
-        if (vxls(i,j,k) != vxls(i,j,k-1))
-        {
+	forkji_be (0,0,1, vImg.nx(),vImg.ny(),vImg.nz()) {
+		if (vxls(i,j,k) != vxls(i,j,k-1)) {
 			if(seged(i,j,k-1)<=maks && seged(i,j,k-1)>=min ) seged(i,j,k-1)=vImg(i,j,k-1);
 			if(seged(i,j,k)<=maks && seged(i,j,k)>=min ) seged(i,j,k)=vImg(i,j,k);
 		}
@@ -838,14 +826,14 @@ inline pair<OtT, array<double,5>> otsu_threshold(const piece<double>& hist, int 
 
 
 template<typename T>
-array<double,5> otsu_th(const voxelImageT<T>& vImg, int  minvi, int  maxvi, double skipFrac=0.)
+array<double,5> otsu_th(const voxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, double skipFrac=0.)
 {//! Warning doesn't work for negatives
 	int3 nnn1=skipFrac*vImg.size3();
 	int3 nnn2=(1.000000000001-skipFrac)*vImg.size3();
 	T  minv=minvi, maxv=maxvi;
 
-	const int nHist = std::min(minvi-maxvi, 65536/10);
-	int delta = std::max((maxvi-minvi)/ nHist, 1);
+	const int nHist = std::min(minvi-maxvi, Tint(65536/10));
+	Tint delta = std::max((maxvi-minvi)/ nHist, Tint(T(1)));
 
 	vars<long long> hist(nHist+1, 0l);
 
@@ -939,8 +927,8 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 		  float cosp(cos(_2pi*p/nth)), sinp(sin(_2pi*p/nth));
 		  for (int r=0; r<int(radimag.nx()) ; r++)
 		  {
-			float xo=((n3-k)*X0+k*X1)/n3+0.5;
-			float yo=((n3-k)*Y0+k*Y1)/n3+0.5;
+			float xo=float((n3-k)*X0+k*X1)/n3+0.5;
+			float yo=float((n3-k)*Y0+k*Y1)/n3+0.5;
 			float rf = r*nrCrs;
 
 			int i = xo+rf*cosp;
@@ -953,8 +941,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 			int nNeis=0;
 
 			for (short j_nei_m=-npCrs-5/(r+1); j_nei_m<=npCrs+5/(r+1); ++j_nei_m)
-			for (short i_nei_m=-nrCrs-10/(r+1); i_nei_m<=nrCrs+10/(r+1); ++i_nei_m)
-			{
+			 for (short i_nei_m=-nrCrs-10/(r+1); i_nei_m<=nrCrs+10/(r+1); ++i_nei_m) {
 			  int jj=yo+(rf+i_nei_m)*sin(_2pi*(pf+j_nei_m)/nth/npCrs);
 			  int ii=xo+(rf+i_nei_m)*cos(_2pi*(pf+j_nei_m)/nth/npCrs);
 			  if (ii>=0 && ii<n1 && jj>=0 && jj<n2)
@@ -962,7 +949,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 				for (short kk=max(nzCrs*int(z)-nzCrs-10./(r+1)+0.5,0.1); kk<=min(z*nzCrs+nzCrs+10./(r+1)+0.5,n3-0.9); ++kk)
 				 { neiSum+=vImg(ii,jj,kk); ++nNeis;}
 			  }
-			}
+			 }
 			radimag(r,p+2,z)=min(T(0.5+neiSum/(nNeis+0.001)),maxT(T));
 		  }
 		}
@@ -983,8 +970,8 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 	forAllkji_(vImg)
 	{
 
-		float xo=((n3-k)*X0+k*X1)/n3+0.5;
-		float yo=((n3-k)*Y0+k*Y1)/n3+0.5;
+		float xo=float((n3-k)*X0+k*X1)/n3+0.5;
+		float yo=float((n3-k)*Y0+k*Y1)/n3+0.5;
 		int r = 0.5+sqrt((i-xo)*(i-xo)+(j-yo)*(j-yo))/nrCrs;
 
 		int p = (atan2(yo-j,xo-i)/_2pi+0.5)*nth;

@@ -13,7 +13,8 @@ Ali Q Raeini:    a.q.raeini@gmail.com
 #include "Tnsr.h"
 #include "typses.h"
 #include "cmaes.h"
-#include "newuoa.h"
+// #include "newuoa.h"
+#include "voxelImage.h"
 #include "voxelImageI.h"
 #include <mutex>
 
@@ -208,29 +209,21 @@ inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, v
 	double dif=0.; size_t count=1;
 	int diffcontrast=0;//function.difContrast_;
 	OMPragma("omp parallel for reduction(+:dif) reduction(+:count)")
-	for (int k=0; k<(origImage2).nz(); ++k)
-	for (int j=0; j<(origImage2).ny(); ++j)
-	for (int i=0; i<(origImage2).nx(); ++i)
-	{
+	forAllkji(origImage2) {
 		dbl3 ijk(rotateAroundVec(dbl3(i,j,k),angl,axis)*scal+trans-offset);
 				//dbl3 ijk((imgCntr+rotateAroundVec(dbl3(i,j,k)-imgCntr,angl,axis))*scal+trans-offset); once implemented in func, no effect
-		if(-0.499<ijk[0] && ijk[0]<nnn[0]-1.  &&   -0.499<ijk[1] && ijk[1]<nnn[1]-1.  &&   -0.499<ijk[2] && ijk[2]<nnn[2]-1.)
-		{
+		if(-0.499<ijk[0] && ijk[0]<nnn[0]-1.  &&   -0.499<ijk[1] && ijk[1]<nnn[1]-1.  &&   -0.499<ijk[2] && ijk[2]<nnn[2]-1.) {
 			dif+=abs(double(origImage2(i,j,k))-double(origImage(ijk[0],ijk[1],ijk[2])));  ++count;
 			origImage2(i,j,k) = min(max(0, int(origImage.vv_mp5(ijk[0],ijk[1],ijk[2]))),imaxT(T)) ;
 		}
 		else if (defaultV==-1)
-			origImage2(i,j,k) = min(max(0, int(origImage2(i,j,k))-diffcontrast),imaxT(T)) ;
-
-
+			origImage2(i,j,k) = min(max(0, int(origImage2(i,j,k))-diffcontrast),imaxT(T));
 	}
 	origImage = origImage2;
-
 
 	cout<<"dif: "<< dif/count-diffcontrast<<endl;
 
 	return std::array<double,7>{xxBest[0],xxBest[1],xxBest[2],xxBest[3],xxBest[4],xxBest[5],xxBest[6]};
-
 }
 
 
@@ -357,9 +350,7 @@ inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, v
 	double dif=0.; size_t count=1;
 	int diffcontrast=0;//function.difContrast_;
 	OMPragma("omp parallel for reduction(+:dif) reduction(+:count)")
-	for (int k=0; k<(origImage2).nz(); ++k)
-	for (int j=0; j<(origImage2).ny(); ++j)
-	for (int i=0; i<(origImage2).nx(); ++i)
+	forAllkji(origImage2)
 	{
 		Vctr3d ijk = rotat*Vctr3d(i,j,k)+trans-offset;
 		if(-0.499<ijk[0] && ijk[0]<nnn[0]-1.  &&   -0.499<ijk[1] && ijk[1]<nnn[1]-1.  &&   -0.499<ijk[2] && ijk[2]<nnn[2]-1.)
@@ -368,9 +359,7 @@ inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, v
 			origImage2(i,j,k) = min(max(0, int(origImage.vv_mp5(ijk[0],ijk[1],ijk[2]))),imaxT(T)) ;
 		}
 		else
-			origImage2(i,j,k) = min(max(0, int(origImage2(i,j,k))-diffcontrast),imaxT(T)) ;
-
-
+			origImage2(i,j,k) = min(max(0, int(origImage2(i,j,k))-diffcontrast),imaxT(T));
 	}
 	origImage = origImage2;
 

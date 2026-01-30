@@ -1,8 +1,9 @@
 #pragma once
+
+#ifdef PYBINDINGSTREAM
 #include "globals.h"
 #include <string>
 
-#ifdef PYBINDINGSTREAM
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 namespace pyd = pybind11::detail;

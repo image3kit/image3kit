@@ -1,7 +1,6 @@
 
 #include "VxlStrips.h"
 #include "globals.h"
-#include "voxelImageI.h"
 
 #include <iostream>
 

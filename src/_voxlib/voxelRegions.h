@@ -14,6 +14,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include "voxelImage.h"
 using namespace std;
 
 #define min7Nei(_vxls, vp_) \
@@ -169,7 +170,7 @@ voxelImageT<int> labelImage(const voxelImageT<T>& vImage, const T minvv=0, const
 
 
 template<typename T>
-void keepLargest0(voxelImageT<T>& vImage, const T minvv=0, const T maxvv=0)  {
+void keepLargestvv(voxelImageT<T>& vImage, const T minvv=0, const T maxvv=0)  {
 	const voxelImageT<int> lbls = labelImage(vImage,minvv,maxvv);
 	const auto* lbl0=&lbls(0);
 	int mxl = 0;

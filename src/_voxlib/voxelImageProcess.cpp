@@ -11,10 +11,11 @@ Free Software Foundation, either version 3 of the License, or (at
 your option) any later version. see <http://www.gnu.org/licenses/>.
 
 \*-------------------------------------------------------------------------*/
+// order is important for typse.h
+#ifndef VMMLIB
+#define VMMLIB
+#endif
 
-
-#include "Vctr.h" // order is important for typse.h
-#include "Tnsr.h"
 #define _STOR_PUB    //EXP:;
 #include "SiRun.cpp" //EXP:;
 #include "voxelImageI.h"

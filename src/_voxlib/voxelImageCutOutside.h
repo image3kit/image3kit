@@ -1,4 +1,10 @@
 
+#include "globals.h"
+#include "voxelImage.h"
+
+namespace VoxLib {
+using namespace std;
+
 inline void zerogradVecBC(vector<double>& vs) {vs[0]=vs[1];  vs[vs.size()-1]=vs[vs.size()-2]; }
 constexpr double _PI = 3.141592653589793;
 
@@ -80,7 +86,7 @@ void cutOutside(voxelImageT<T>& vImage, char dir='z', int nExtraOut=1, int thres
 	ensure(dir=='z');
 
 	if(threshold<0)  {
-		array<double,5> thresholdsOtsu = otsu_th(vImage,1,std::numeric_limits<T>::max()-1,0.2);
+		array<double,5> thresholdsOtsu = otsu_th(vImage, Tint(1), TImax(T)-1, 0.2);
 		if (cuthighs) threshold=0.5*thresholdsOtsu[3]+0.5*thresholdsOtsu[3];
 		else          threshold=0.5*thresholdsOtsu[3]+0.5*thresholdsOtsu[2];
 		cout<<"  threshold:  "<<threshold<<",  "; cout.flush();
@@ -103,3 +109,4 @@ void cutOutside(voxelImageT<T>& vImage, char dir='z', int nExtraOut=1, int thres
 
 	cout<<" Mean image diameter:  "<<int(2.*sqrt(R2Sum/nnn[2]))<<",  n:"<<nnn[0]<<" "<<nnn[1]<<endl;
 }
+} // namespace VoxLib

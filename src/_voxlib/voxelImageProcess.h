@@ -10,10 +10,8 @@ Developed by:
 	- Ali Qaseminejad Raeini (2015-2021), Email: a.q.raeini@gmail.com
 \*-------------------------------------------------------------------------*/
 
-#include "SiRun.h"
 #include "typses.h"
 #include "voxelImage.h"
-#include "InputFile.h"
 
 
 #include "voxelImageML.h"
@@ -28,7 +26,6 @@ Developed by:
 #include "svplot.hpp"
 #endif
 
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -36,7 +33,7 @@ Developed by:
 
 #include <assert.h>
 
-								namespace MCTProcessing _begins_
+namespace MCTProcessing {
 
 
 
@@ -123,18 +120,17 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
 
 template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, std::string img2Nam) {
 	cout<<"   adjasting contrast,  ";
-	int meanvimg = otsu_th(vImg, 1, imaxT(T)-1, 0.2)[3];
-	int meantovxls = meanvimg;
+	double meanvimg = otsu_th(vImg, Tint(1), TImax(T)-1, 0.2)[3];
 
 	_dbgetOrReadImg(T,image2,img2Nam);
 
-	meantovxls= otsu_th(image2, 1 , maxT(T)-1 , 0.2)[3];
+	double meantovxls = otsu_th(image2, Tint(1), TImax(T)-1, 0.2)[3];
 
-	int delC = meantovxls; delC-=meanvimg;
+	Tint delC = meantovxls - meanvimg;
 	cout<<"  adjust contrast by:  "<<int(meantovxls)<<" - "<<int(meanvimg)<<" = "<<delC<<",  "; cout.flush();
 	forAllvp_(vImg)
 		if(0<(*vp) && (*vp)<maxT(T))
-			*vp = max(1, min(int(*vp)+delC, imaxT(T)-1));;
+			*vp = max(Tint(0), min(Tint(*vp)+delC, TImax(T)-1));;
 
 	return true;
 }
@@ -733,7 +729,7 @@ template<typename T>  bool segment2( stringstream& ins, voxelImageT<T>& vImg)  {
 	return segment2(vImg, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
 }
 
-template<typename T>  bool cutOutside( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool vxlProCutOutside( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("dir(z) nExtraOut(0) threshold outVal(-1) nShiftX(0) nShiftY(0) cutHighs(0)\n// automatically remove voxels on the outside of cylindrical samples");
 
 	//circular cut
@@ -742,7 +738,7 @@ template<typename T>  bool cutOutside( stringstream& ins, voxelImageT<T>& vImg) 
 	ins >> dir>>nExtraOut>>threshold>>outVal>>nShiftX>>nShiftY>>cuthighs;
 	(std::cout<<"  cutOutside:  dir:"<<dir<<",  nExtraOut:"<<nExtraOut<<",  threshold:"<<threshold<<",  cuthighs:"<<cuthighs<<",  nShiftX:"<<nShiftX<<",  nShiftY:"<<nShiftY ).flush();
 
-	cutOutside(vImg,dir,nExtraOut,threshold,cuthighs,nShiftX,nShiftY, T(outVal));
+	VoxLib::cutOutside(vImg,dir,nExtraOut,threshold,cuthighs,nShiftX,nShiftY, T(outVal));
 
 	(std::cout<<".").flush();
 	return true;
@@ -939,4 +935,4 @@ template<typename T>  bool readFromFloat( stringstream& ins, voxelImageT<T>& vIm
 }
 
 
-								_end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing

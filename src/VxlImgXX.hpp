@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include "pybind11/pytypes.h"
+#include "voxelEndian.h"
 #include "voxelImage.h"
 #include "voxelImageI.h"
 #include "shapeToVoxel.h"
@@ -32,7 +33,10 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)>=3) 
 
 template<typename VxT> 
 void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) {
-    m.def("segment2", [](voxelImageT<VxT> &m, int nSegs, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
+
+    using SelfT = voxelImageT<VxT>;
+
+    m.def("segment2", [](SelfT &m, int nSegs, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
                         double noisev, double localF, double flatnes, double resolution, double gradFactor,
                         int krnl, int nItrs, int writedumps) {
             return segment2(m, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
@@ -41,7 +45,7 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) 
         arg("noisev")=2., arg("localF")=800., arg("flatnes")=0.1, arg("resolution")=2.,
         arg("gradFactor")=0., arg("krnl")=2, arg("nItrs")=13, arg("writedumps")=0
     )
-    .def("segment", [](voxelImageT<VxT> &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
+    .def("segment", [](SelfT &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
          return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
         }, arg("n_segments")=2, arg("thresholds"), arg("min_sizes"), arg("smooth_image")="", 
         arg("noise_val")=16.0, arg("resolution_sq")=2.0, arg("write_dumps")=0
@@ -134,11 +138,11 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
         }, arg("outSurf"), "Write contour extraction to a surface file.")
     .def("sliceToPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv, const string& color) {
         ::sliceToPng(m, normalAxis, fnam, iSlice, bgnv, endv, color);
-        }, arg("normalAxis"), arg("filename"), arg("sliceIndex"), arg("val_min"), arg("val_max"), arg("color_map")="gray",
+        }, arg("normalAxis"), arg("filename"), arg("sliceIndex")=-1000000, arg("val_min")=0, arg("val_max")=-1000001, arg("color_map")="gray",
         "Save a 2D slice as a PNG image, color_map can be 'gray' or 'RGB'")
-    .def("sliceFromPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv) {
-        ::sliceFromPng(m, normalAxis, fnam, iSlice, bgnv, endv);
-        }, arg("normalAxis"), arg("filename"), arg("sliceIndex"), arg("val_min"), arg("val_max"), "Read a slice from a Png image")
+    // .def("sliceFromPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv) {
+    //     ::sliceFromPng(m, normalAxis, fnam, iSlice, bgnv, endv);
+    //     }, arg("normalAxis"), arg("filename"), arg("sliceIndex")=0, arg("val_min")=0, arg("val_max")=255, "Read a slice from a Png image")
     // Member functions and wrappers
     .def("rescaleValues", [](SelfT &m, VxT min, VxT max) { rescaleValues(m, min, max); }, arg("min"), arg("max"), "Rescale image values to [min, max].")
     .def("setOffset", [](SelfT &m, dbl3 off) { m.X0Ch() = off; }, arg("offset"), "Set the spatial offset (origin).")
@@ -162,14 +166,14 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     .def("medianX", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 in x-direction to reduce compressed file size")
     .def("FaceMedian06", &SelfT::FaceMedian06, arg("nAdj0"), arg("nAdj1"), 
          "Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels")
-    .def("PointMedian032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"), 
+    .def("pointMedian032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"), 
          "Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels")
     .def("faceMedNgrowToFrom", [](SelfT &m, VxT lblTo, VxT lblFrm, int ndif) { FaceMedGrowToFrom(m, lblTo, lblFrm, ndif); }, arg("labelTo"), arg("labelFrom"), arg("nDiff"), 
          "Face median grow to/from labels.")
     .def("delense032", [](SelfT &m, int x, int y, int r, char d, VxT v) { _delense032(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Delense operation.")
     .def("circleOut", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Circle out operation.")
     .def("growLabel", &SelfT::growLabel)
-    .def("keepLargest0", [](SelfT &m) { keepLargest0(m); })
+    .def("keepLargest", [](SelfT &m, VxT minvv, VxT maxvv) { keepLargestvv(m, minvv, maxvv); }, arg("min"), arg("max"), "Keep largest singly-connected region with values in [min, max].")
     //.def("maskWriteFraction", &SelfT::maskWriteFraction)
     .def("mapFrom", [](SelfT& m, const SelfT& vimg2, VxT vmin, VxT vmax, double scale, double shift) { mapToFrom(m, vimg2, vmin, vmax, scale, shift); }, arg("sourceImage"), arg("vmin"), arg("vmax"), arg("scale"), arg("shift"), "Map values from another image.") 
     .def("addSurfNoise", [](SelfT &m, const int randMask1, const int randMask2, int trsh, int randseed) { addSurfNoise(m, randMask1, randMask2, trsh, randseed); }, arg("mask1"), arg("mask2"), arg("threshold"), arg("seed"), "Add surface noise.")
@@ -233,7 +237,7 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
          return MCTProcessing::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
     }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
     .def("cutOutside", [](SelfT &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
-            ::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal));  }, 
+            VoxLib::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); }, 
          arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=0, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
     .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255)
     ;
