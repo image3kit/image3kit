@@ -37,8 +37,10 @@ template<typename T> std::string _s(const T& n){  std::ostringstream ss;  ss<<n;
 template<typename T> inline bool hasExt(const T& path, const std::string_view& ext) { return path.size()>ext.size() && path.compare(path.size()-ext.size(), ext. size(),ext) == 0; }
 
 //stringify macro args after (sub)macro expansion
+#ifndef TOSTRING
 #define STRINGIFY(xpandd) #xpandd
 #define TOSTRING(x_macro) STRINGIFY(x_macro)
+#endif
 
 #define __FILEBASENAME__ std::string(strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__, strcspn (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__,"."))
 

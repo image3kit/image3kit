@@ -1,8 +1,6 @@
 #pragma once
 
-// Convinience vector classes used by network extraction, flow simulation
-// and other codes developed by Ali Qaseminejad Raeini.
-// Main template classes defined here: var3, var2, piece and Vars
+// Convinience vector classes: var3, var2, piece and Vars...
 
 
 #include <iomanip>
@@ -20,9 +18,6 @@
 #include <regex>
 #include <numeric>
 
-#include "globals.h" // TOSTRING
-
-#define sizt size_t  // temp, was = int
 
 #ifdef VMMLIB
 #include "Vctr.h" // order is important for typse.h
@@ -44,6 +39,11 @@ template<typename T> T strTo(const std::string &s){  std::istringstream ss(s);  
 	#define  epsT(Typ)          std::numeric_limits<Typ>::epsilon()
 #endif
 
+// #include globals.h leads to compile errors in gcc-13
+#ifndef TOSTRING
+#define STRINGIFY(xpandd) #xpandd
+#define TOSTRING(x_macro) STRINGIFY(x_macro)
+#endif
 
 #ifdef OpenMP
  #ifdef _debugCompile_
@@ -59,6 +59,7 @@ template<typename T> T strTo(const std::string &s){  std::istringstream ss(s);  
 #define for_(_vector_m, _i_m)  for(size_t _i_m=0; _i_m<_vector_m.size(); ++_i_m)
 #define for_0(_i_end_m, _ind_)  for(int _ind_=0; _ind_<_i_end_m; ++_ind_)
 #define for_i_(_i_bgn_m,_i_end_m)  for(int i=_i_bgn_m; i<_i_end_m; ++i)
+
 
 constexpr double PI = 3.141592653589793;
 
@@ -84,7 +85,7 @@ struct var3  {
 	T _1()                       const  { return y; }
 	T _2()                       const  { return z; }
 
-	
+
 	var3&  operator += (const var3& v)  { x += v.x;  y += v.y;  z += v.z;  return  *this; }
 	var3&  operator -= (const var3& v)  { x -= v.x;  y -= v.y;  z -= v.z;  return  *this; }
 	var3&  operator += (const T& t)     { x += t;    y += t;    z += t;    return  *this; } // clumsy
@@ -190,11 +191,11 @@ template<class T>
 struct piece  {
 
 	piece()                   noexcept: d(0) ,   dn(0)     {}
-	piece(T* dd, sizt n)      noexcept: d(dd),   dn(d+n)   {}
+	piece(T* dd, size_t n)    noexcept: d(dd),   dn(d+n)   {}
 	piece(T* dd, T* de)       noexcept: d(dd),   dn(de)    {}
 	piece(const piece& p)     noexcept: d(p.d),  dn(p.dn) {}; //! Note: different from operator=(), note: casting away unenforced const
 	piece(std::vector<T>& vs) noexcept: d(&*vs.begin()), dn(d+vs.size()) {};
-	void reset(T* dd, sizt n)       {    d=dd;     dn=d+n; };
+	void reset(T* dd, size_t n)    {    d=dd;     dn=d+n; };
 	void reset(const piece& vs)    {    d=&vs[0]; dn=d+vs.size(); }//! note data hold by piece are not const unless piece is const itself
 	void reset(std::vector<T>& vs) {    d=&vs[0]; dn=d+vs.size(); }
 
@@ -203,8 +204,8 @@ struct piece  {
 	const T& back()     const { return *(dn-1); }
 	const T* cbegin()   const { return d; }
 	const T* cend()     const { return dn; }
-	T& operator[](sizt i)const { return d[i]; }
-	//const T& operator [](sizt i) const { return d[i]; }
+	T& operator[](size_t i)const { return d[i]; }
+	//const T& operator [](size_t i) const { return d[i]; }
 	size_t   size()     const { return dn-d; }
 	bool     empty()    const { return dn<=d; }
 	size_t   capacity() const { return dn-d; }
@@ -221,7 +222,7 @@ struct piece  {
 	piece& operator +=(T            v)  { for(auto& a:*this){ a += v; };        return *this; }
 	piece& operator -=(T            v)  { for(auto& a:*this){ a -= v; };        return *this; }
 	piece& operator *=(double       t)  { for(auto& a:*this){ a *= t; };        return *this; }
-	piece& operator *=(sizt         t)  { for(auto& a:*this){ a *= t; };        return *this; }
+	piece& operator *=(size_t       t)  { for(auto& a:*this){ a *= t; };        return *this; }
 	piece& operator /=(double       t)  { return (*this)*=(1./t); }
 	T sum() const                       { return std::reduce(d,dn); }
 	T avg() const                       { return sum()/size(); } // see also sumdbl
@@ -232,7 +233,7 @@ struct piece  {
 };
 
 
-template<class T>  piece<T> rang(T* t, sizt n) { return piece<T>(t, n); }
+template<class T>  piece<T> rang(T* t, size_t n) { return piece<T>(t, n); }
 template<class T, size_t N>  piece<T> allof(std::array<T, N>& vs) { return piece<T>(&*vs.begin(), &*vs.end()); }
 template<class T, template<class ...> class C>  piece<T> allof(C<T>& vs) { return piece<T>(&*vs.begin(), &*vs.end()); }
 template<class T, template<class ...> class C>  piece<T const> allof(const C<T>& vs) { return piece<T const>(&*vs.cbegin(), &*vs.cend()); }
@@ -259,14 +260,14 @@ struct Vars: public piece<T>  {
 	static constexpr Alocer20pc<T> A{};
 
 	Vars(): piece<T>() {};
-	Vars(sizt siz): piece<T>(A.aloc(siz), siz) {};
+	Vars(size_t siz): piece<T>(A.aloc(siz), siz) {};
 	Vars(size_t siz, const T& val): piece<T>(A.aloc(siz), siz) {  std::fill(d, dn, val); }
 	Vars(const piece<T>& v):        piece<T>(A.aloc(v.size()), v.size()) {  std::copy(v.d, v.dn, d); }
 	Vars(const Vars& v):            piece<T>(A.aloc(v.size()), v.size()) {  std::copy(v.d, v.dn, d); }
 	Vars(const std::vector<T>& v):  piece<T>(A.aloc(v.size()), v.size()) {  std::copy(&v[0], &*v.end(), d); }
 	Vars(const piece<T>& v, T(*func)(const T&)): piece<T>(A.aloc(v.size()), v.size()) { std::transform(&v[0], &*v.end(), d, func); }
 	Vars(Vars&& v)  noexcept:       piece<T>(v.d, v.size())      { v.d=0; v.dn=0; }
-	Vars(const T* dd, sizt nn):     piece<T>(A.aloc(nn), nn)       { std::copy(dd, dd+nn, d); }
+	Vars(const T* dd, size_t nn):   piece<T>(A.aloc(nn), nn)       { std::copy(dd, dd+nn, d); }
 	Vars(const T* dd, const T* de): piece<T>(A.aloc(de-dd), de-dd) { std::copy(dd, de, d); }
 	~Vars() noexcept { delete[] d; }
 
@@ -292,7 +293,7 @@ struct Vars: public piece<T>  {
 	template<class U> Vars& operator *=(const piece<U>& v)  { for(auto& a:*this){ a *= v[&a-d]; };  return *this; }
 	template<class U> Vars& operator /=(const piece<U>& v)  { for(auto& a:*this){ a /= v[&a-d]; };  return *this; }
 
-	void resize(sizt nn) { /// does not release the memory
+	void resize(size_t nn) { /// does not release the memory
 		if(d){
 			size_t no = dn-d;
 			if (nn>no) { // || nn<(no>>1)
@@ -303,7 +304,7 @@ struct Vars: public piece<T>  {
 			else dn = d+nn;
 		} else { _newD(nn); }
 	}
-	void resize(sizt nn, const T& val)  {
+	void resize(size_t nn, const T& val)  {
 		size_t no = dn-d;
 		resize(nn);
 		if(nn>no) std::fill(d+no, dn, val);
@@ -382,7 +383,7 @@ class varsORv: public Vars<T> {
 	varsORv(const varsORv& vs)       : Vars<T>(vs),      dfult(vs.dfult), Xa(vs.Xa), Xp(vs.Xp), transf(vs.transf)              , ax(vs.ax), px(vs.px) {}
 	varsORv(const std::vector<T>& vs): Vars<T>(vs),      dfult(vs.dfult), Xa(vs.Xa), Xp(vs.Xp), transf(vs.transf)              , ax(vs.ax), px(vs.px) {}
 	varsORv(varsORv&& vs)  noexcept  : Vars<T>(vs),      dfult(vs.dfult), Xa(vs.Xa), Xp(vs.Xp), transf(vs.transf)              , ax(vs.ax), px(vs.px) {}
-	varsORv(const T* dd, sizt nn)    : Vars<T>(dd,nn),   dfult(dd[nn-1]), Xa(1)    , Xp(0)    , transf([](double a){return a;}), ax(1)    , px(0)     {}
+	varsORv(const T* dd, size_t nn)  : Vars<T>(dd,nn),   dfult(dd[nn-1]), Xa(1)    , Xp(0)    , transf([](double a){return a;}), ax(1)    , px(0)     {}
 	varsORv(const T* dd, const T* de): Vars<T>(dd,de),   dfult(*(de-1)) , Xa(1)    , Xp(0)    , transf([](double a){return a;}), ax(1)    , px(0)     {}
 	varsORv(const T* dd, const T* de, T(*fn)(T)): Vars<T>(dd,de,fn)     , Xa(1)    , Xp(0)    , transf([](double a){return a;}), ax(1)    , px(0)     {}
 
@@ -396,8 +397,8 @@ class varsORv: public Vars<T> {
 
 	void operator =(Vars<T>&& v) noexcept { Vars<T>::eat(v); }
 
-	T&       operator [](sizt i)       { if(d+i<dn) return d[i]; else return dfult; }
-	const T& operator [](sizt i) const { if(d+i<dn) return d[i]; else return dfult; }
+	T&       operator[](size_t i)       { if(d+i<dn) return d[i]; else return dfult; }
+	const T& operator[](size_t i) const { if(d+i<dn) return d[i]; else return dfult; }
 	T scalefrom01(T val) const { return Xp+Xa*transf(val*ax+px); }
 
 	///fn shall be inverse of transf
