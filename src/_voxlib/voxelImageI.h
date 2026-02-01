@@ -19,6 +19,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 #include "globals.h"
 #include <map>
 #include <limits>   // std::numeric_limits
+#include <functional>
 
 #ifdef ZLIB
 #include "zfstream.h"
