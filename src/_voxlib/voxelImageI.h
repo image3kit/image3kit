@@ -406,7 +406,7 @@ template<typename T>   void voxelField<T>::writeBin(std::string fnam) const  {
 		(std::cout<<"  writing compressed file "<<fnam<<";  size: "<<nnn).flush();
 		gzofstream  of(fnam.c_str());
 		of << setcompression(5);//,Z_RLE TODO: benchmark  Z_DEFAULT_COMPRESSION   Z_RLE +gz
-		ensure(of,"Failed in writing "+fnam);
+		ensure(!of.fail(),"Failed in writing "+fnam);
 		if(data_.size()) {
 			of.write(reinterpret_cast<const char*>(&((*this)(0,0,0))), (size_t(nnn.x)*nnn.y*nnn.z) * sizeof(T));
 			of.flush();
@@ -618,7 +618,7 @@ void voxelField<T>::writeHeader(std::string fnam, int3 iS, int3 iE, dbl3 dx, dbl
 		else if (typeid(T)==typeid(float)) typeNmeVTK="MET_FLOAT";
 		else if (typeid(T)==typeid(double)) typeNmeVTK="MET_DOUBLE";
 
-		std::ofstream of(fnam);	ensure(of, fnam);
+		std::ofstream of(fnam);	ensure(!of.fail(), fnam);
 		of
 			 <<"ObjectType =  Image"<<std::endl
 			 <<"NDims =	   3"<<std::endl

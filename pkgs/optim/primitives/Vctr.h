@@ -403,9 +403,7 @@ _MT_ const Vctr<M,T> Vctr<M,T>::UNIT_Z(0, 0, 1);
 #endif
 
 #ifndef VMMLIB_NO_TYPEDEFS
-#  ifdef _MSC_VER
-	 typedef UINT8 uint8_t;
-#  endif
+
 typedef Vctr<2,int> Vctr2i;
 typedef Vctr<3,int> Vctr3i;
 typedef Vctr<4,int> Vctr4i;

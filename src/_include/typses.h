@@ -47,14 +47,14 @@ template<typename T> T strTo(const std::string &s){  std::istringstream ss(s);  
 
 #ifdef OpenMP
  #ifdef _debugCompile_
-  #define OMPragma(_args_)
+  #define OMPragma(...)
  #else
-  #define OMPragma(_args_) _Pragma(_args_)
+  #define OMPragma(...) _Pragma(__VA_ARGS__)
  #endif
 #else
- #define OMPragma(_args_)
+ #define OMPragma(...)
 #endif
-#define OMPFor(_args_)  OMPragma(TOSTRING(omp parallel for _args_))
+#define OMPFor(...)  OMPragma(TOSTRING(omp parallel for __VA_ARGS__))
 
 #define for_(_vector_m, _i_m)  for(size_t _i_m=0; _i_m<_vector_m.size(); ++_i_m)
 #define for_0(_i_end_m, _ind_)  for(int _ind_=0; _ind_<_i_end_m; ++_ind_)
