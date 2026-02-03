@@ -15,7 +15,7 @@ def test_readPng():
     img2 = ik.VxlImgU8("piskelapp.tif")
     assert img2.data().shape == (72,54,1)
     print(img2)
-    img2.sliceToPng(normalAxis="z", filename="piskelapp2")
+    img2.plotSlice(filename="piskelapp2", normal_axis="z")
 
 if __name__ == "__main__":
     # test_version()

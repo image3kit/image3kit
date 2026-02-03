@@ -16,13 +16,13 @@ def test_voxlibI():
 
 def test_writePng():
     lnt, rad = 128, 16
-    img = ik.VxlImgU8((lnt, rad * 2, rad * 2), 1)
-    img.Paint(ik.cylinder((0, rad, rad), (lnt, rad, rad), (rad * 3) // 4, 0))
+    img = ik.VxlImgU8((lnt, rad*2, rad*2), 1)
+    img.paint(ik.cylinder((0,rad,rad), (lnt, rad, rad), (rad*3)//4, 0))
     img.printInfo()
-    img.sliceToPng("x", "cross_x.png", lnt // 2, 0, 2, "RGB")
-    img.sliceToPng("y", "cross_y.png", rad, 0, 2, "RGB")
-    img.sliceToPng("z", "cross_z.png", rad, 0, 2, "RGB")
-    indices = np.where(img.data() == 0)
+    img.plotSlice(filename="cross_x.png", normal_axis='x', slice_index=lnt//2, min_val=0, max_val=2, color_map="RGB")
+    img.plotSlice(filename="cross_y.png", normal_axis='y', slice_index=rad, min_val=0, max_val=2, color_map="RGB")
+    img.plotSlice(filename="cross_z.png", normal_axis='z', slice_index=rad, min_val=0, max_val=2, color_map="RGB")
+    indices = np.where(img.data()==0)
     print(indices)
     print(lnt * rad * rad * 4)
 

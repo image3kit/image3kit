@@ -14,11 +14,11 @@ def test_readPng():
     img.printInfo()
     assert img.shape() == img.data().shape
     assert img.nz() == 1
-    img.plotAll(zProfile=False) # FIXME: zProfile hangs svplot when nz==1
+    img.plotAll(z_profile=False) # FIXME: zProfile hangs svplot when nz==1
     img.distMapExtrude(offset=0.5, scale=2.0,)
     assert img.nz() > 1
     slice=8
-    img.plotAll(name="extruded", normalAxis="z", sliceIndex=slice)
+    img.plotAll(filename="extruded", normal_axis="z", slice_index=slice)
     assert Path(f"fig/extruded_z{slice}_grey.png").exists()
 
 if __name__ == "__main__":
