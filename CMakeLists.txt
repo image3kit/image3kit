@@ -12,8 +12,10 @@ project(
 # Find pybind11 and Python
 find_package(pybind11 CONFIG REQUIRED)
 
-find_package(ZLIB REQUIRED)
-find_package(OpenMP REQUIRED)
+
+if(MSVC)
+  add_compile_definitions(NOMINMAX)
+endif()
 
 include(FetchContent)
 

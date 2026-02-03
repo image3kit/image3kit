@@ -153,14 +153,14 @@ vars<dbls> vxlDist(const voxelFieldT& vf, int nsteps=32, double minV=3e38, doubl
 
 
 
-template<typename T>   void voxelField<T>::reset(int3 nnn)  {
+template<typename T> inline  void voxelField<T>::reset(int3 nnn)  {
 	nij_=size_t(nnn.x)*nnn.y;
 	this->data_.resize(nnn.z*nij_+128); // 128 extra memory for readRLE, sync: XADSDAS
 	this->data_.resize(nnn.z*nij_);
 	nnn_=nnn;
 }
 
-template<typename T>   void voxelField<T>::reset(int3 nnn, T value)  {
+template<typename T> inline  void voxelField<T>::reset(int3 nnn, T value)  {
 	nij_=size_t(std::max(0,nnn.x))*std::max(0,nnn.y);
 	this->data_.resize(size_t(std::max(0,nnn.z))*nij_+128,value); // 128 extra memory for readRLE, sync: XADSDAS
 	this->data_.resize(size_t(std::max(0,nnn.z))*nij_,value);
@@ -777,7 +777,7 @@ int resetFromImageT(voxelImageT<T>& vImg, const voxelImageTBase* imgPtr) { //! c
 	return -1;
 }
 
-template<typename T>
+template<typename T> inline // inline is needed for crap macOS clang++
 voxelImageT<T>::voxelImageT(const std::string& hdrNam, readOpt procConvert)
 : X0_(0.,0.,0.),dx_(1,1,1) 
 { //! read image and if needed convert its type // readConvertFromHeader

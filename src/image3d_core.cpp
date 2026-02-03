@@ -8,6 +8,17 @@
 
 namespace py = pybind11;
 
+// Explicit instantiation to ensure symbol is generated, WTF: crap macOS clang++
+template void voxelField<unsigned char>::reset(var3<int>, unsigned char);
+template void voxelField<unsigned short>::reset(var3<int>, unsigned short);
+template void voxelField<int>::reset(var3<int>, int);
+template void voxelField<float>::reset(var3<int>, float);
+
+template voxelImageT<unsigned char>::voxelImageT(const std::string&, readOpt);
+template voxelImageT<unsigned short>::voxelImageT(const std::string&, readOpt);
+template voxelImageT<int>::voxelImageT(const std::string&, readOpt);
+template voxelImageT<float>::voxelImageT(const std::string&, readOpt);
+
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace VxlPy;
 

@@ -321,7 +321,7 @@ typedef voxelImageT<unsigned char> voxelImage;   //! default image type
 
 //#define forAllitr12(_vxls1,_vxls2)   for (const auto itr1 _vxls1.data_.begin(), itr2 _vxls2.data_.begin(); itr2<_vxls2.end(); ++itr1, ++itr2)
 #define forAlliii_(_vxls)   OMPFor()	\
-	for ( size_t iii=0; iii<(_vxls).data_.size(); ++iii)
+	for (long long iii=0; iii<(_vxls).data_.size(); ++iii)
 
 #define forAllvp_(_vxls)   OMPFor()	\
 	for(auto vp=(_vxls).data_.data(); vp<&(*(_vxls).data_.cend()); ++vp)
@@ -352,7 +352,7 @@ typedef voxelImageT<unsigned char> voxelImage;   //! default image type
 #define forAllcp_seq_(_vxls)  for(const auto* cp=_vxls.data_.data(), *_ve_=&(*_vxls.data_.cend()); cp<_ve_; ++cp)
 #define forAllvv_seq(_vxls)   for(auto vv : _vxls.data_)
 #define forAllvr_seq(_vxls)   for(auto& vr : _vxls.data_)
-#define forAlliii_seq(_vxls)  for(size_t iii=0; iii<_vxls.data_.size(); ++iii)
+#define forAlliii_seq(_vxls)  for(long long iii=0; iii<_vxls.data_.size(); ++iii)
 
 #define forAllkji_m_seq(_nNei,_vxls)   \
  	for (int k=_nNei; k<(_vxls).nz()-_nNei; ++k)   \
@@ -381,7 +381,7 @@ typedef voxelImageT<unsigned char> voxelImage;   //! default image type
 //not used in libvoxel:
 
 #define forAlliii_k(_vxls)		\
-	for(size_t iii=k*_vxls.nij_; iii<size_t(k+1)*_vxls.nij_; ++iii)
+	for(long long iii=k*_vxls.nij_; iii<(long long)(k+1)*_vxls.nij_; ++iii)
 
 #define forkjid_seq(iMin_m,iMax_m,delta_i)   \
 	for (int k=iMin_m.z; k<iMax_m.z; k+=delta_i )   \
