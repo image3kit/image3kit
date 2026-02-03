@@ -16,6 +16,60 @@ find_package(ZLIB REQUIRED)
 find_package(OpenMP REQUIRED)
 
 include(FetchContent)
+
+find_package(ZLIB)
+if(NOT ZLIB_FOUND)
+  message(STATUS "ZLIB not found, fetching from source...")
+  FetchContent_Declare(
+    ZLIB
+    URL https://github.com/madler/zlib/releases/download/v1.3.1/zlib-1.3.1.tar.gz
+    EXCLUDE_FROM_ALL
+  )
+  FetchContent_MakeAvailable(ZLIB)
+  if(NOT TARGET ZLIB::ZLIB)
+    if(TARGET zlibstatic)
+      add_library(ZLIB::ZLIB ALIAS zlibstatic)
+    elseif(TARGET zlib)
+      add_library(ZLIB::ZLIB ALIAS zlib)
+    endif()
+  endif()
+endif()
+
+if(APPLE)
+  if(NOT DEFINED OpenMP_ROOT AND DEFINED ENV{OpenMP_ROOT})
+    set(OpenMP_ROOT $ENV{OpenMP_ROOT})
+  endif()
+  
+  find_package(OpenMP)
+  
+  if(NOT OpenMP_FOUND)
+    # Hint for Homebrew libomp
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+    set(OpenMP_CXX_LIB_NAMES "omp")
+    if (EXISTS "${OpenMP_ROOT}/lib/libomp.dylib")
+      set(OpenMP_omp_LIBRARY "${OpenMP_ROOT}/lib/libomp.dylib")
+    elseif(EXISTS "/opt/homebrew/opt/libomp/lib/libomp.dylib")
+       set(OpenMP_omp_LIBRARY "/opt/homebrew/opt/libomp/lib/libomp.dylib")
+    elseif(EXISTS "/usr/local/opt/libomp/lib/libomp.dylib")
+       set(OpenMP_omp_LIBRARY "/usr/local/opt/libomp/lib/libomp.dylib")
+    endif()
+    
+    if (DEFINED OpenMP_omp_LIBRARY)
+       message(STATUS "Manual config for OpenMP: ${OpenMP_omp_LIBRARY}")
+       set(OpenMP_FOUND TRUE)
+       add_library(OpenMP::OpenMP_CXX UNKNOWN IMPORTED)
+       set_target_properties(OpenMP::OpenMP_CXX PROPERTIES
+         IMPORTED_LOCATION "${OpenMP_omp_LIBRARY}"
+         INTERFACE_COMPILE_OPTIONS "${OpenMP_CXX_FLAGS}"
+         INTERFACE_LINK_LIBRARIES "${OpenMP_omp_LIBRARY}"
+       )
+    endif()
+  endif()
+endif()
+
+if(NOT OpenMP_FOUND)
+  find_package(OpenMP REQUIRED)
+endif()
 FetchContent_Declare(
   TIFF
   URL https://gitlab.com/libtiff/libtiff/-/archive/v4.6.0/libtiff-v4.6.0.tar.gz
@@ -66,6 +120,9 @@ target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 set_property(TARGET _core PROPERTY CXX_STANDARD 23)
 # Toolset: gcc-linux:
 set(CMAKE_CXX_FLAGS_INIT "-Werror -Wall -Wextra -Wpedantic")
+if(MSVC)
+  set(CMAKE_CXX_FLAGS_INIT "/W4 /permissive-")
+endif()
 # target_link_options(_core PRIVATE "-Wl,-z,defs")
 target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB TIFF::tiff OpenMP::OpenMP_CXX)
 

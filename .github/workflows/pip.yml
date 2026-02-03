@@ -25,6 +25,19 @@ jobs:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
 
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install libomp
+        echo "OpenMP_ROOT=$(brew --prefix libomp)" >> $GITHUB_ENV
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        vcpkg install zlib:x64-windows
+        echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+        echo "SKBUILD_CMAKE_ARGS=-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+
     - name: Build and install
       run: pip install --verbose . --group test
 
