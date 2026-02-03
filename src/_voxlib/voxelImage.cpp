@@ -29,7 +29,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 using namespace std; //cin cout endl string stringstream  istream istringstream regex*
 
 
-int maxNz = 500, _maxNz = 500|12; // FIXME: #LICENSEPROBLEM add license check to skelor etc and make default license invalid
+int maxNz = 1000000, _maxNz = 1000000|12; // use `reset maxNz 100` to limit the number of layers processed during fine-tuning of image processing params
 
 
 namespace MCTProcessing{
@@ -215,15 +215,19 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys)  {
 	else if (hasExt(hdrNam,".raw.gz") || hasExt(hdrNam,".raw") || hasExt(hdrNam,".dat"))  { // detect size and voxel size from image name.
 		string
 		data=replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(
-									hdrNam,".gz$",""), ".raw$",""), ".dat$",""),"__","\n"),"_"," ");
-		data=replaceFromTo(replaceFromTo(replaceFromTo(data,"voxel",""),"size",""),"um","\n");
+									hdrNam,".gz$",""), ".raw$"," "), ".dat$"," "),"__","\n"),"_"," ");
+
+		data=regex_replace(data,regex(".*/"), "");
+		data=regex_replace(data, regex(R"(\b[a-zA-Z_]\w*)"), "");
+
+		data=replaceFromTo(replaceFromTo(replaceFromTo(data,"voxel",""),"size"," "),"um ","\n");
 		data=regex_replace(data,regex("( [0-9][0-9]*)c"), " $1 $1 $1 ", regex_constants::format_first_only);
 		data=regex_replace(data,regex("( [0-9][0-9]*)[ x]*([0-9][0-9]*)[ x]*([0-9][0-9]* )"),
 		                                        "\n   reset Nd0 $1 $2 $3 ", regex_constants::format_first_only);
 		data=regex_replace(data,regex("^[^\n]*\n"), "", regex_constants::format_first_only);
 		data=regex_replace(data,regex("\n|($)"),"\n   read "+hdrNam+"\n", regex_constants::format_first_only);
 		for(auto&da:data)  { if(da=='p') da='.'; else if(da=='\n') break; }
-		cout<<"  Keywords: {\n"<<data<<"  }"<<endl;
+		cout<<"  filename keywords: {\n"<<data<<"  }"<<endl;
 		vxlProcess(data,vImg,hdrNam);
 		procesKeys=0;
 	}
@@ -275,13 +279,15 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys)  {
 		cout<<"  flipEndian "<<endl;
 		flipEndian(vImg);	}
 
-	if(autoUnit  && vImg.dx_[0]>0.02)	{ //&& dxread
-		cout<<"   dx="<<vImg.dx_[0]<<"(>0.02 -> assuming unit is um), ";
+	if(autoUnit  && vImg.dx_[0]>1.0000001)	{ //&& dxread, doggy
+		cout<<"\n\n\n  WARNING dx="<<vImg.dx_[0]<<"(>1 -> assuming unit is um),\n  please set Unit manually if needed ****\n\n\n";
 		unit_ = 1e-6;
 	}
-	vImg.dx_*=unit_;
-	vImg.X0_*=unit_;
-	if(abs(unit_-1.)>epsT(float)) cout<<"  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
+	if(abs(unit_-1.)>epsT(float)) {
+		vImg.dx_*=unit_;
+		vImg.X0_*=unit_;
+		cout<<"\n  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
+	}
 	static const voxelplugins<T> plagins;
 	if (procesKeys) plagins.vxProcess(InputFile(fil,hdrNam),vImg);
 	cout<<"."<<endl;

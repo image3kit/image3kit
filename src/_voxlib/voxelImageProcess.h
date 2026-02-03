@@ -716,14 +716,14 @@ template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
 
 template<typename T>  bool segment2( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("nSegs(3) t_i(1 60 128 254) minSizs(1 2 2)  "
-		        " noisev(2) localF(0.5) flatnes(0.01)  resolution(2) nItrs(13) writedumps(0)");
+		        " noisev(2) localF(0.05) flatnes(0.01)  resolution(2) nItrs(13) writedumps(0)");
 
 	int nSegs(2);  ins >> nSegs ;
 
 	vars<Tint> th;  ins >> th;//- thresholds.  NB! using vars<T> does not read ascii as number
 	vars<int> minSizs;  ins >> minSizs;   //NOT USED
 
-	double noisev(2.),localF(800), flatnes(0.1), resolution(2), gradFactor(0); int krnl(2), nItrs(13), writedumps(0);
+	double noisev(2.),localF(0.05), flatnes(0.1), resolution(2), gradFactor(0); int krnl(2), nItrs(13), writedumps(0);
 	ins >> noisev >>localF >> krnl >> flatnes >> resolution >> gradFactor>> nItrs >> writedumps;
 
 	return segment2(vImg, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
