@@ -19,7 +19,9 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 #include "voxelImageI.h"
 #include "voxelEndian.h"
 #include "voxelPng_stbi.h"
+#ifdef TIFLIB
 #include "voxelTiff.h"
+#endif
 
 #ifdef _WBASM // work around CLang bugs complaining about undefined function
 #include "vxlPro1.cpp"
@@ -61,7 +63,7 @@ class  voxelplugins {
 				if(inp.data().size()>2) cout<<endl;
 			}
 			else {
-				if(ky.first!="end") { cout<<"  stopped executing "+inp.fileName()+" before \""+ky.first+"\"  :/ ";
+				if(ky.first!="end") { cout<<"  stopped executing "+inp.fileName()+" ("+nam+") before \""+ky.first+"\"  :/ ";
 												return -1; }
 				break;
 			}

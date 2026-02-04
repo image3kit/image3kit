@@ -3,6 +3,7 @@
 // Convinience vector classes: var3, var2, piece and Vars...
 
 
+#include <cstddef>
 #include <iomanip>
 #include <string>
 #include <vector>
@@ -246,7 +247,7 @@ public:
         return new T[n];
     }
 
-    void deallocate(T* p, size_t n)  const noexcept {
+    void deallocate(T* p, size_t)  const noexcept {
         delete[] p;
     }
 };

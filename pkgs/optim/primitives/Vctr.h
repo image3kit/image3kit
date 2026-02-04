@@ -41,8 +41,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <vector>
-#include <string>
 #include <cstring>
 #include <limits>
 #include <algorithm>
@@ -67,7 +65,7 @@
 
 
 
-template<typename T> class var3;
+template<typename T> struct var3;
 
 
 #define _MT_ template< size_t M, typename T  >
@@ -87,6 +85,7 @@ public:
 
 	// constructors
 	Vctr() : array() {} // http://stackoverflow.com/questions/5602030
+	Vctr(const Vctr&) = default;
 	explicit Vctr(const T& a); // sets all components to a;
 	Vctr(const T& x, const T& y);
 	Vctr(const T& x, const T& y, const T& z);

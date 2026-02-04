@@ -7,7 +7,7 @@
 using namespace std;
 
 
-VxlStrips::VxlStrips(const InputFile& inp, bool verbose)
+VxlStrips::VxlStrips(const InputFile& inp)
 		: nx(0), ny(0), nz(0), vxlSize(1), X0(0.,0.,0.)
 	{
 		_1ExtraSegX = !inp.getOr("oldAlg", true);
@@ -138,7 +138,7 @@ void VxlStrips::createStripsX(const voxelImage& VImage) {
 
 // Testing TODO
 voxelImage segToVxlMesh(const VxlStrips & ref)  {/// converts strips back to voxelImage
-	voxelImage vxls(ref.nx,ref.ny,ref.nz,255);
+	voxelImage vxls({ref.nx,ref.ny,ref.nz},255);
 	for (int iz = 0; iz<ref.nz; ++iz)
 		for (int iy = 0; iy<ref.ny; ++iy)  {
 			const strips& sgs = ref.segXs_[iz+1][iy+1];
@@ -313,9 +313,9 @@ voxelImage readImageU8(const InputFile& inp) {
 	return VImage;
 }
 
-voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR, bool verbose)  {
+voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR)  {
 
-	VxlStrips cfg(inp, verbose);
+	VxlStrips cfg(inp);
 
 	int ivVal=0;
 
@@ -331,7 +331,7 @@ voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double
 	cout<< " nx   "<<nx<< " "<<ny<< " "<<nz1<<endl;
 	cout<< " computing distance map for index "<<int(ivVal)<<endl;
 
- 	voxelImageT<float> rads(nx,ny,nz1,0.);
+ 	voxelImageT<float> rads(int3(nx,ny,nz1),0.);
 	float maxrrr=0;
 	OMPragma("omp parallel for reduction(max:maxrrr)")
 	for (int iy = 0; iy<ny; ++iy)  {
@@ -346,7 +346,7 @@ voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double
  	//rads.write("distMapExtrude_radius.mhd");
 	cout<< "maxrrr radius = "<<maxrrr<<endl;
 
-	voxelImage vxls(int3{nx,ny,int(maxrrr+0.5)+2},dbl3{cfg.vxlSize},dbl3{0.},255);
+	voxelImage vxls(int3(nx,ny,int(maxrrr+0.5)+2), 255, dbl3{cfg.vxlSize},dbl3{0.});
 
 	int offCenter = maxrrr*offsetR + 1.501;
 	OMPFor()

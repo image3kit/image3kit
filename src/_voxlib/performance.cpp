@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <math.h>
+#include <cmath>
 #include <chrono>
 #include <iomanip>
 #include "typses.h"

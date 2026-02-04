@@ -14,8 +14,8 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 \*-------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <assert.h>
+#include <cmath>
+#include <cassert>
 #include <iostream>
 #include "voxelImage.h"
 
@@ -240,7 +240,7 @@ class sphere : public shape {
 class roughSphere : public shape {
 
 	dbl3 p1; double rr, r2, r2min;
-	int nXimg,nYimg, imin, jmin;//< image sizes after cut to make image size the largest integer fraction of 2PI/2
+	int nXimg,nYimg;//< image sizes after cut to make image size the largest integer fraction of 2PI/2
 	voxelImageT<float> height;
  public:
 	roughSphere(stringstream & ins): shape(/*polyType*/'r') {

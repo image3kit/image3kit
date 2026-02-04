@@ -38,7 +38,7 @@ voxelImageT<int> labelImage(const voxelImageT<T>& vImage, const T minvv=0, const
 
 	cout<<" labeling Image between "<<int(minvv)<<"  "<<int(maxvv)<<endl;
 
-	voxelImageT<int> lbls(n_2[0]+2,n_2[1]+2,n_2[2]+2, bigN); //+2 is needed for min5Nei
+	voxelImageT<int> lbls({n_2[0]+2, n_2[1]+2, n_2[2]+2}, bigN); //+2 is needed for min5Nei
 	lbls.X0Ch()=vImage.X0();
 	lbls.dxCh()=vImage.dx();
 	forAllkji_(vImage) if(minvv<=vImage(i,j,k) && vImage(i,j,k)<=maxvv) lbls(i+1,j+1,k+1)= i+j*n_2[0]+2; ///. int won't work for large images, go slice by slice

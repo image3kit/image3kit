@@ -17,10 +17,11 @@
 #define BOOST_SVG_SVG_COLOR_HPP
 
 
+#include "globals.h"
 #include <ostream>
 
 //namespace boost {
-							namespace svg _begins_
+namespace svg {
 
   /*!
     \brief Colors that have SVG standard special names.
@@ -401,6 +402,6 @@
  	//else
  	return c01;
  }
-							_end_of_(namespace svg)
+} // namespace svg
 
 #endif // BOOST_SVG_SVG_COLOR_HPP

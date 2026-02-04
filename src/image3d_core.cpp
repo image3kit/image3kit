@@ -13,6 +13,7 @@ template void voxelField<unsigned char>::reset(var3<int>, unsigned char);
 template void voxelField<unsigned short>::reset(var3<int>, unsigned short);
 template void voxelField<int>::reset(var3<int>, int);
 template void voxelField<float>::reset(var3<int>, float);
+template void voxelField<var3<float>>::reset(var3<int>, var3<float>);
 
 template voxelImageT<unsigned char>::voxelImageT(const std::string&, readOpt);
 template voxelImageT<unsigned short>::voxelImageT(const std::string&, readOpt);
@@ -42,7 +43,7 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
         return v[i];
     })
     .def("__setitem__", [](var3<int> &v, int i, int val) { v[i] = val; })
-    .def("__len__", [](const var3<int> &v) { return 3; })
+    .def("__len__", [](const var3<int> &) { return 3; })
     .def("__repr__", [](const var3<int> &v) { return "int3(" + _s(v) + ")"; })
     ;
 
@@ -60,7 +61,7 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
         return v[i];
     })
     .def("__setitem__", [](var3<double> &v, int i, double val) { v[i] = val; })
-    .def("__len__", [](const var3<double> &v) { return 3; })
+    .def("__len__", [](const var3<double> &) { return 3; })
     .def("__repr__", [](const var3<double> &v) { return "dbl3(" + _s(v) + ")"; })
     ;
 
@@ -69,7 +70,7 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     .def(py::init([](py::dict dic) { return pyCastInput(dic); }))
     .def("add", [](InputFile &inp, std::string key, std::string val) { inp.add(key, val); })
     .def("set", [](InputFile &inp, std::string key, std::string val) { inp.set(key, val); })
-    .def("get", [](InputFile &inp, std::string key, std::string val) { return inp.kwrd(key); })
+    .def("get", [](InputFile &inp, std::string key) { return inp.kwrd(key); })
     .def("setDefault", &InputFile::setDefault)
     .def("echoKeywords", [](InputFile &inp) { inp.echoKeywords(); })
     .def("renameKeys", &InputFile::renameKeys)

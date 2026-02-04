@@ -5,10 +5,11 @@
 #include "voxelImage.h"
 #include "IOUtils.h"
 
-#include <stdio.h>
-#include <math.h>
-#include <malloc.h>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
 #include <png.h>
+
 #include <svg_color.hpp>
 
 template <typename T>

@@ -8,11 +8,10 @@ For further information please contact us by email:
 Ali Q Raeini:    a.q.raeini@gmail.com
 \*-------------------------------------------------------------------------*/
 
-#include <fstream>
 #include <iostream>
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 
 #include "voxelImage.h"
@@ -59,7 +58,7 @@ int main(int argc, char** argv)  {
 	int3 n=vimage.size3();
 
 
-	voxelImageT<float> fField(n[0]-2,n[1]-2,n[2]-2,0.);
+	voxelImageT<float> fField(n-2, 0.);
 	const float p2dx=0.5/vimage.dx()[0];
 	fField.readBin(psimg);
 	fField.growBox(1);
@@ -87,7 +86,7 @@ int main(int argc, char** argv)  {
 	else cout<<"Error wrong flow direction, "<<dir<<endl;
 
 
-	voxelField<float3> pGrad(n[0],n[1],n[2],{0.0f,0.0f,0.0f});
+	voxelField<float3> pGrad({n[0],n[1],n[2]},{0.0f,0.0f,0.0f});
 	{
 	 float maxMagGrad=0.;
 	 forAllkji_1_(vimage)  {

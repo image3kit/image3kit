@@ -26,7 +26,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 #include <fstream>
 #include <iostream>
-#include <string.h>
+#include <string>
 #include <cassert>
 #include <sstream>
 #include <memory>
@@ -180,11 +180,9 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
 
 	voxelImageT(): X0_(0.,0.,0.), dx_(1,1,1) {}
 
-	voxelImageT(int n1, int n2, int n3, T value) //do not remove, the following constructor will be misused in old codes!
-	: voxelField<T>( n1,  n2,  n3,  value),  X0_(0.,0.,0.), dx_(1.,1.,1.) {}
 
-	voxelImageT(int3 n, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.), T value=0)
-	: voxelField<T>( n.x,  n.y,  n.z,  value), X0_(xmin),dx_(dx) {}
+	voxelImageT(int3 n, T value=0, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.))
+	: voxelField<T>( n,  value), X0_(xmin),dx_(dx) {}
 
 	voxelImageT(const std::string& fileName, readOpt procConvert); // readConvertFromHeader
 
@@ -321,12 +319,23 @@ typedef voxelImageT<unsigned char> voxelImage;   //! default image type
 
 //#define forAllitr12(_vxls1,_vxls2)   for (const auto itr1 _vxls1.data_.begin(), itr2 _vxls2.data_.begin(); itr2<_vxls2.end(); ++itr1, ++itr2)
 #define forAlliii_(_vxls)   OMPFor()	\
-	for (long long iii=0; iii<(_vxls).data_.size(); ++iii)
+	for (long long iii=0; iii<(long long)((_vxls).data_.size()); ++iii)
 
+// workaround the primitive MSVC OpenMP support
+#ifndef OpenMP
 #define forAllvp_(_vxls)   OMPFor()	\
 	for(auto vp=(_vxls).data_.data(); vp<&(*(_vxls).data_.cend()); ++vp)
 #define forAll_vp_(_vxls)   OMPFor()	\
 	for(auto vp=(_vxls).data_.data()+(_vxls).data_.size()-1; vp>&(*(_vxls).data_.cbegin())-1; --vp)
+#else
+#define forAllvp_(_vxls)   OMPFor()	\
+	for (long long _iii=0; _iii<(long long)((_vxls).data_.size()); ++_iii) \
+	for (auto vp=(_vxls).data_.data()+_iii; vp==(_vxls).data_.data()+_iii; vp=NULL)
+
+#define forAll_vp_(_vxls)   OMPFor()	\
+	for (long long _iii=(long long)((_vxls).data_.size())-1; _iii>=0; --_iii) \
+	for (auto vp=(_vxls).data_.data()+_iii; vp==(_vxls).data_.data()+_iii; vp=NULL)
+#endif
 
 
 #define forAllkvp_(_vxls)	OMPFor()	\
@@ -352,7 +361,7 @@ typedef voxelImageT<unsigned char> voxelImage;   //! default image type
 #define forAllcp_seq_(_vxls)  for(const auto* cp=_vxls.data_.data(), *_ve_=&(*_vxls.data_.cend()); cp<_ve_; ++cp)
 #define forAllvv_seq(_vxls)   for(auto vv : _vxls.data_)
 #define forAllvr_seq(_vxls)   for(auto& vr : _vxls.data_)
-#define forAlliii_seq(_vxls)  for(long long iii=0; iii<_vxls.data_.size(); ++iii)
+#define forAlliii_seq(_vxls)  for(long long iii=0; iii<((long long)(_vxls.data_.size())); ++iii)
 
 #define forAllkji_m_seq(_nNei,_vxls)   \
  	for (int k=_nNei; k<(_vxls).nz()-_nNei; ++k)   \

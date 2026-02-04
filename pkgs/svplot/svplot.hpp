@@ -25,21 +25,18 @@
 #define BOOST_SVPLOT_HPP
 
 
-#include <typses.h>
+#include "globals.h"
+#include "typses.h"
 
 #include <svgraphic.hpp>
 #include <svplot_axes.hpp>
 
-#include <map>
 #include <string>
-#include <sstream>
-#include <utility>
 #include <ostream>
 #include <iterator>
-#include <exception>
 #include <iostream> // for debug.
 
-							namespace svg _begins_
+namespace svg {
 
 
 /*!
@@ -93,13 +90,13 @@ class svplot_series
 		  std::string title = "",//  \param @c std::string title Title of data series.
 			point_shape   pshap = circlet,
 			svg_color     clr = blank,  /// fil and line colour only
-			std::vector<int>  dash = std::vector<int>(),
+			// std::vector<int>  dash = std::vector<int>(),
 			svg_color (*clrInterpf)(const float& f, svg_color c0, svg_color c1) = &rgbtween
 	 )
 	 : title_(title), //!< Title of a series of data values.
 		marker_(clr, clr*0.1, 5, pshap), // Default point style (default fill same as line color).
 		marker2_(clr, clr*0.3, 15, pshap), // Default point style (default fill same as line color).
-		line_style_(blank, blank, 2, false, false),  // Default line style, no fill, width 2, no line_on, no bezier.
+		line_style_(blank, blank, 2, false),  // Default line style, no fill, width 2, no line_on, no bezier.
 		pointScale_(1.), pointScale2_(0.),seriesClr_(1.),
 		clrinterf_(clrInterpf)
 	{
@@ -119,13 +116,13 @@ class svplot_series
 		std::string title = "",
 		point_shape pshap = circlet,
 		svg_color   clr = blank,  /// fil and line colour only
-		std::vector<int>  dash = std::vector<int>(),
+		// std::vector<int>  dash = std::vector<int>(),
 		svg_color  (*clrInterpf)(const float& f, svg_color c0, svg_color c1) = &rgbtween
 	 ) :
 		title_(title), //!< Title of a series of data values.
 		marker_(clr, clr*0.1, 5, pshap), // Default point style (default fill same as line color).
 		marker2_(clr, clr*0.3, 15, pshap), // Default point style (default fill same as line color).
-		line_style_(clr, blank, 2, false, false), // Default line style, no fill, width 2, no line, no bezier.
+		line_style_(clr, blank, 2, false), // Default line style, no fill, width 2, no line, no bezier.
 		pointScale_(1.), pointScale2_(0.),  seriesClr_(1.),
 		clrinterf_(clrInterpf)
 	{
@@ -350,14 +347,14 @@ public:
 		legend_header_(0, 0, "", legend_style_, center_align, horizontal),
 		legend_place_(outside_right), // default but interacts with using pl_window.
 		legend_left_(-1), legend_top_(-1), // Default top left of plot window.
-		x_ax_(dark, 1, true, false),//, -10., +10.
-		y_ax_(dark, 1, true, false),//, -10., +10.
+		x_ax_(dark, 1),//, -10., +10.
+		y_ax_(dark, 1),//, -10., +10.
 		x_label_info_(0, 0, "", text_style(18), center_align, horizontal),
 		y_label_info_(0, 0, "", text_style(18), center_align, upward),
 		x_tight_(1e-6), // margin that a point can lie outside top and bottom tick.
 		y_tight_(1e-6), //!< margin that a point can lie outside top and bottom tick without triggering another interval and tick .
-		x_ticks_(X,text_style(16)),// so for other defaults see no_style.
-		y_ticks_(Y,text_style(16)),
+		x_ticks_(text_style(16)),// so for other defaults see no_style.
+		y_ticks_(text_style(16)),
 
 
 		x_include_zero_(false), // If autoscaled, include zero on X-axis.
@@ -471,7 +468,7 @@ public:
       container1.begin(),
       container1.end(),
       container2.begin(),
-      title, auto_point_shape(), auto_color(), auto_stroke_dash())
+      title, auto_point_shape(), auto_color())//, auto_stroke_dash()
     );
     return serieses_[serieses_.size()-1]; //! \return Reference to data series just added to make chainable.
   }
@@ -521,6 +518,5 @@ public:
 
  }; // class svplot
 
-								_end_of_(namespace svg)
-//} // namespace boost
+} // namespace svg
 #endif // BOOST_SVPLOT_HPP

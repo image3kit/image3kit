@@ -1,13 +1,15 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <typeindex>
 #include <unordered_map>
-#include <string.h>
+#include <string>
 #include <iostream>
 
 #include "tiffio.h"
+
+#include "globals.h"
 #include "voxelImage.h"
 
 //https://stackoverflow.com/questions/24059421/adding-custom-tags-to-a-tiff-file, didn't work properly, also a too dirty solution

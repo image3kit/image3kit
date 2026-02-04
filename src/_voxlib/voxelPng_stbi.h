@@ -2,20 +2,28 @@
 
 #include <iostream>
 #include <string>
+#include <cstdio>
+#include <cmath>
+#include <cstdlib>
+#include <cstdint>
 #include <algorithm>
-#include <stdint.h>
+#include <cctype>
 
 #include "stb_image_write.h"
 #include "stb_image.h"
+
+
+#ifdef min // to avoid conflict with windows.h mess
+#undef min
+#undef max
+#endif
+
 #include "IOUtils.h"
 #include "globals.h"
 
 #include "typses.h"
 #include "voxelImage.h"
 
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
 #include <svg_color.hpp>
 
 //template <typename T>
@@ -37,7 +45,7 @@ template <typename T>
 int slice2RGBAPng(const voxelImageT<T>& imgRGB, char axis, std::string fnam, int iSlice, T bgnv, T endv, const voxelImageT<T>& imgAlf, T bgna, T enda)  {
 	std::cout<<"Writing "<<fnam<<" \n";  // #WViz
 
-	int width, height, CHANNEL_NUM=4;
+	int width=0, height=0, CHANNEL_NUM=4;
 	auto nnn=imgRGB.size3();
 	switch (axis) {
 		case 'x':  width=nnn[2]; height=nnn[1]; ensure(iSlice<nnn[0]," i_slice ?<"+_s(nnn[0]),2);  break;
@@ -133,7 +141,7 @@ int slice2RGBPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int 
 	std::cout<<"Writing "<<fnam<<" \n";  // #WViz
 	int code = 0;
 
-	int width, height, CHANNEL_NUM=3;
+	int width=0, height=0, CHANNEL_NUM=3;
 	auto nnn=vImage.size3();
 	switch (axis) {
 		case 'x':  width=nnn[2]; height=nnn[1]; ensure(iSlice<nnn[0]," i_slice ?<"+_s(nnn[0]),2);  break;
@@ -178,7 +186,7 @@ int slice2GrayPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int
 	std::cout<<"Writing "<<fnam<<" \n";  // #WViz
 	int code = 0;
 
-	int width, height, CHANNEL_NUM=1;
+	int width=0, height=0, CHANNEL_NUM=1;
 	auto nnn=vImage.size3();
 	switch (axis) {
 		case 'x':  width=nnn[2]; height=nnn[1]; ensure(iSlice<nnn[0]," i_slice ?<"+_s(nnn[0]),2);  break;
@@ -219,16 +227,15 @@ int sliceFromPng(voxelImageT<T>& vImage, std::string normalAxis, std::string fna
 
 	std::cout<<"Reading "<<fnam<<" \n";
 	char axis = tolower(normalAxis[0]);
-	int iDir=axis-'x'; iDir%=3;
 	int code = 0;
 
-	int width, height, channels;
+	int width=0, height=0, channels=0;
 	// force 4 channel (rgba)
 	unsigned char *data = stbi_load(fnam.c_str(), &width, &height, &channels, 4);
-	ensure(data, "Could not load file " + fnam, -1);
+	ensure(data && width>0 && height>0, "Could not load file " + fnam, -1);
 
 	if (vImage.nz()==0) {
-		vImage.reset(int3(width, height, 1), 255);
+		vImage.reset({width, height, 1}, 255);
 	}
 
 	auto nnn=vImage.size3();

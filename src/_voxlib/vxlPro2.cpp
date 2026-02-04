@@ -1,4 +1,4 @@
- #define _noAddFuncs
+#define _noAddFuncs
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION

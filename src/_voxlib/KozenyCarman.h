@@ -4,7 +4,7 @@ For further information please contact Ali Q Raeini:    a.q.raeini@gmail.com
 
 
 #include "typses.h"
-#include "voxelImageI.h"
+#include "voxelImageI.h" // IWYU pragma: keep
 #include "InputFile.h"
 
 
@@ -19,7 +19,7 @@ class poroRange : public int2  {
 
 
 
-void KozenyCarman(const InputFile& inp, const voxelImage& rokImg, std::vector<int>& segValues, std::vector<poroRange>& RTs)  {
+void inline KozenyCarman(const InputFile& inp, const voxelImage& rokImg, std::vector<int>& segValues, std::vector<poroRange>& RTs)  {
 	///. \param RTs: vValue-index pairs segValues
 	using namespace std;
 	using std::string;

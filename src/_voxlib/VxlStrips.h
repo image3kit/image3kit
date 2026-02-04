@@ -10,6 +10,7 @@ struct medbal;
 
 struct strip {
 	strip(const strip&) = delete;
+	strip& operator=(const strip&) = default; // check for mb_a, mb_b
 	strip() :  iCh0(0), iCh1(0), mb_a(nullptr), mb_b(nullptr) { }
 	strip(int ibgn, unsigned char value) : i0(ibgn), vv(value), iCh0(0), iCh1(0), mb_a(nullptr), mb_b(nullptr) { }
 
@@ -28,7 +29,6 @@ struct strips  {
 	void operator =(const strips& c) {
 		sts = new strip[c.cnt+1]; cnt=c.cnt;
 		dAsrt(c.sts);
-		// sV0_=c.sV0_; // or nullptr?
 		std::copy(c.sts, c.sts+cnt+1, sts); };
 	void reSize(int size) { dAsrt(!sts);  sts = new strip[size+1]; cnt=size; }
 
@@ -57,7 +57,7 @@ struct strips  {
 class VxlStrips  {
 public:
 
-	VxlStrips(const InputFile& inp, bool verbose);
+	VxlStrips(const InputFile& inp);
 
 	void setImageInfo(const InputFile& inp, const voxelImage& VImage);
 	void createStripsX(const voxelImage& VImage);
@@ -114,4 +114,4 @@ public:
 
 };
 
-voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR, bool verbose);
+voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR);

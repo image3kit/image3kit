@@ -516,8 +516,9 @@ void x_axis_auto_locate()
 	{ //! Data series (all values) to use to calculate autoscaled X-axis values.
 		scale_axis(XAxis(),ser.series_.begin(), ser.series_.end(), // All the container.
 			&tiks.min_, &tiks.max_, &tiks.major_ticks_frac_,
-			autoscale_check_limits_, autoscale_plusminus_,
-			x_include_zero_, x_tight_, tiks.value_precision_, scalMinMax);
+			autoscale_check_limits_, // autoscale_plusminus_,
+			x_include_zero_, // x_tight_, 
+			tiks.value_precision_, scalMinMax);
 	}
 
 	tiks.major_ticks_frac_ = std::abs(tiks.major_ticks_frac_); // in case

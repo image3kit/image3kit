@@ -117,7 +117,6 @@
 #include <string>
 #include <ostream>
 #include <fstream>
-#include <exception>
 #include <vector>
 #include <string>
 
@@ -243,7 +242,7 @@ class svgraphic
 		if(subplots_[iPlt]==0)
 		{
 			if(iPlt>=int(subplots_.size())) std::cout<<"Error: requesting too large plot index from svg "<<iPlt<<" actual size: "<<n_x_<<"*"<<n_y_<<std::endl;;
-			subplots_[iPlt]=new subplotType(x_size_/n_x_-2.000, y_size_/n_y_-2.000, iX*x_size_/n_x_+1.000, iY*y_size_/n_y_+1.000);
+			subplots_[iPlt]=new subplotType(x_size_/n_x_-2, y_size_/n_y_-2, iX*x_size_/n_x_+1, iY*y_size_/n_y_+1);
 		} //int Error_memory_leak risk;
 		return *static_cast<subplotType*>(subplots_[iPlt]);
 	}

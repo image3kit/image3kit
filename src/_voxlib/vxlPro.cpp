@@ -15,11 +15,11 @@ extern int _maxNz;
 								namespace MCTProcessing _begins_
 
 
-template<typename T> bool ignore( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T> bool ignore( stringstream& ins, voxelImageT<T>&)  {
 	KeyHint("{ section to ignore }");
 	return 0;
 }
-template<typename T> bool raiseErr( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T> bool raiseErr( stringstream& ins, voxelImageT<T>&)  {
 	KeyHint("{ // crash! }");
 	throw std::runtime_error("bad behavior!");
 	return 0;
@@ -57,7 +57,7 @@ template<typename T> bool selectPore( stringstream& ins, voxelImageT<T>& vImg)  
 	return 0;
 }
 
-template<typename T,  enable_if_t<std::is_arithmetic<T>::value, int> = 0>
+template<typename T,  std::enable_if_t<std::is_arithmetic<T>::value, int> = 0>
 bool rescale( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("range_min range_max;// rescale values to be within range");
 	(cout<<"  rescaling voxel values to [ ").flush();
@@ -333,7 +333,7 @@ template<typename T> bool circleOut( stringstream& ins, voxelImageT<T>& vImg)  {
 }
 
 
-template<typename T> bool maskWriteFraction( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T> bool maskWriteFraction( stringstream& ins, voxelImageT<T>&)  {
 	KeyHint("not implemented");
 	int maskvv(2);
 	Tint minIelm(1), maxIelm=std::numeric_limits<T>::max();
@@ -433,7 +433,11 @@ bool mapFrom( stringstream& ins, voxelImageT<T>& vImg)  {
 
 
 template<typename T> void addFuncs(VxlFuncs<T>& key_funs); //EXP:;
-template<typename T> VxlFuncs<T> namedProcesses()  __attribute__((visibility("default")));
+template<typename T> VxlFuncs<T> namedProcesses()
+#ifndef _MSC_VER
+__attribute__((visibility("default")))
+#endif
+;
 
 template<typename T> VxlFuncs<T> namedProcesses() requires(sizeof(T)<=2) {
 	auto key_funs = VxlFuncs<T>{

@@ -23,17 +23,16 @@
 #define BOOST_SVPLOT_AXES_HPP
 
 
+#include "globals.h"
 #include <algorithm>
  // minmax_element finds both min and max elements more efficiently than separately.
 
 #include <cmath> // using std::fabs, std::pow, std::ceil, std::log10
 #include <limits> // using std::numeric_limits;
-#include <stdexcept> // using std::domain_error; sdtd::runtime_error;
-#include <iterator> // using std::iterator_traits;
 #include <utility> // using std::pair; using std::make_pair;
 #include <typses.h> // using std::pair; using std::make_pair;
 
-							namespace svg _begins_
+namespace svg {
 
 class XAxis
 { public:
@@ -111,9 +110,9 @@ void scale_axis(const Axis& Ax,
   double* axis_max_value, //  Computed maximum value for the axis, updated here.
   double* major_ticks_fraction_, //  Computed tick increment for the axis, updated here.
   bool check_limits, // Whether to check all values for infinity, NaN etc.
-  double autoscale_plusminus, // NOT_USED Mutiplier of uncertainty or standard deviations to allow for confidence ellipses.
+//   double autoscale_plusminus, // NOT_USED Mutiplier of uncertainty or standard deviations to allow for confidence ellipses.
   bool origin = false, // Do not include the origin unless the range min_value <= 0 <= max_value.
-  double tight = 0., // NOT_USED tightest - fraction of 'overrun' allowed before another tick used.
+//   double tight = 0., // NOT_USED tightest - fraction of 'overrun' allowed before another tick used.
   int precision = 3, // Minimum number of major ticks.
   bool scaleMinMax = false
 )
@@ -187,6 +186,6 @@ void scale_axis(const Axis& Ax,
 
 
 
-								_end_of_(namespace svg)
+} // namespace svg
 
 #endif // BOOST_SVPLOT_AXES_HPP

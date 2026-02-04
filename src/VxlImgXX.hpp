@@ -34,7 +34,7 @@ inline InputFile pyCastInput(py::dict dic) {
 
 
 template<typename VxT>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)>=3) {}
+void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &) requires(sizeof(VxT)>=3) {}
 
 template<typename VxT> 
 void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) {
@@ -59,13 +59,13 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) 
 }
 
 template<typename VxT>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)>=2) {
+void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &) requires(sizeof(VxT)>=2) {
 }
 template<typename VxT> 
 void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=1) {
     m
     .def("distMapExtrude", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
-        m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR, true); },
+        m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR); },
         arg("distMapDict")=py::dict(), arg("offset")=0.5, arg("scale")=1.0, arg("power")=1.0,
         "Extrude proportional to distance map"
     )
@@ -85,7 +85,7 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
             { long(sizeof(VxT)), long(sizeof(VxT)*m.nx()), long(sizeof(VxT) * m.nxy()) } // Strides (in bytes)
         );
     })
-    .def(py::init([](py::tuple tpl, VxT value) { return SelfT(tpl[0].cast<int>(), tpl[1].cast<int>(), tpl[2].cast<int>(), value); }),
+    .def(py::init([](py::tuple nxyz, VxT value) { return SelfT({nxyz[0].cast<int>(), nxyz[1].cast<int>(), nxyz[2].cast<int>()}, value); }),
          arg("shape")=py::make_tuple(0,0,0), arg("value") = 0, "Initialize a new image of size tuple (nx, ny, nz) with the fill value.")
     .def("__repr__", [VxTypS](const SelfT &m) {
         return "<" + std::string(VxTypS) + " shape=("+_s(m.size3())+")>";
@@ -147,7 +147,7 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     .def("paintAfter"    , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setAfter); }, arg("shape"), "Paint after the shape (plane...)")
     .def("paintAddBefore", [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addBefor); }, arg("shape"), "Add (+) a shape's value before the shape (plane...)")
     .def("paintAddAfter" , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addAfter); }, arg("shape"), "Add (+) a shape's value after the shape (plane...)")
-    .def("writeContour"  , [&](SelfT &m, const string& outSurf) { // TODO
+    .def("writeContour"  , [&](SelfT &, const string& outSurf) { // TODO
         InputFile inp;
         if (outSurf.size())  inp.set("outputSurface", outSurf);
         // vxlToSurfWrite(m, inp);

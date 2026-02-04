@@ -54,7 +54,7 @@ class sumAbsDif {
 
 	};
 
-	double operator()(long n, const double *x) const
+	double operator()(long , const double *x) const
 	{
 		double res(1000);
 		Vctr3d   trans = x; trans*=SCALE_TRANS; // assuming the init guess is
@@ -107,7 +107,7 @@ class sumAbsDif7DOF {
 	:  vImage_(vImageGrad), toImage_(toImageGrad), wImage_(wImage), nMin_(toInt3(nMin)), nMax_(toInt3(nMax)), calls_count(0)
 	{	};
 
-	double operator()(long n, const double *x) const
+	double operator()(long, const double *x) const
 	{
 		double res(1000);
 		dbl3   trans(x); trans*=SCALE_TRANS; // assuming the init guess is
@@ -156,7 +156,7 @@ class sumAbsDif7DOF {
 
 
 template<typename T>
-inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0., int nSkipZ=0, int defaultV=-1)
+inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0., int defaultV=-1)
 {
 
 	constexpr int nx = 7;
@@ -295,7 +295,7 @@ inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, v
 
 
 template<typename T>
-inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0., int nSkipZ=0, int defaultV=-1)
+inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0.)
 {
 
 	const int nx = 12;
@@ -393,16 +393,16 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
 	}
 
 
-	dbl3 bgnReg(0.2,0.2,0.2), endReg(0.8,0.8,0.8), dX0(0.,0.,0.);   int thetaz(0),   nSkip(0), defaultV(-1);
-	ins >>bgnReg               >>endReg                >>dX0                >>thetaz     >>nSkip   >>defaultV;
-								cout<<"  "<<bgnReg<<"  "<<endReg <<"  "<<            dX0<< "  "<<     thetaz<<"  "<<   nSkip<<"  "<<defaultV<<endl;
+	dbl3 bgnReg(0.2,0.2,0.2), endReg(0.8,0.8,0.8), dX0(0.,0.,0.);   int thetaz(0), defaultV(-1); // nSkipZ
+	ins >>bgnReg               >>endReg                >>dX0                >>thetaz     >>defaultV;
+								cout<<"  "<<bgnReg<<"  "<<endReg <<"  "<<            dX0<< "  "<<     thetaz<<"  "<<   defaultV<<endl;
 								ensure(bgnReg[0]<0.5,"check registerToImage data",2);
 								ensure(Xstp<5, "too large s_Xstp size");
 								ensure(bgnReg[0]<=0.99 && bgnReg[0]>=0., "bad bgnReg[0]");
 								ensure(endReg[0]>=0.01 && endReg[0]<=1., "bad endReg[0]");
 
 
-	cout<<"registerToImage:  "<<toImgName<<"  "<<maskNam<<"  bilateralX  "<<nIters<<"  "<<kernRad<<"  "<<Xstp<<"  "<<sigmavv<<"  "<<sigmadd<<"  "<<sharpFact<<"  "<<smotOut<<"  "<<toSmOut<<"  "<<bgnReg<<"  "<<endReg<<"  "<<dX0<<"  "<<thetaz<<"  "<<nSkip<<"  "<<defaultV<<endl;
+	cout<<"registerToImage:  "<<toImgName<<"  "<<maskNam<<"  bilateralX  "<<nIters<<"  "<<kernRad<<"  "<<Xstp<<"  "<<sigmavv<<"  "<<sigmadd<<"  "<<sharpFact<<"  "<<smotOut<<"  "<<toSmOut<<"  "<<bgnReg<<"  "<<endReg<<"  "<<dX0<<"  "<<thetaz<<"  "<<defaultV<<endl;
 
 	voxelImageT<T> vxlsmoot = resampleMean(vxlImage, CrsFctr);
 	if(nIters) {
@@ -456,7 +456,7 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
 
 	(cout<<" \n ... ").flush();
 	//std::pair<Tnsr3d,Vctr3d> trnsf =
-	registerToImageEMS7DOF(vxlImage,vxlsmoot,vxlImage2,vxlsmot2, wImage, bgnReg, endReg, dX0, thetaz,  nSkip, defaultV);
+	registerToImageEMS7DOF(vxlImage,vxlsmoot,vxlImage2,vxlsmot2, wImage, bgnReg, endReg, dX0, thetaz, defaultV);
 
 
 	(cout<<".").flush();

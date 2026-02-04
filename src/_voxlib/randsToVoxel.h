@@ -13,8 +13,8 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 \*-------------------------------------------------------------------------*/
 
-#include <math.h>
-#include <assert.h>
+#include <cmath>
+#include <cassert>
 #include "voxelImage.h"
 
 

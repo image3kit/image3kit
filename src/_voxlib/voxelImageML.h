@@ -801,7 +801,7 @@ inline pair<OtT, array<double,5>> otsu_threshold(const piece<double>& hist, int 
 	}
 
 	OtT level = shift + ilevel*scale;
-	OtT minv = shift + minv*scale;
+	OtT minv = shift + ibgn*scale;
 	OtT maxv = shift + iend*scale;
 
 	double  avgs[2] = {sunL/wL, (sumB-sunL)/(wB-wL)};
@@ -881,7 +881,7 @@ template<typename T>
 voxelImageT<uint8_t> otsu_th01(const voxelImageT<T>& vImg, int  minvi=0, int  maxvi=maxT(T), double skipFrac=0.)
 {//! Warning doesn't work for negatives
 	T otst2 = otsu_th(vImg,minvi,maxvi,skipFrac)[2];
-	voxelImageT<uint8_t> msk(vImg.size3(),vImg.dx(),vImg.X0(),1);
+	voxelImageT<uint8_t> msk(vImg.size3(), 1, vImg.dx(),vImg.X0());
 	forAlliii_(vImg)	if(vImg(iii)<otst2) msk(iii)=0;
 	return msk;
 }
@@ -969,7 +969,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
 	if (writeDumps) vImg.write("dumpDringMeGrow1.tif");
 
 
-	voxelImageT<T> radimag(nr, nth+6, nz,0);
+	voxelImageT<T> radimag({nr, nth+6, nz}, 0);
 	for (int z=0; z<int(radimag.nz()) ; z++)
 	{
 		int k = z*nzCrs;

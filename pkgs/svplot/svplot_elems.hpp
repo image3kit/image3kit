@@ -17,6 +17,8 @@
 // (See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include "svg_color.hpp"
+#include "svg_elements.hpp"
 #define FOLD
 
 #ifndef BOOST_SVG_SVG_STYLE_HPP
@@ -28,11 +30,10 @@
 
 #include <iostream>
 #include <sstream>
-#include <limits>
 #include <string>
 
 //namespace boost {
-							namespace svg _begins_
+namespace svg {
 
 
 // Forward declarations of classes in svg_style.hpp
@@ -293,7 +294,7 @@ public:
   std::string dasharray_; //!< svg stroke-dasharray style
 
   //! Constructor to set plot line style, but providing defaults for all member data.
-  line_style(const svg_color& col = black, const svg_color& fill_col = blank, double width = 2, bool line_on = true, bool bezier = false)
+  line_style(const svg_color& col = black, const svg_color& fill_col = blank, double width = 2, bool bezier = false)
     : svg_style(col,fill_col,width),  bezier_curve_(bezier)    {  } // Provides defaults for all private data.
 
 
@@ -380,9 +381,9 @@ public:
   // Default constructor.
   axis_line_style( //!< Default constructor.  Sets all member data items with defaults for all.
     const svg_color col = black, //!< Axis line color.
-    double width = 1, //!< Axis line width.
-    bool label_on = true, //!< Label axis with text - example: "length".
-    bool axis_lines_on = true  //!< Draw an X horizontal or a Y vertical axis line.
+    double width = 1 //, //!< Axis line width.
+    // bool label_on = true, //!< Label axis with text - example: "length".
+    // bool axis_lines_on = true  //!< Draw an X horizontal or a Y vertical axis line.
     )
    :   color_(col), axis_width_(width),//, min_(min), max_(max)  dim_(d),
     //axis_position_(axis_position),
@@ -502,7 +503,7 @@ public:
 
      //! Constructor setting several parameters, but providing default values for all member data.
     tick_style(
-    dim d = X, //!< X or Y axis (-1 if not assigned yet).
+    // dim d = X, //!< X or Y axis (-1 if not assigned yet).
     const text_style& txtstyle = no_style, //!< Default text font style.
     double max = -10.,  //!< Maximum x value,  <min means we need to update the results.
     double min = +10., //!< Minimum x value., >max means we need to update the results
@@ -734,8 +735,8 @@ inline const std::string e_to_x10(std::string s)
   if(s[1]=='e'&&s[0]=='1')
     s="10"+superscript(s.substr(2)); // remove "-0", leave "-dd"
   else
-  if (j != string::npos)
-    s=s.substr(0,j)+"⨯10"+superscript(s.substr(j+1)); // remove "-0", leave "-dd"
+    if (j != string::npos)
+      s=s.substr(0,j)+"⨯10"+superscript(s.substr(j+1)); // remove "-0", leave "-dd"
   return s; //! \return length of trimmed string (perhaps unchanged).
 } // const std::string strip(double d)
 
@@ -794,7 +795,6 @@ enum pl_doc_structure
 
 
 
-								_end_of_(namespace svg)
-//} // namespace boost
+} // namespace svg
 
 #endif // BOOST_SVG_SVG_STYLE_HPP

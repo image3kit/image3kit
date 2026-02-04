@@ -77,6 +77,8 @@ public:
 	template<size_t P, size_t Q, typename U >
 	Tnsr( const Tnsr< P, Q, U >& source_);
 
+	Tnsr(const Tnsr&) = default;
+
 	// accessors
 	inline T& operator()( size_t i1, size_t i2);
 	inline const T& operator()( size_t i1, size_t i2) const;

@@ -11,6 +11,7 @@ Developed by:
 \*-------------------------------------------------------------------------*/
 
 #include "typses.h"
+#include "voxelEndian.h"
 #include "voxelImage.h"
 
 
@@ -18,7 +19,6 @@ Developed by:
 #include "voxelImageCutOutside.h"
 #include "voxelRegions.h"
 #include "voxelPng_stbi.h"
-#include "voxelEndian.h"
 #include <algorithm>
 #include <limits>
 
@@ -31,7 +31,7 @@ Developed by:
 #include <sstream>
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 namespace MCTProcessing {
 
@@ -233,7 +233,7 @@ template<typename T> bool adjustSliceBrightness(voxelImageT<T>& vImg, voxelImage
 	return true;
 }
 
-template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& )  {
 	KeyHint("....");
 	cout<<"  adjusting Slice RegBrightness  ";
 	int nSmoothItr(3), nSmoothKrnl(20);
@@ -313,7 +313,7 @@ template<typename T>  bool smooth( stringstream& ins, voxelImageT<T>& vImg)  {
 }
 
 
-template<typename T>  bool medianTime( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool medianTime( stringstream& ins, voxelImageT<T>& )  {
 	KeyHint("Not implemented");
 	//int nMedImgs=5;	ins >> nMedImgs;
 	//cout<<"\n  nMedImgs:"<<nMedImgs;
@@ -397,7 +397,7 @@ template<typename T>  bool mode26( stringstream& ins, voxelImageT<T>& vImg)  {
 
 template<typename T>  bool flipEndian( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("fix ending, use to convert big-endian to small-ending");
-	flipEndian(vImg);
+	::flipEndian(vImg);
 	(cout<<"flipEndian.").flush();
 	return true;
 }
@@ -413,7 +413,7 @@ template<typename T> int svgZProfile(const voxelImageT<T>& vImg, const string& f
 		double sum=0.; size_t cnt=0;
 		forAlliii_k(vImg) {  T vv=vImg(iii); if(minv<=vv && vv<=maxv)  { sum+=vv; ++cnt; } }
 		datas[0][k]=k;
-		datas[1][k]=sum/std::max(cnt, 1ul);
+		datas[1][k]=sum/std::max(cnt, size_t(1));
 		datas[2][k]=cnt;
 	}
 	my_plot.plot(datas[0], datas[1],"").line_on(true).shape(svg::no_point);
@@ -525,7 +525,7 @@ template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
 }
 #endif
 
-template<typename T>  bool end_here( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool end_here( stringstream& ins, voxelImageT<T>& )  {
 	KeyHint("//End of VxlPro commands");
 	cout<<"end_here"<<endl;
 	//DONOT throw xception("end_here");	// end_here is used as synonym with end which is also used as the last data in InputFile commands
@@ -583,7 +583,7 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
 	cout<<":"<<endl;
 
 
-	ensure(trshlds.size() > nSegs, "threshold array less than nSegs, <" + _s(nSegs), -1);
+	ensure(trshlds.size() > size_t(nSegs), "threshold array less than nSegs, <" + _s(nSegs), -1);
 	ensure(nSegs>1, "nSegs  shall be at least 2", -1);
 	constexpr int nHist = std::min(Tint(maxT(T)), Tint(2<<12)-1);
 	constexpr Tint delta = maxT(T)/nHist;
@@ -882,7 +882,7 @@ template<typename T>  bool labelImage( stringstream& ins, voxelImageT<T>& vImg) 
 template<typename T> bool readFromFloat(voxelImageT<T>& vImg, std::string header, float aa, float bb) {
 	cout<<" Reading data from header "<<header<<" converting to T (short),  d = "<<aa<<"*x+"<<bb<<endl;
 	voxelImageT<float> vImgf(header, readOpt::procOnly); // readFromHeaderT
-	vImg=voxelImageT<T>(vImgf.size3(), vImgf.dx(), vImgf.X0(), 0);
+	vImg=voxelImageT<T>(vImgf.size3(), 0, vImgf.dx(), vImgf.X0());
 	forAlliii_(vImg)  vImg(iii) = max(minT(T),T(min(fmaxT(T), aa*vImgf(iii)+bb)));
 
 	(std::cout<<".").flush();

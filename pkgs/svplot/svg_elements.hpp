@@ -26,7 +26,7 @@
 #include <vector>
 
 
-							namespace svg _begins_
+namespace svg {
 
 
 
@@ -372,7 +372,7 @@ class svg_element
 	svg_element()    {     }//! Default constructor.
 
 
-	virtual void write(std::ostream& rhs) {}; //!< write functions output SVG commands.
+	virtual void write(std::ostream& rhs) = 0; //!< write functions output SVG commands.
 
 	virtual ~svg_element()
 	{ //! destructor.
@@ -518,7 +518,7 @@ class qurve_element: public svg_element
 		  << " Q" << x2_ << "," << y2_ << " " // Control point - will not pass thru this point.
 		  << x3_ << "," << y3_ <<"\"";
 	  if(style_info_.fill_on() == false)
-		 o_str << " fill = \"none\"";
+		  o_str << " fill = \"none\"";
 	  o_str<<"/>";
 	}
 }; // class qurve_element
@@ -1237,7 +1237,6 @@ struct path_point	//! Base class for m_path, z_path, q_path, h_path, v_path, c_p
     void clear()    {      children.clear();    } //! Remove all the child nodes.
   }; // class g_element
 
-								_end_of_(namespace svg)
-//} // namespace boost
+} // namespace svg
 
 #endif // BOOST_SVG_TAG_HPP

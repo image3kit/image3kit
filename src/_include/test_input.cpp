@@ -11,13 +11,11 @@ namespace std {}; class string {}; class vector {}; class ostringstream {}; clas
 #endif
 
 
-#include <fstream>
 #include <iostream>
 #include <vector>
 #include <array>
-#include <memory>
 
-#include <assert.h>
+#include <cassert>
 #include "globals.h"
 #include "InputFile.h"
 #include "profilers.h"
@@ -28,7 +26,7 @@ using namespace std;
 
 int main() {
  int nErrs=0; // number of errors, if any
- #define TEST  nErrs+=ensure
+ #define TEST  nErrs+=check
  try {
 
 	const double small=1e-64;

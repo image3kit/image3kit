@@ -16,11 +16,11 @@ Ali Q Raeini: a.q.raeini@gmail.com
 #endif //_VoxBasic
 
 #include "voxelImage.h"
-using namespace std; //cin cout endl string stringstream  istream istringstream regex*
 
 #include "voxelImageProcess.h" // EXP:;
 
 namespace MCTProcessing {
+using namespace std; //cin cout endl string stringstream  istream istringstream regex*
 using namespace VoxLib;
 
 //EXP_1:
