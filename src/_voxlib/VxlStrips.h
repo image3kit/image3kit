@@ -3,6 +3,7 @@
 
 #include "InputFile.h"
 #include "voxelImage.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -25,7 +26,7 @@ struct strip {
 };
 
 struct strips  {
-	strips(): sts(nullptr), cnt(0), csh(0) {};
+	strips(): sts(nullptr), cnt(0) {};
 	void operator =(const strips& c) {
 		sts = new strip[c.cnt+1]; cnt=c.cnt;
 		dAsrt(c.sts);
@@ -39,18 +40,15 @@ struct strips  {
 		// return nullptr; }
 
 	const strip* stp0(int i) const {
-		int p = csh; // avoid race condition
-		if (i >= sts[p].i0) {
-			for (; p<cnt; ++p) if (i >= sts[p].i0 && i < sts[p+1].i0)  { csh=p; return sts+p; } }
-		else { --p;
-			for (; p>=0 ; --p) if (i >= sts[p].i0 && i < sts[p+1].i0)  { csh=p; return sts+p; } }
-		return sts+cnt; }
+		auto it = std::upper_bound(sts, sts + cnt + 1, i,
+			[](int val, const strip& s) { return val < s.i0; });
+		if (it == sts) return sts + cnt;
+		return it - 1;
+	}
 	strip* stpCh(int i) { return const_cast<strip*>(stp0(i)); }
 
 	strip*       sts; // strips
 	int          cnt; // count
-	mutable volatile int csh; // cache
-	// voxel*       sV0_;// obsolete
 };
 
 
