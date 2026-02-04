@@ -2,6 +2,7 @@
 
 
 #include "InputFile.h"
+#include "globals.h"
 #include "voxelImage.h"
 #include <algorithm>
 
@@ -27,10 +28,37 @@ struct strip {
 
 struct strips  {
 	strips(): sts(nullptr), cnt(0) {};
-	void operator =(const strips& c) {
-		sts = new strip[c.cnt+1]; cnt=c.cnt;
+
+	strips(const strips& c) : sts(nullptr), cnt(c.cnt) {
+		if (c.sts) {
+			sts = new strip[cnt+1];
+			std::copy(c.sts, c.sts+cnt+1, sts);
+		}
+	}
+
+	strips& operator =(const strips& c) {
+		dAsrt(sts==nullptr);
 		dAsrt(c.sts);
-		std::copy(c.sts, c.sts+cnt+1, sts); };
+		cnt = c.cnt;
+		sts = new strip[cnt+1];
+		std::copy(c.sts, c.sts+cnt+1, sts);
+		return *this;
+	}
+
+	strips(strips&& c) noexcept : sts(c.sts), cnt(c.cnt) {
+		c.sts = nullptr; c.cnt = 0;
+	}
+
+	strips& operator=(strips&& c) {
+		dAsrt(sts==nullptr);
+		dAsrt(c.sts);
+		sts = c.sts;
+		cnt = c.cnt;
+		c.sts = nullptr;
+		c.cnt = 0;
+		return *this;
+	}
+
 	void reSize(int size) { dAsrt(!sts);  sts = new strip[size+1]; cnt=size; }
 
 	~strips() { if(sts) delete[] sts; sts = nullptr; }

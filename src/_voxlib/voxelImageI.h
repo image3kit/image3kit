@@ -145,7 +145,7 @@ template<typename T> double varianceDbl(const voxelImageT<T>& img, int bgn, int 
 template<class voxelFieldT>
 vars<dbls> vxlDist(const voxelFieldT& vf, int nsteps=32, double minV=3e38, double maxV=-3e38)
 {
-	vars<dbls> distrib(2,dbls(nsteps,0.));
+	vars<dbls> distrib(2, dbls(nsteps+1, 0.));
 
 	if(minV> 1e38) minV=accumulate(vf,dblfunc(std::min), 1e38);
 	if(maxV<-1e38) maxV=accumulate(vf,dblfunc(std::max),-1e38);
