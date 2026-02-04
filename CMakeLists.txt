@@ -46,7 +46,7 @@ if(APPLE)
   
   if(NOT OpenMP_FOUND)
     # Hint for Homebrew libomp
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp")
+    set(OpenMP_CXX_FLAGS -Xpreprocessor -fopenmp)
     set(OpenMP_CXX_LIB_NAMES "omp")
     if (EXISTS "${OpenMP_ROOT}/lib/libomp.dylib")
       set(OpenMP_omp_LIBRARY "${OpenMP_ROOT}/lib/libomp.dylib")
