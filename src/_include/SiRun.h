@@ -19,7 +19,7 @@ using storeT   = std::unordered_map<std::string,voidPtr>; //!< database class
 
 #ifdef _STOR_PUB
 #include "globals.h"
-_Extern  storeT  _STOR; // DEV:;  thread_local
+_Extrn  storeT  _STOR; // DEV:;  thread_local
 #endif
 
 //! use this function to retreive data from #storeT

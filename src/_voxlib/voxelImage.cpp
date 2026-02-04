@@ -14,14 +14,18 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 #include <sstream>
+
+
+#ifdef TIFLIB
+#include "voxelTiff.h"
+#endif
+#include "voxelPng_stbi.h"
+
 #include "globals.h"  // ensure...
 #include "voxelImage.h"
 #include "voxelImageI.h"
 #include "voxelEndian.h"
-#include "voxelPng_stbi.h"
-#ifdef TIFLIB
-#include "voxelTiff.h"
-#endif
+
 
 #ifdef _WBASM // work around CLang bugs complaining about undefined function
 #include "vxlPro1.cpp"
@@ -97,9 +101,7 @@ class  voxelplugins {
 
 };
 
-#ifdef ZLIB_FOUND
-asdd
-#endif
+
 
 template<class InpT, typename T>  //! run voxel plugins
  int vxlProcess(const InpT& ins, voxelImageT<T>& img, string nam) {

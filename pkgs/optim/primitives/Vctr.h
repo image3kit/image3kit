@@ -48,7 +48,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <stdint.h>
 
 
 

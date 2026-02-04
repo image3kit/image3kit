@@ -14,12 +14,24 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 \*-------------------------------------------------------------------------*/
 
 
+#include <map>
+#include <limits>   // std::numeric_limits
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#ifdef check
+#undef check
+#endif
+
+typedef int sdsdsdsdsdsds;
+
+#include <functional>
 
 #include "voxelImage.h"
 #include "globals.h"
-#include <map>
-#include <limits>   // std::numeric_limits
-#include <functional>
 
 #ifdef ZLIB
 #include "zfstream.h"
@@ -89,7 +101,7 @@ TRes accumulate(const voxelField<T>& vf, TFunc operatorFunc, TRes result=0)  {
 }
 
 template<typename T>
-int accumulateT(const voxelImage& vf, std::function<T(T, T)> operatorFunc, T result=0)  {
+T accumulateT(const voxelImage& vf, std::function<T(T, T)> operatorFunc, T result=0)  {
 	return std::accumulate(vf.data_.begin(), vf.data_.end(), result, operatorFunc);
 }
 
@@ -100,11 +112,11 @@ inline double covarianceDbl(const voxelImageT<unsigned short>& img1, const voxel
 	forAlliii_seq(img1) { 	int v1=img1(iii), v2=img2(iii);
 	 if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum1+=v1; sum2+=v2;  ++count; } }
 
-	int mean1 = sum1/count;
-	int mean2 = sum2/count;
+	double mean1 = sum1/count;
+	double mean2 = sum2/count;
 
 	double sum12=0., sum11=0., sum22=0.;
-	OMPFor(reduction(+:sum1) reduction(+:sum2))
+	OMPFor(reduction(+:sum11) reduction(+:sum22) reduction(+:sum12))
 	forAlliii_seq(img1) { 	int v1=img1(iii), v2=img2(iii);
 	 if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum11+=sqr(v1-mean1);  sum22+=sqr(v2-mean2); sum12+=(v1-mean1)*(v2-mean2); } }
 		//cout<<"cov: "<<sum12/sqrt(sum11*sum22)<<" "<<sum12<<" / "<<sum11<<"*"<<sum22<<" "<<count<<" xxx  ";
@@ -334,7 +346,7 @@ template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipByt
 		char* const ve =reinterpret_cast<char*>(&*voxelField<T>::data_.end());
 		while(vp<ve)  { // this requires data_ has reserved extra memory  when maxNz is set, sync: XADSDAS
 			in.get(count); in.get(val);
-			if(count&char(0x80)) {
+			if(count&static_cast<char>(0x80)) {
 				*vp=val;
 				count&=0x7f;
 				while(--count) { in.get(val); *(++vp)=val; }

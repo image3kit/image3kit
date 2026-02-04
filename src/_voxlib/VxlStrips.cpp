@@ -83,6 +83,7 @@ void VxlStrips::createStripsX(const voxelImage& VImage) {
 	nVxlVs.resize(rockTypes_.size()+1,0);
 	segXs_.resize(nz+2); for(auto& ss:segXs_) ss.resize(ny+2);
 
+	#ifndef _MSC_VER // MSVC OpenMP support is primitive
 	#ifdef OpenMP
 		#pragma   omp declare reduction(vec_sizet_plus : vector<size_t> : \
 				  transform(omp_out.begin(), omp_out.end(), omp_in.begin(), omp_out.begin(), plus<size_t>())) \
@@ -90,6 +91,7 @@ void VxlStrips::createStripsX(const voxelImage& VImage) {
 	#endif
 
 	OMPragma("omp parallel for  reduction(vec_sizet_plus : nVxlVs)")
+	#endif
 	for (int iz = 0; iz<nz; ++iz)  {
 		stvec<strip> segTmp(nx+1);
 		for (int iy = 0; iy<ny; ++iy)  {

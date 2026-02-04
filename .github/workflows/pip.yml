@@ -17,6 +17,7 @@ jobs:
         platform: [windows-latest, macos-latest, ubuntu-latest]
         python-version: ["3.9", "3.14", "pypy-3.10"]
 
+
     steps:
     - uses: actions/checkout@v5
 

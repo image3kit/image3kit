@@ -3,6 +3,10 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include "pybind11/pytypes.h"
+#ifdef min
+#undef min
+#undef max
+#endif
 #include "typses.h"
 #include "voxelEndian.h"
 #include "voxelImage.h"

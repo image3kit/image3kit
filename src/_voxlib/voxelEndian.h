@@ -6,8 +6,8 @@
 #include <algorithm>
 #include <stdexcept>
 
-template<typename T> inline T be2le(T vv) {
-	throw std::runtime_error("err: be2le not implemented");	return vv; 
+template<typename T> inline T be2le(T) {
+	throw std::runtime_error("err: be2le not implemented");
 }
 template<> inline unsigned short  be2le(unsigned short vv) {
 	return (vv >> 8) | (vv << 8);  }

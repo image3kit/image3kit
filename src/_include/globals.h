@@ -94,11 +94,11 @@ inline bool _cerr_(std::string msg="", int xit=0) {
 /// TODO use static inline vars instead?
 /// Usage: `#define _InitGlobals` in one .cpp file before `#include "globals.h"`
 /// and then `#include "other.h"` files (order matters), where globals  are defined as:
-/// `_Extern thread_local int III _Eq( 1+1+1 );`
+/// `_Extrn thread_local int III _SetTo( 1+1+1 );`
 #ifdef _InitGlobals
-	#define _Extern
-	#define _Eq(...)  = __VA_ARGS__
+	#define _Extrn
+	#define _SetTo(...)  = __VA_ARGS__
 #else
-	#define _Extern extern
-	#define _Eq(...)
+	#define _Extrn extern
+	#define _SetTo(...)
 #endif

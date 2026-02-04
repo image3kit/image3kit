@@ -89,7 +89,7 @@ class Stats  {
 	void count(const std::string& cs) {  counts_.insert({cs,0}).first->second += 1;  }
 };
 
-_Extern	thread_local Stats _Stats;
+_Extrn	thread_local Stats _Stats;
 
 
 #endif

@@ -57,7 +57,7 @@ template<typename T>  bool variance(stringstream& ins, voxelImageT<T> & img)  {
 		 sumNei3IIf(nNeis_,sumNeis_, _vxls.p_k( nW_, _vxls.p_j( nW_,vp_)),lowerB_, upperB_);\
 		 sumNei3IIf(nNeis_,sumNeis_, _vxls.p_k(-nW_, _vxls.p_j( nW_,vp_)),lowerB_, upperB_);\
 		 sumNei3IIf(nNeis_,sumNeis_, _vxls.p_k( nW_, _vxls.p_j(-nW_,vp_)),lowerB_, upperB_); }
-template<typename T> void sumNei3IIf(int& nNeis,int& sumNeis, const T* vp,T l, T u)	{
+template<typename T> void sumNei3IIf(int& nNeis,Tint& sumNeis, const T* vp,T l, T u)	{
 	T vv=*(vp-1); if(l<=vv && vv<=u) {++nNeis; sumNeis+=vv;}
 	  vv=*(vp  ); if(l<=vv && vv<=u) {++nNeis; sumNeis+=vv;}
 	  vv=*(vp+1); if(l<=vv && vv<=u) {++nNeis; sumNeis+=vv;}	}
@@ -719,7 +719,7 @@ voxelImageT<T> meanWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB, 
 		const T* vp=&vImg(i,j,k);
 		if( (*vp<lowerB || upperB<*vp) && grad(i,j,k)<=gradthresh)
 		{
-			int nNeis=0,sumNeis=0;
+			int nNeis=0; Tint sumNeis=0;
 			getnNeissumNeis(nNeis,sumNeis, vImg,vp,nW, lowerB, upperB)
 			getnNeissumNeis(nNeis,sumNeis, vImg,vp,nW/2, lowerB, upperB)
 			if(nNeis>5)
@@ -1218,7 +1218,7 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
 						  coVar[newmid]/((coVarSum[newmid]+2000000.)*(abs(ov-newmid)+8*noisv)))
 						newmid=mid;
 
-				if(newmid && coVar[newmid]>1e-12) vImg(i,j,k)=newmid;
+				if(newmid && coVar[newmid]>1e-12) vImg(i,j,k) = T(newmid);
 			//}
 			}
 		}
@@ -1332,7 +1332,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
 		cdf[minv] = histi[minv];
 		myu[minv] = minv*histi[minv];       // 0. times prob[0] equals zero
 		for (int i = max(minv,1); i <= maxv; ++i) {   cdf[i] = cdf[i-1] + histi[i];   myu[i] = myu[i-1] + i*histi[i];  }
-		for (int i=0; i<nSegs; ++i) meds[i] = (myu[trshlds[i+1]]-myu[trshlds[i]])/max(cdf[trshlds[i+1]]-cdf[trshlds[i]],1.);
+		for (int i=0; i<nSegs; ++i) meds[i] = T((myu[trshlds[i+1]]-myu[trshlds[i]])/max(cdf[trshlds[i+1]]-cdf[trshlds[i]],1.));
 	}
 	cout<<"  -> mid+ranges: "; for_i_(0,nSegs) { (std::cout<<"  t"<<int(trshlds[i])<<" m"<<int(meds[i])).flush(); }   cout<<"  "<<int(trshlds[nSegs])<<endl;
 	ensure(meds.back()>0,"meds:"+_s(meds),-1);

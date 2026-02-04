@@ -1,13 +1,18 @@
 #pragma once
 
+#include "tiffio.h"
+
+#ifdef min // to avoid conflict with windows.h mess
+#undef min
+#undef max
+#endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <typeindex>
 #include <unordered_map>
 #include <string>
 #include <iostream>
-
-#include "tiffio.h"
 
 #include "globals.h"
 #include "voxelImage.h"
@@ -61,7 +66,7 @@ inline void getTifTags(dbl3& X0_, dbl3& dx_, TIFF *tif) {
 
 inline void setTifTags(const dbl3& X0_, const dbl3& dx_, TIFF *tif) {
 	// negative numbers not supported in TIFFTAG_XPOSITION :-( for X0, using TIFFTAG_IMAGEDESCRIPTION instead
-	float dx=dx_[0], dy=dx_[1];
+	float dx=float(dx_[0]), dy=float(dx_[1]);
 	TIFFSetField(tif, TIFFTAG_XRESOLUTION, dx);
 	TIFFSetField(tif, TIFFTAG_YRESOLUTION, dy);
 	//TIFFSetField(tif, TIFFTAG_ZRESOLUTION, dz);, dz=dx_[2]

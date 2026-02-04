@@ -75,7 +75,7 @@ struct var3  {
 	explicit var3(const T* d)     { x = d[0];  y = d[1];  z = d[2]; }
 	var3(std::nullptr_t) = delete;
 	template<class U>
-	var3(var3<U> n)               { x = n.x;   y = n.y;   z = n.z; }
+	var3(var3<U> n)               { x = T(n.x);  y = T(n.y);  z = T(n.z); }
 	#ifdef VMMLIB__VECTOR__HPP
 	var3(const Vctr<3,T>& v3)     { x = v3[0]; y = v3[1]; z = v3[2]; }
 	#endif
@@ -565,9 +565,15 @@ private:
 	std::vector<C2<T>>  vss;
 };
 
-template<class T, template<class ...> class C1, template<class ...> class C2>
-TableIO<T,C2> tableIO(C1<C2<T>> vecvec, std::vector<std::string> hdrs=std::vector<std::string>(), char sepr='\t') {
-	return TableIO<T,C2>(piece<C2<T>>(vecvec),hdrs,sepr);  }
+template<class T, class... Alloc1, class... Alloc2, template<class ...> class C1, template<class ...> class C2>
+TableIO<T,C2> tableIO(C1<C2<T,Alloc2...>, Alloc1...>& vecvec, std::vector<std::string> hdrs=std::vector<std::string>(), char sepr='\t') {
+	return TableIO<T,C2>(piece<C2<T,Alloc2...>>(vecvec),hdrs,sepr);  }
+
+// workaround for dumb MSVC
+template<class T>
+TableIO<T,Vars> tableIO(Vars<Vars<T>>& vecvec, std::vector<std::string> hdrs=std::vector<std::string>(), char sepr='\t') {
+	return TableIO<T,Vars>(piece<Vars<T>>(vecvec),hdrs,sepr);
+}
 
 template<class T>
 std::ostream& operator << (std::ostream& out, const var3<T>& pos) {
