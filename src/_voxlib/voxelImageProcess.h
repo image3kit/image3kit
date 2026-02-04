@@ -275,47 +275,19 @@ template<typename T>  bool growingThreshold( stringstream& ins, voxelImageT<T>& 
 }
 
 
-template<typename T>  bool bilateralX(voxelImageT<T>& vImg, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
-	cout<<"\n bilateralX    nIterations  kernRad, Xstp/2   sigmavv,   sharpFact,  sigmadd  \n";
-	cout<<"\n bilateralX    "<<nItrs <<"  "<<kernRad<<" "<<Xstp<<"  "<<sigmavv <<" "<<sharpFact<<" "<<sigmadd<<"\n";
-	vImg.growBox(kernRad*Xstp+4);
-	for (int i=nItrs-1; i>=0; --i)
-	{
-		const int stpi=(Xstp+1)/2+(i%(Xstp+1)); //! Xstp =2-> 1,2,3,   =3-> 2,3,4(,5)
-		cout<<" ks"<<kernRad*stpi<<"/s"<<stpi<<" ";
-		bilateralX(vImg, kernRad*stpi,stpi, sigmavv, sharpFact, sigmadd);
-	}
-	vImg.shrinkBox(kernRad*Xstp+4);
-	cout<<endl;
-	return true;
-}
-
 template<typename T>  bool bilateralX( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("nItrs   kernRad    Xstp   sigmavv   sharpFact   sigmadd");
 	double sigmavv(16.*maxT(T)/256.), sigmadd(2.), sharpFact(0.1); int nItrs(1), Xstp(2), kernRad(1);
 	ins >>nItrs >> kernRad >>  Xstp >> sigmavv >> sharpFact >> sigmadd;
-	return bilateralX(vImg, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
+	return _bilateralX(vImg, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
 }
 
-
-template<typename T>  bool bilateralGauss(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
-	cout<<"\nsmoothing:   nIterations:"<<nItrs <<", kernRad:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<"\n";
-	vImg.growBox(kernRad+2);
-	for (int i=0; i<nItrs; ++i)  {
-		cout<<"  ";
-		bilateralGauss(vImg, kernRad, sigmavv, sharpFact, sigmadd);
-	}
-	vImg.shrinkBox(kernRad+2);
-
-	cout<<endl;
-	return true;
-}
 
 template<typename T>  bool bilateralGauss( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("nItrs   kernRad   sigmavv   sharpFact   sigmadd");
 	 int nItrs(1), kernRad(1); double sigmavv(16.), sigmadd(2.), sharpFact(0.1);
 	ins >> nItrs >> kernRad >> sigmavv >> sharpFact >> sigmadd;
-	return bilateralGauss(vImg, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
+	return _bilateralGauss(vImg, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
 }
 
 template<typename T>  bool smooth(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact) {
@@ -584,17 +556,6 @@ template<typename T>  bool print_otsu( stringstream& ins, voxelImageT<T>& vImg) 
 	return true;
 }
 
-//template<typename T>  bool registerToImage( stringstream& ins, voxelImageT<T>& vImg);
-template<typename T>  bool dering(voxelImageT<T>& vImg, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
-	cout<<"\n  dering:   range:"<<minV <<"-"<<maxV<<"  XY0: "<<X0 <<" "<<Y0 <<"   XY1: "<<X1 <<" "<<Y1<<"  nr:"<<nr<<"  ntheta:"<<ntheta<<"  nz:"<<nz <<endl;
-
-	vImg.growBox(0+10);
-	deringImg(vImg,nr,ntheta,nz,T(minV),T(maxV), X0,Y0,X1,Y1);
-	vImg.shrinkBox(0+10);
-
-	cout<<endl;
-	return true;
-}
 
 template<typename T>  bool dering( stringstream& ins, voxelImageT<T>& vImg)  {
 	KeyHint("X0  Y0  X1 Y1 minV maxV nr ntheta nz // Fix ring effects");
@@ -606,7 +567,9 @@ template<typename T>  bool dering( stringstream& ins, voxelImageT<T>& vImg)  {
 	int minV(0),maxV(maxT(T));
 	ins >> minV>> maxV;
 	ins >> nr>> ntheta>> nz;
-	return dering(vImg, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
+
+	deringImg(vImg,nr,ntheta,nz,T(minV),T(maxV), X0,Y0,X1,Y1, 10, 1, 0.05, true);
+	return true;
 }
 
 template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {

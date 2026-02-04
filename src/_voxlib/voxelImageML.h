@@ -16,6 +16,7 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <array>
 
+#include "globals.h"
 #include "voxelImage.h"
 #include "voxelImageI.h"
 
@@ -293,6 +294,21 @@ void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp, float sigmaSqr=16, 
 	}
 }
 
+template<typename T>  bool _bilateralX(voxelImageT<T>& vImg, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
+	cout<<"\n bilateralX    nIterations  kernRad, Xstp/2   sigmavv,   sharpFact,  sigmadd  \n";
+	cout<<"\n bilateralX    "<<nItrs <<"  "<<kernRad<<" "<<Xstp<<"  "<<sigmavv <<" "<<sharpFact<<" "<<sigmadd<<"\n";
+	vImg.growBox(kernRad*Xstp+4);
+	for (int i=nItrs-1; i>=0; --i)
+	{
+		const int stpi=(Xstp+1)/2+(i%(Xstp+1)); //! Xstp =2-> 1,2,3,   =3-> 2,3,4(,5)
+		cout<<" ks"<<kernRad*stpi<<"/s"<<stpi<<" ";
+		bilateralX(vImg, kernRad*stpi,stpi, sigmavv, sharpFact, sigmadd);
+	}
+	vImg.shrinkBox(kernRad*Xstp+4);
+	cout<<endl;
+	return true;
+}
+
 
 
 template<typename T>
@@ -338,6 +354,20 @@ void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float 
 		}
 	}
 }
+
+template<typename T>  bool _bilateralGauss(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
+	cout<<"\nsmoothing:   nIterations:"<<nItrs <<", kernRad:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<"\n";
+	vImg.growBox(kernRad+2);
+	for (int i=0; i<nItrs; ++i)  {
+		cout<<"  ";
+		bilateralGauss(vImg, kernRad, sigmavv, sharpFact, sigmadd);
+	}
+	vImg.shrinkBox(kernRad+2);
+
+	cout<<endl;
+	return true;
+}
+
 
 template<typename T>
 void biLateral(voxelImageT<T>& vImg, int kernRad, double sigmad, double sharpFact) {
@@ -858,67 +888,88 @@ voxelImageT<uint8_t> otsu_th01(const voxelImageT<T>& vImg, int  minvi=0, int  ma
 
 
 template<typename T>
-int average2p(const voxelImageT<T>& vm) {
+int average2p(const voxelImageT<T>& vm, T minV=2) {
 	long long sum(128);
 	long long nsum(1);
-	forAllvv_seq(vm)	if(vv>1)	{		sum+=vv;		++nsum;	}
+	forAllvv_seq(vm)	if(vv>=minV)	{		sum+=vv;		++nsum;	}
 	return sum/nsum;
 }
 
 template<typename T>
-void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int X0,int Y0,int X1,int Y1) {//  TODO to be tested
+void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  
+	int X0,int Y0,int X1,int Y1, int nGrowBox, double scaleDifV=1, double sharpenRings=0.05, bool writeDumps=false) {// deringImg TODO to be tested
+
+	cout<<"\n  dering:  { range:"<<minV <<"-"<<maxV<<"  XY0: "<<X0 <<" "<<Y0 <<"   XY1: "<<X1 <<" "<<Y1
+	    <<"  nr:"<<nr<<"  ntheta:"<<nth<<"  nz:"<<nz <<"  nGrowBox:"<<nGrowBox <<endl;
+
+	const voxelImageT<T> vxls0 = vImg;
+	if (nGrowBox) vImg.growBox(nGrowBox);
+	X0+= nGrowBox; Y0+= nGrowBox; X1+= nGrowBox; Y1+= nGrowBox;
+	nz += nGrowBox*(nz/vImg.nz());
+	nr+= nGrowBox;
+
+	int n3=vImg.nz(),n2=vImg.ny(),n1=vImg.nx();
+	const int  nrCrs = 1.01 + (n2+n1)*0.25/nr;
+	const int  nzCrs = n3/nz;
+	nz = n3/nzCrs+1;
+	nr = n1/nrCrs+1;
+
 
 	const voxelImageT<T> vxls = vImg;
 
-	cout<<"capping to 254"<<endl;
+	if (maxV==maxT(T)) maxV -= 1;
+
+	const T invalidT = std::min(T(maxV+1),maxT(T));
+
+
+	cout<<"capping to "<<maxV<<endl;
 	int noisev=0.1*(maxV-minV);
 	bilateralX(vImg, 3, 2, noisev*noisev,0.05,12);
-	bilateralX(vImg, 4, 4, noisev*noisev,0.05,12);
-	bilateralX(vImg, 6, 4, noisev*noisev,0.05,12);
-	vImg.write("dumpFiltDering.tif");
+	// bilateralX(vImg, 4, 4, noisev*noisev,0.05,12);
+	// bilateralX(vImg, 6, 4, noisev*noisev,0.05,12);
+	if (writeDumps) vImg.write("dumpFiltDering.tif");
 	vImg=median(vImg);
 
-	replaceRange(vImg, T(maxT(T)-1), maxT(T), T(maxT(T)-1));
-	replaceRange(vImg,T(0),minV,maxT(T));
-	replaceRange(vImg,maxV,maxT(T),maxT(T));
-	grow(vImg,maxT(T), T(0),T(maxT(T)-1));; ///. set to origils
-	grow(vImg,maxT(T), T(0),T(maxT(T)-1));; ///. set to origils
+	replaceRange(vImg, maxV, invalidT, maxV);
+	replaceRange(vImg,maxV,maxT(T),invalidT);
+	replaceRange(vImg,T(0),minV,invalidT);
+	grow(vImg,invalidT, T(0),maxV); //. shrink used voxels
+	grow(vImg,invalidT, T(0),maxV); ///. to set to origils
 
-	vImg.write("dumpMeGrow0.tif");
+	constexpr T minVr = 1;
+
+	if (writeDumps) vImg.write("dumpDringMeGrow0.tif");
+	if (0) {
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// medGrow(vImg,minV,maxV,1,3);
+	// medGrow(vImg,minV,maxV,1,3);
+	// medGrow(vImg,minV,maxV,2,3);
+	// medGrow(vImg,minV,maxV,2,3);
+	// medGrow(vImg,minV,maxV,3,3);
+	// medGrow(vImg,minV,maxV,3,3);
+	// for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,3,1);
+	// vImg=median(vImg);//, 0, 254, 1, 255
+	// for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,5,0);
+	// medGrow(vImg,minV,maxV,10,0);
+	// medGrow(vImg,minV,maxV,20,0);
+	// for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,40,0);
+	// medGrow(vImg,minV,maxV,20,0);
+	}
 	vImg=median(vImg);//, 0, 254, 1, 255
-	vImg.growBox(21);//, 0, 254, 1, 255
-	vImg=median(vImg);//, 0, 254, 1, 255
-	vImg=median(vImg);//, 0, 254, 1, 255
-	vImg=median(vImg);//, 0, 254, 1, 255
-	vImg=median(vImg);//, 0, 254, 1, 255
-	medGrow(vImg,minV,maxV,1,3);
-	medGrow(vImg,minV,maxV,1,3);
-	medGrow(vImg,minV,maxV,2,3);
-	medGrow(vImg,minV,maxV,2,3);
-	medGrow(vImg,minV,maxV,3,3);
-	medGrow(vImg,minV,maxV,3,3);
-	for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,3,1);
-	vImg=median(vImg);//, 0, 254, 1, 255
-	for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,5,0);
-	medGrow(vImg,minV,maxV,10,0);
-	medGrow(vImg,minV,maxV,20,0);
-	for(int ii=0; ii<10; ++ii) medGrow(vImg,minV,maxV,40,0);
-	medGrow(vImg,minV,maxV,20,0);
-	vImg=median(vImg);//, 0, 254, 1, 255
-	vImg.shrinkBox(21);//, 0, 254, 1, 255
-	T avg = average2p(vImg);
+	T avg = average2p(vImg, minVr);
 	cout<<"avg:"<<avg<<endl;
-	replaceRange(vImg,maxT(T),maxT(T),avg);
+	// replaceRange(vImg,invalidT,invalidT,avg);
 	//avg = 2*average2p(vImg)-avg;
-	//replaceRange(vImg,maxT(T),maxT(T),avg);
+	//replaceRange(vImg,invalidT,invalidT,avg);
 	cout<<"avg:"<<avg<<endl;
-	vImg.write("dumpMeGrow1.tif");
+	if (writeDumps) vImg.write("dumpDringMeGrow1.tif");
 
 
-	int n3=vImg.nz(),n2=vImg.ny(),n1=vImg.nx();
 	voxelImageT<T> radimag(nr, nth+6, nz,0);
-	int  nrCrs = 1.01 + (n2+n1)*0.25/nr;
-	int  nzCrs = n3/nz;
 	for (int z=0; z<int(radimag.nz()) ; z++)
 	{
 		int k = z*nzCrs;
@@ -941,13 +992,15 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 			int nNeis=0;
 
 			for (short j_nei_m=-npCrs-5/(r+1); j_nei_m<=npCrs+5/(r+1); ++j_nei_m)
-			 for (short i_nei_m=-nrCrs-10/(r+1); i_nei_m<=nrCrs+10/(r+1); ++i_nei_m) {
+			 for (short i_nei_m=-nrCrs-5/(r+1); i_nei_m<=nrCrs+5/(r+1); ++i_nei_m) {
 			  int jj=yo+(rf+i_nei_m)*sin(_2pi*(pf+j_nei_m)/nth/npCrs);
 			  int ii=xo+(rf+i_nei_m)*cos(_2pi*(pf+j_nei_m)/nth/npCrs);
 			  if (ii>=0 && ii<n1 && jj>=0 && jj<n2)
 			  {
 				for (short kk=max(nzCrs*int(z)-nzCrs-10./(r+1)+0.5,0.1); kk<=min(z*nzCrs+nzCrs+10./(r+1)+0.5,n3-0.9); ++kk)
-				 { neiSum+=vImg(ii,jj,kk); ++nNeis;}
+					if (T vv = vImg(ii,jj,kk); vv!=invalidT) {
+						neiSum+=vxls(ii,jj,kk); ++nNeis;
+					}
 			  }
 			 }
 			radimag(r,p+2,z)=min(T(0.5+neiSum/(nNeis+0.001)),maxT(T));
@@ -960,41 +1013,78 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,  int
 
 
 	//vImg=radimag; return;
-
+	medGrow(radimag,minVr,maxT(T),1,1);
+	medGrow(radimag,minVr,maxT(T),1,1);
+	medGrow(radimag,minVr,maxT(T),1,1);
+	medGrow(radimag,minVr,maxT(T),2,1);
+	medGrow(radimag,minVr,maxT(T),2,1);
+	medGrow(radimag,minVr,maxT(T),3,1);
+	medGrow(radimag,minVr,maxT(T),2,1);
+	for(int ii=0; ii<10; ++ii) medGrow(radimag,minVr,maxT(T),3,1);
+	radimag = medianz(radimag);
+	radimag = mediany(radimag); // theta
+	radimag = medianz(radimag);
+	radimag = mediany(radimag); // theta
+	if (writeDumps) radimag.write("dumpDringRad.tif");
+	avg = average2p(radimag, minVr);
+	replaceRange(radimag, T(0), T(minVr-1), T(avg));
 	voxelImageT<T> smoothRad = mean(radimag);//GaussHalf
-	smoothRad.write("dumpSmoothRad.tif");
+
 	//biLateral(smoothRad, 2., 1., 0.5);
-	avg = average2p(smoothRad);
+	avg = average2p(smoothRad, minVr);
+	replaceRange(smoothRad, T(0), T(minVr-1), T(avg));
+
+	if (writeDumps) smoothRad.write("dumpDringSmoothRad.tif");
+
 	cout << ": avg "<<avg<<endl;
 
-	forAllkji_(vImg)
-	{
+
+	ensure((vImg.nz()-1)/nzCrs<smoothRad.nz(), _s(smoothRad.size3())+" "+_s(vImg.nz())+" "+_s(nzCrs));
+
+	long long nSkipped = 0;
+	bool warned = false;
+	forAllkji_(vImg) {
 
 		float xo=float((n3-k)*X0+k*X1)/n3+0.5;
 		float yo=float((n3-k)*Y0+k*Y1)/n3+0.5;
 		int r = 0.5+sqrt((i-xo)*(i-xo)+(j-yo)*(j-yo))/nrCrs;
 
 		int p = (atan2(yo-j,xo-i)/_2pi+0.5)*nth;
-		int NewVal= vxls(i,j,k);
-		NewVal-=int(smoothRad(r,p+2,k/nzCrs))-avg;
-		//NewVal=int(smoothRad[k/nzCrs][p+2][r]);
-		vImg(i,j,k)=min(max(NewVal,0),imaxT(T));
 
+		int radV = avg;
+		if (!(r<smoothRad.nx() && p+2<smoothRad.ny() && k/nzCrs<smoothRad.nz())) {
+			++nSkipped;
+			if (!warned) {
+				ensure( k/nzCrs<smoothRad.nz(), "k: "+_s(k)+" k/nzCrs: "+_s(k/nzCrs)+" smoothRad.nz(): "+_s(smoothRad.nz()));
+				warned = true;
+			}
+		}
+		else if (T vr = smoothRad(r,p+2,k/nzCrs); vr >= minVr)
+			radV = vr;
+		
+		vImg(i,j,k) = radV;
 	}
 
+	ensure(nSkipped==0, "nSkipped: "+_s(nSkipped)+" %"+_s(100.*nSkipped/(vImg.nz()*vImg.ny()*vImg.nx())));
+	if (nGrowBox) vImg.shrinkBox(nGrowBox);
+	ensure(vImg.size3()==vxls0.size3());
 
+	if (writeDumps) vImg.write("dumpDringBackground.tif");
+	vImg = median(vImg);
+	bilateralX(vImg, 3, 2, noisev*noisev,sharpenRings,12);
+	forAlliii_(vImg) vImg(iii) = min(max(int(vxls0(iii)) - int((vImg(iii)-avg)*scaleDifV), 0), imaxT(T));
+
+
+	cout<<" dering; }/ "<<endl;
 }
 
 
 
+////////////////////
 
 
 template<typename T>
 void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSizs, double resolutionSqr, double noisVSqr, bool writeDumps, std::string smoot) {
-	//vector<int> midse(meds.size()+2);
-	//*midse.rbegin()=*meds.rbegin();
-	//*midse.begin()=*meds.begin();
-	//for (size_t tt=0;tt<meds.size(); ++tt) midse[tt+1]=meds[tt];
 
 
 	const int nSegs=minSizs.size();

@@ -785,12 +785,19 @@ voxelImageT<T>::voxelImageT(const std::string& hdrNam, readOpt procConvert)
 	static_assert(sizeof(T)<=1);
 	#endif
 
+	if (hasExt(hdrNam,".raw.gz") || hasExt(hdrNam,".raw")) {
+		std::cout<<"Reading "<<hdrNam<<" as "<<_s(typeid(T).name()) << ", figuring out image size from file name." <<std::endl;
+		readFromHeader(hdrNam);
+		return;
+	}
 	std::unique_ptr<voxelImageTBase> vImgUptr = readImage(hdrNam, procConvert != readOpt::justRead);
 	voxelImageTBase* imgPtr = vImgUptr.get();
 	if  (auto img = dynamic_cast<voxelImageT<T>*>(imgPtr)) {
 		*this = std::move(*img);
 	}
 	else  {
+		std::cout<<"Converting image to "<<_s(typeid(T).name()) <<std::endl;
+
 		int erc = resetFromImageT<T,SupportedVoxTyps>(*this, imgPtr);
 		ensure(  erc==0, "can not convert image", -1); 
 	}
@@ -1184,18 +1191,40 @@ size_t  voxelImageT<T>::FaceMedian06(int nAdj0,int nAdj1)  {
 
 template<typename T>
 voxelImageT<T> medianx(const voxelImageT<T>& vImage)  {
-	//unsigned long nChanges(0);
-	(std::cout<<"  median ").flush();
+	(std::cout<<"  median filter along x direction ").flush();
 	voxelImageT<T> vxls=vImage;
 	forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
 		std::array<T,3> vvs={{ *vp, vImage.v_i(-1,vp), vImage.v_i( 1,vp) }};
 
 		std::nth_element(vvs.begin(),vvs.begin()+1,vvs.end());
-		//nChanges+=vxls(i,j,k) != vvs[3];
 		vxls(i,j,k) = vvs[1];
 	}
+	return vxls;
+}
 
-	//(std::cout<<nChanges<<", ").flush();
+template<typename T>
+voxelImageT<T> mediany(const voxelImageT<T>& vImage)  {
+	(std::cout<<"  median filter along y direction ").flush();
+	voxelImageT<T> vxls=vImage;
+	forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
+		std::array<T,3> vvs={{ *vp, vImage.v_j(-1,vp), vImage.v_j( 1,vp) }};
+
+		std::nth_element(vvs.begin(),vvs.begin()+1,vvs.end());
+		vxls(i,j,k) = vvs[1];
+	}
+	return vxls;
+}
+
+template<typename T>
+voxelImageT<T> medianz(const voxelImageT<T>& vImage)  {
+	(std::cout<<"  median filter along z direction ").flush();
+	voxelImageT<T> vxls=vImage;
+	forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
+		std::array<T,3> vvs={{ *vp, vImage.v_k(-1,vp), vImage.v_k( 1,vp) }};
+
+		std::nth_element(vvs.begin(),vvs.begin()+1,vvs.end());
+		vxls(i,j,k) = vvs[1];
+	}
 	return vxls;
 }
 
@@ -1533,17 +1562,17 @@ void printInfo(const voxelImageT<T>& vImage)  {
 	if constexpr (std::is_integral<T>::value)  {
 		unsigned long long nPores=0;
 		unsigned long long nTotal=0;
-		std::cout<<"\n  Image info, (void==0, valid!="<<Tint(maxT(T))<<"):"<<std::endl;
+		int minv=1000000000, maxv=-1000000000; long long avgv=0;
+		forAllcp(vImage)  { int val = *cp; minv=std::min(minv,val); maxv=std::max(maxv,val); avgv+=val; }
+		(std::cout<<"\n  Image info:").flush();
+		std::cout << "   min: "<<minv  << " max: "<<maxv  << " avg: "<<avgv/(double(nnn.x)*nnn.y*nnn.z)<<" Variance: "<<varianceDbl(vImage,minv,maxv)<< std::endl;
 		OMPFor(reduction(+:nPores) reduction(+:nTotal))
 		forAllcp(vImage)  { nPores += (*cp==0); nTotal += (*cp!=maxT(T)); }
 		// sync "total_porosity" with tests
-		std::cout << "   total_porosity: "<< double(nPores)/(double(nnn.x)*nnn.y*nnn.z)  <<"  = "<< nPores<<"/ ("<<nnn.x<<"*"<<nnn.y<<"*"<<nnn.z<<")" << std::endl;
-		std::cout << "   valid_porosity: "<< double(nPores)/double(nTotal) <<"  = " << nPores<<"/"<<nTotal << std::endl;
+		std::cout << "   total_porosity: "<< double(nPores)/(double(nnn.x)*nnn.y*nnn.z)  <<" ="<<nPores<<"/("<<nnn.x<<"*"<<nnn.y<<"*"<<nnn.z<<") #void(=0) fraction" << std::endl;
+		std::cout << "   valid_porosity: "<< double(nPores)/double(nTotal) <<"  =" << nPores<<"/"<<nTotal << " #valid(<"<<Tint(maxT(T))<<") void fraction" << std::endl;
 		std::cout << "   dx: " << vImage.dx()<<",  X0: "<< vImage.X0() << std::endl;
 
-		int minv=1000000000, maxv=-1000000000; long long avgv=0;
-		forAllcp(vImage)  { int val = *cp; minv=std::min(minv,val); maxv=std::max(maxv,val); avgv+=val; }
-		std::cout << "   min: "<<minv  << " max: "<<maxv  << " avg: "<<avgv/(double(nnn.x)*nnn.y*nnn.z)<<" Variance: "<<varianceDbl(vImage,minv,maxv)<< std::endl;
 	}
 	else {
 		double minv=1e64, maxv=-1e64, avgv=0.;

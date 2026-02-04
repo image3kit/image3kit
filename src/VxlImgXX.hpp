@@ -3,6 +3,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include "pybind11/pytypes.h"
+#include "typses.h"
 #include "voxelEndian.h"
 #include "voxelImage.h"
 #include "voxelImageI.h"
@@ -17,6 +18,10 @@ namespace VxlPy {
 namespace py = pybind11;
 using py::arg;
 using namespace VoxLib;
+
+
+template<typename T> inline var3<T> tov3(py::tuple v) { return var3<T>(v[0].cast<T>(), v[1].cast<T>(), v[2].cast<T>()); }
+template<typename T> inline py::tuple to3(var3<T> v) { return py::make_tuple(v.x, v.y, v.z); }
 
 
 inline InputFile pyCastInput(py::dict dic) {
@@ -36,14 +41,14 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) 
 
     using SelfT = voxelImageT<VxT>;
 
-    m.def("segment2", [](SelfT &m, int nSegs, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
+    m.def("segment2", [](SelfT &m, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
                         double noisev, double localF, double flatnes, double resolution, double gradFactor,
                         int krnl, int nItrs, int writedumps) {
-            return segment2(m, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
+            return segment2(m, int(th.size())-1, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
         },
-        arg("nSegs")=2, arg("th")=std::vector<int>(), arg("minSizs")=std::vector<int>(),
-        arg("noisev")=2., arg("localF")=800., arg("flatnes")=0.1, arg("resolution")=2.,
-        arg("gradFactor")=0., arg("krnl")=2, arg("nItrs")=13, arg("writedumps")=0
+        arg("thresholds")=std::vector<int>(), arg("min_sizes")=std::vector<int>(),
+        arg("noise_val")=2., arg("local_factor")=0.05, arg("flatnes")=0.1, arg("effective_resolution")=2.,
+        arg("gradient_factor")=0., arg("kernel_radius")=2, arg("n_iterations")=13, arg("write_dumps")=0
     )
     .def("segment", [](SelfT &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
          return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
@@ -89,24 +94,35 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
         [](py::object filepath, bool processKeys)  { return SelfT(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }), 
         arg("filepath"), arg("processKeys")=true, 
         "Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw")
-    .def("data", [](SelfT &m) {
-        return py::array_t<VxT>(py::buffer_info{
-            m.data(), sizeof(VxT), py::format_descriptor<VxT>::format(), 3,
-            { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
-            { long(sizeof(VxT)), long(sizeof(VxT) *m.nx()), long(sizeof(VxT) * m.nxy()) } // Strides (in bytes)
-        }); }, "Get the raw data buffer as a numpy array.")
+    .def("data", [](py::object self) {
+        auto& m = self.cast<SelfT&>();
+        return py::array_t<VxT>(
+            { m.nx(), m.ny(), m.nz() },
+            { long(sizeof(VxT)), long(sizeof(VxT) *m.nx()), long(sizeof(VxT) * m.nxy()) },
+            m.data(),
+            self);
+        }, "Get the raw data buffer as a numpy array.")
     .def("nx", &SelfT::nx)
     .def("ny", &SelfT::ny)
     .def("nz", &SelfT::nz)
+    .def("scaleDx", [](SelfT &m, double s) { m.dxCh() *= s;  m.X0Ch() *= s; }, arg("scale"), "Scale the voxel size (dx, dy, dz) and origin by a factor.")
+    .def("setVoxelSize", [](SelfT &m, py::tuple tpl) { m.dxCh() = tov3<double>(tpl); }, arg("voxelSize"), "Set the voxel size (dx, dy, dz).")
+    .def("voxelSize", [](SelfT &m) { return to3(m.dx()); }, "Get the voxel size (dx, dy, dz).")
+    .def("setOrigin", [](SelfT &m, py::tuple tpl) { m.X0Ch() = tov3<double>(tpl); }, arg("origin"), "Set the origin value (x0, y0, z0).")
+    .def("origin", [](SelfT &m) { return to3(m.X0()); }, "Get the origin value (x0, y0, z0).")
     .def("printInfo", &SelfT::printInfo)
-    .def("shape", [&](SelfT &m) { return py::make_tuple(m.nx(), m.ny(), m.nz()); })
+    .def("shape", [&](SelfT &m) { return to3(m.size3()); })
     .def("write", &SelfT::write, arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
     .def("writeNoHeader", &SelfT::writeNoHdr, arg("filename"), "Write the raw image data without a header.")
     // .def("writeHeader", &SelfT::writeHeader)
     .def("readAscii", &SelfT::readAscii, arg("filename"), "Read image data from an ASCII file.")
     // .def("readRLE", &SelfT::readRLE)
-    .def("cropD", &SelfT::cropD, arg("begin"), arg("end"), arg("emptyLayers")=0, arg("emptyLayersValue")=1, arg("verbose")=false, 
-         "Crop the image (inplace) from begin index tupe ix,iy,iz (inclusive) to and end index tuple.")
+    .def("cropD", [](SelfT &m, py::tuple bgn, py::tuple end, int emptyLayers, VxT emptyLayersValue, bool verbose) {
+         int3 b(bgn[0].cast<int>(), bgn[1].cast<int>(), bgn[2].cast<int>());
+         int3 e(end[0].cast<int>(), end[1].cast<int>(), end[2].cast<int>());
+         m.cropD(b, e, emptyLayers, emptyLayersValue, verbose);
+    }, arg("begin"), arg("end"), arg("emptyLayers")=0, arg("emptyLayersValue")=1, arg("verbose")=false, 
+         "Crop the image (inplace) from begin index tupe ix,iy,iz (inclusive) to and and end index (not inclusive) tuple.")
     .def("growBox", &SelfT::growBox, arg("num_layers"), 
          "Expand the image boundaries, increasing its size by `num_layers` in all directions")
     .def("shrinkBox", &SelfT::shrinkBox, arg("num_layers"), 
@@ -125,21 +141,21 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
         "Downsample the image, setting voxel values to maximum of original encompassing voxel values.")
     .def("resampleMean", [&](SelfT &m, double nReSampleNotSafe) { return resampleMean(m,nReSampleNotSafe); }, arg("factor"), "Resample the image using mean interpolation.")
     .def("resliceZ", [&](SelfT &m, double nReSampleNotSafe) { return resliceZ(m,nReSampleNotSafe); }, arg("factor"), "Reslice along the Z axis.")
-    .def("Paint"         , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setIn);    }, arg("shape"), "Paint (set values of) a shape into the image.")
-    .def("PaintAdd"      , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addTo);    }, arg("shape"), "Add (+) a shape's value to the image.")
-    .def("PaintBefore"   , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setBefor); }, arg("shape"), "Paint before the shape (plane...)")
-    .def("PaintAfter"    , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setAfter); }, arg("shape"), "Paint after the shape (plane...)")
-    .def("PaintAddBefore", [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addBefor); }, arg("shape"), "Add (+) a shape's value before the shape (plane...)")
-    .def("PaintAddAfter" , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addAfter); }, arg("shape"), "Add (+) a shape's value after the shape (plane...)")
+    .def("paint"         , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setIn);    }, arg("shape"), "Paint (set values of) a shape into the image.")
+    .def("paintAdd"      , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addTo);    }, arg("shape"), "Add (+) a shape's value to the image.")
+    .def("paintBefore"   , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setBefor); }, arg("shape"), "Paint before the shape (plane...)")
+    .def("paintAfter"    , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setAfter); }, arg("shape"), "Paint after the shape (plane...)")
+    .def("paintAddBefore", [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addBefor); }, arg("shape"), "Add (+) a shape's value before the shape (plane...)")
+    .def("paintAddAfter" , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addAfter); }, arg("shape"), "Add (+) a shape's value after the shape (plane...)")
     .def("writeContour"  , [&](SelfT &m, const string& outSurf) { // TODO
         InputFile inp;
         if (outSurf.size())  inp.set("outputSurface", outSurf);
         // vxlToSurfWrite(m, inp);
         }, arg("outSurf"), "Write contour extraction to a surface file.")
-    .def("sliceToPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv, const string& color) {
+    .def("plotSlice"    , [&](SelfT &m, const string& fnam, const string& normalAxis, int iSlice, int bgnv, int endv, const string& color) {
         ::sliceToPng(m, normalAxis, fnam, iSlice, bgnv, endv, color);
-        }, arg("normalAxis"), arg("filename"), arg("sliceIndex")=-1000000, arg("val_min")=0, arg("val_max")=-1000001, arg("color_map")="gray",
-        "Save a 2D slice as a PNG image, color_map can be 'gray' or 'RGB'")
+        }, arg("filename"), arg("normal_axis")="xyz", arg("slice_index")=-1000000, arg("min_val")=0, arg("max_val")=-1000001, arg("color_map")="gray",
+        "Save a 2D slice as a PNG image. \nnormalAxis can be 'x', 'y', 'z', 'xy', 'xz', 'yz', 'xyz'. \ncolor_map can be 'gray' or 'RGB'")
     // .def("sliceFromPng"    , [&](SelfT &m, const string& normalAxis, const string& fnam, int iSlice, int bgnv, int endv) {
     //     ::sliceFromPng(m, normalAxis, fnam, iSlice, bgnv, endv);
     //     }, arg("normalAxis"), arg("filename"), arg("sliceIndex")=0, arg("val_min")=0, arg("val_max")=255, "Read a slice from a Png image")
@@ -156,21 +172,27 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
          "Set values in range [min, max] to val.")
     .def("replaceRange", [](SelfT &m, VxT min, VxT max, VxT val) { replaceRange(m, min, max, val); }, arg("min"), arg("max"), arg("val"),
          "Replace values in range [min, max] with val.")
-    .def("write8bit", [](SelfT &m, std::string outName, double minv, double maxv) { _write8bit(m, outName, minv, maxv); }, arg("filename"), arg("min"), arg("max"),
+    .def("write8bit", [](SelfT &m, std::string outName, double minv, double maxv) { _write8bit(m, outName, minv, maxv); },
+         arg("filename"), arg("min")=0.0, arg("max")=-0.5,
          "Write as 8-bit image scaled between min and max.")
-    .def("read", [](SelfT &m, std::string s) { m.reset(int3(0), 0); m.readFromHeader(s); }, arg("filename"), "Read image from file.")
+    .def("readFromHeader", [](SelfT &m, std::string s) { m.reset(int3(0), 0); m.readFromHeader(s); }, arg("filename"), "Reset and read image from file.")
+    .def("readBin", [](SelfT &m, std::string s, int nSkipBytes) { m.readBin(s, nSkipBytes); }, arg("filename"), arg("nSkipBytes")=0, 
+         "Read image data from  a .raw, .raw/.raw.gz, or reset and read from a .am or .tif file.")
     // //.def("readAtZ", &SelfT::readAtZ)
     .def("modeNSames", [](SelfT &m, const short nSameNei) { return modeNSames(m, nSameNei); }, arg("nSameNeighbors"), 
          "Apply mode filter based on nearest 6 neighbor voxels.")
     .def("medianFilter", [](SelfT &m) { m = median(m); }, "Apply a 1+6-neighbour median filter.")
-    .def("medianX", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 in x-direction to reduce compressed file size")
+    .def("medianX", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 voxels in x-direction")
+    .def("medianY", [](SelfT &m) { m = mediany(m); }, "Apply median filter with kernel size of 1 voxels in y-direction")
+    .def("medianZ", [](SelfT &m) { m = medianz(m); }, "Apply median filter with kernel size of 1 voxels in z-direction")
     .def("FaceMedian06", &SelfT::FaceMedian06, arg("nAdj0"), arg("nAdj1"), 
          "Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels")
     .def("pointMedian032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"), 
          "Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels")
     .def("faceMedNgrowToFrom", [](SelfT &m, VxT lblTo, VxT lblFrm, int ndif) { FaceMedGrowToFrom(m, lblTo, lblFrm, ndif); }, arg("labelTo"), arg("labelFrom"), arg("nDiff"), 
          "Face median grow to/from labels.")
-    .def("delense032", [](SelfT &m, int x, int y, int r, char d, VxT v) { _delense032(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Delense operation.")
+    .def("delense032", [](SelfT &m, int nItrs, int nAdj0,  int nAdj1, intOr<VxT> lbl0, intOr<VxT> lbl1) { _delense032(m, nItrs, nAdj0, nAdj1, lbl0, lbl1); }, arg("iterations"), arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"),
+     "Delense operation.")
     .def("circleOut", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Circle out operation.")
     .def("growLabel", &SelfT::growLabel)
     .def("keepLargest", [](SelfT &m, VxT minvv, VxT maxvv) { keepLargestvv(m, minvv, maxvv); }, arg("min"), arg("max"), "Keep largest singly-connected region with values in [min, max].")
@@ -187,11 +209,12 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
                         int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
                         return MCTProcessing::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
                     },  
-        arg("name")="pltAll", arg("minv")=0, arg("maxv")=-1000001, arg("sliceIndex")=-1000000, arg("nBins")=128,
-        arg("normalAxis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("zProfile")=true,
-        arg("alphaImage")=nullptr, arg("alphaMin")=0, arg("alphaMax")=-1000001,
-        "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging, all args except are optional")
+        arg("filename")="pltAll", arg("min_val")=0, arg("max_val")=-1000001, arg("slice_index")=-1000000, arg("histogram_bins")=128,
+        arg("normal_axis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("z_profile")=true,
+        arg("alpha_image")=nullptr, arg("alpha_min")=0, arg("alpha_max")=-1000001,
+        "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
     .def("mode26", [](SelfT &m, int nMinD) { return mode26(m,nMinD); })
+    .def("copy", [](SelfT &m) { return SelfT(m); }, "duplicate the image data")
     .def("growingThreshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) {
         ::growingThreshold(m, t1, t2, t3, t4, nIter);
     }, arg("startMin"), arg("startMax"), arg("finalMin"), arg("finalMax"), arg("iterations")=4)
@@ -200,11 +223,12 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     }, arg("val_old")=0, arg("val_new")=2, arg("hole_size")=5)
     .def("smooth", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact) {
         return MCTProcessing::smooth(m, nItrs, kernRad, sigmavv, sharpFact);
-    }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1)
-    .def("svgHistogram", [](SelfT &m, std::string fnam, int nBins, double minV, double maxV) {
+    }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1,
+    "bilateral smoothing filter")
+    .def("plotHistogramSvg", [](SelfT &m, std::string fnam, int nBins, double minV, double maxV) {
         return MCTProcessing::svgHistogram(m, fnam, nBins, minV, maxV);
     }, arg("filename")="aa.svg", arg("bins")=128, arg("min_val")=3e38, arg("max_val")=-3e38)
-    .def("svgZProfile", [](SelfT &m, std::string fnam, double minV, double maxV) {
+    .def("plotZProfileSvg", [](SelfT &m, std::string fnam, double minV, double maxV) {
             return MCTProcessing::svgZProfile(m, fnam, VxT(minV), VxT(maxV));
         }, arg("filename")="aa.svg", arg("min_val")=0, arg("max_val")=255) // Assuming 255 default for maxV based on typical usage, though maxT(T) is ideal
     .def("flipEndian", [](SelfT &m) { ::flipEndian(m); })
@@ -220,18 +244,22 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
         return MCTProcessing::readFromFloat(m, header, scale, shift);
     }, arg("header"), arg("scale")=1.0f, arg("shift")=0.0f)
     .def("bilateralX", [](SelfT &m, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
-         return ::bilateralX(m, nItrs, kernRad, Xstp, sigmavv, sharpFact, sigmadd);
-    }, arg("iterations")=1, arg("kernel_radius")=1, arg("x_step")=2, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0)
+         return ::_bilateralX(m, nItrs, kernRad, Xstp, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
+    }, arg("iterations")=1, arg("kernel_radius")=1, arg("x_step")=2, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0,
+    "Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.")
     .def("bilateralGauss", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
-         return ::bilateralGauss(m, nItrs, kernRad, sigmavv, sharpFact, sigmadd);
+         return ::_bilateralGauss(m, nItrs, kernRad, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
     }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0)
     .def("meanWide", [](SelfT &m, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
          return MCTProcessing::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
-    }, arg("width")=0, arg("noise_val")=4, arg("average")=0, arg("delta")=20, arg("iterations")=15, arg("smooth_image")="")
+    }, arg("width")=0, arg("noise_val")=4, arg("average")=0, arg("delta")=20, arg("iterations")=15, arg("smooth_image")="",
+    "computes a background image, used to correct for lens artifacts")
     .def("otsu_threshold", [](SelfT &m, int minv, int maxv) { return ::otsu_th(m, minv, maxv); }, arg("min_val")=0, arg("max_val")=256)
-    .def("dering", [](SelfT &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz) {
-         return MCTProcessing::dering(m, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz);
-    }, arg("x0"), arg("y0"), arg("x1"), arg("y1"), arg("min_val")=0, arg("max_val")=255, arg("nr")=0, arg("ntheta")=18, arg("nz")=0)
+    .def("dering", [](SelfT &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz, double scaleDifV, double bilateralSharpen, int nGrowBox, bool write_dumps) {
+        //  return MCTProcessing::deringImg(m, X0, Y0, X1, Y1, minV, maxV, nr, ntheta, nz, int nGrowBox);
+         ::deringImg(m, nr,ntheta,nz, VxT(minV),VxT(maxV), X0,Y0, X1,Y1, nGrowBox, scaleDifV, bilateralSharpen, write_dumps);
+    }, arg("x0"), arg("y0"), arg("x1"), arg("y1"), arg("min_val")=0, arg("max_val")=255, 
+       arg("nr")=0, arg("ntheta")=18, arg("nz")=0, arg("scale_dif_val")=1, arg("bilateral_sharpen")=0.05, arg("nGrowBox")=10, arg("write_dumps")=true)
     .def("adjustBrightnessWith", [](SelfT &m, std::string imgName) { return MCTProcessing::adjustBrightnessWith(m, imgName); }, arg("image_file"))
     .def("adjustSliceBrightness", [](SelfT &m, voxelImage& mskA, voxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
          return MCTProcessing::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
@@ -239,7 +267,8 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     .def("cutOutside", [](SelfT &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
             VoxLib::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); }, 
          arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=0, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
-    .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255)
+    .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255,
+    "Set outer tubing of a circular core-holder image to fill_val")
     ;
     addDodgyFuncsInt(clas);
     addDodgyFuncsU8(clas);
