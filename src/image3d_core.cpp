@@ -8,8 +8,6 @@
 
 namespace py = pybind11;
 
-inline dbl3 tpl2d3(py::tuple v) { return dbl3(v[0].cast<double>(), v[1].cast<double>(), v[2].cast<double>()); }
-
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace VxlPy;
 
@@ -22,20 +20,36 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     py::class_<var3<int>>(sirun, "int3")
     .def(py::init<>())
     .def(py::init<int, int, int>())
-    .def(py::init([](py::tuple t) { return var3<int>(t[0].cast<int>(), t[1].cast<int>(), t[2].cast<int>()); }))
+    .def(py::init([](py::tuple t) { return tov3<int>(t); }))
     .def_readwrite("x", &var3<int>::x)
     .def_readwrite("y", &var3<int>::y)
     .def_readwrite("z", &var3<int>::z)
+    .def("__getitem__", [](const var3<int> &v, int iVal) {
+        int i = iVal;
+        if (i < 0) i += 3;
+        if (i < 0 || i >= 3) throw py::index_error();
+        return v[i];
+    })
+    .def("__setitem__", [](var3<int> &v, int i, int val) { v[i] = val; })
+    .def("__len__", [](const var3<int> &v) { return 3; })
     .def("__repr__", [](const var3<int> &v) { return "int3(" + _s(v) + ")"; })
     ;
 
     py::class_<var3<double>>(sirun, "dbl3")
     .def(py::init<>())
     .def(py::init<double, double, double>())
-    .def(py::init([](py::tuple t) { return var3<double>(t[0].cast<double>(), t[1].cast<double>(), t[2].cast<double>()); }))
+    .def(py::init([](py::tuple t) { return tov3<double>(t); }))
     .def_readwrite("x", &var3<double>::x)
     .def_readwrite("y", &var3<double>::y)
     .def_readwrite("z", &var3<double>::z)
+    .def("__getitem__", [](const var3<double> &v, int iVal) {
+        int i = iVal;
+        if (i < 0) i += 3;
+        if (i < 0 || i >= 3) throw py::index_error();
+        return v[i];
+    })
+    .def("__setitem__", [](var3<double> &v, int i, double val) { v[i] = val; })
+    .def("__len__", [](const var3<double> &v) { return 3; })
     .def("__repr__", [](const var3<double> &v) { return "dbl3(" + _s(v) + ")"; })
     ;
 
@@ -62,17 +76,22 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     py::class_<sphere,shape>(voxlib, "sphere")
     .def(py::init([](py::tuple tpl, double r, int val) {
-        return sphere(tpl2d3(tpl), r, val); }))
+        return sphere(tov3<double>(tpl), r, val); }))
     ;
 
     py::class_<cylinder,shape>(voxlib, "cylinder")
     .def(py::init([](py::tuple p1, py::tuple p2, double r, int val) {
-        return cylinder(tpl2d3(p1), tpl2d3(p2), r, val); }))
+        return cylinder(tov3<double>(p1), tov3<double>(p2), r, val); }),
+        py::arg("p1"), py::arg("p2"), py::arg("r"), py::arg("val"),
+        "p1: first point on axis, p2: second point on axis, r: radius, val: paint value")
     ;
 
     py::class_<kube,shape>(voxlib, "cube")
     .def(py::init([](py::tuple p1, py::tuple size, int val) {
-        return kube(tpl2d3(p1), tpl2d3(size), val); }))
+        std::cout << " p1: " << tov3<double>(p1)  << " size: " << tov3<double>(size)  << " val: " << val << " ";
+        return kube(tov3<double>(p1), tov3<double>(size), val); }),
+        py::arg("p1"), py::arg("size"), py::arg("val"),
+        "p1: first point, size: size of cuboid sides, val: paint value")
     ;
 
     // TODO switch to int32_t...
