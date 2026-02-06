@@ -62,13 +62,26 @@ jobs:
     - name: Install dependencies (Windows)
       if: runner.os == 'Windows'
       run: |
-        vcpkg install zlib:x64-windows
+        vcpkg install zlib:${{ matrix.os == 'windows-11-arm' && 'arm64' || 'x64' }}-windows
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+
+    - name: Find correct LLVM OpenMP DLL (Windows ARM64)
+      if: matrix.os == 'windows-11-arm'
+      run: |
+        $libomp = Get-ChildItem -Path "C:\Program Files" -Filter libomp140.aarch64.dll -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($libomp) {
+          echo "LIBOMP_DIR=$($libomp.DirectoryName)" >> $env:GITHUB_ENV
+          echo "Found libomp at $($libomp.DirectoryName)"
+          echo ('CIBW_REPAIR_WHEEL_COMMAND_WINDOWS=delvewheel repair -w {dest_dir} {wheel} --add-path "' + $libomp.DirectoryName + '"') >> $env:GITHUB_ENV
+        } else {
+          echo "::warning ::libomp140.aarch64.dll not found!"
+        }
+      shell: pwsh
 
     - uses: pypa/cibuildwheel@v3.3
       env:
         CIBW_ENABLE: cpython-prerelease
-        CIBW_ARCHS_WINDOWS: auto ARM64
+        CIBW_ARCHS_WINDOWS: ${{ matrix.os == 'windows-11-arm' && 'ARM64' || 'auto' }}
         MACOSX_DEPLOYMENT_TARGET: "15.0"
         CIBW_ENVIRONMENT_WINDOWS: SKBUILD_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
         CIBW_ENVIRONMENT_MACOS: OpenMP_ROOT=$OpenMP_ROOT

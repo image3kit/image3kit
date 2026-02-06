@@ -123,7 +123,7 @@ set_property(TARGET _core PROPERTY CXX_STANDARD 23)
 # Toolset: gcc-linux:
 
 if(MSVC)
-  target_compile_options(_core PRIVATE /openmp:llvm /diagnostics:caret)  # /W4
+  target_compile_options(_core PRIVATE /openmp:llvm /diagnostics:caret /bigobj)  # /W4
   target_compile_definitions(_core PRIVATE NOMINMAX)
 else()
   target_compile_options(_core PRIVATE -Wall -Wextra -Wpedantic)
