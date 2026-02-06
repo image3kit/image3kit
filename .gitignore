@@ -1,13 +1,17 @@
 # Using https://github.com/github/gitignore/blob/master/Python.gitignore
 
-# clangd
+# IDE/language servers
 compile_commands.json
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
 # Distribution / packaging
 build/
+
+# Test artifacts
+fig/
 
 # Environments
 .env

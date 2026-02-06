@@ -10,16 +10,16 @@ help:
 	@echo "  make install      # Install the package"
 	@echo "  make test         # Run tests"
 
-all:
-	pip install .
-	pybind11-stubgen image3kit --output-dir src
+all: install test
+	@[ -f .venv/bin/pybind11-stubgen ] || (set -x && .venv/bin/pip install pybind11-stubgen)
+	.venv/bin/pybind11-stubgen image3kit --output-dir src
 
 install:
 	pip install .
 
 test:
-	# .venv/bin/pip install pytest numpy
-	python -m pytest
+	@[ -f .venv/bin/pytest ] || (set -x && .venv/bin/pip install pytest)
+	.venv/bin/pytest
 
 .PHONY: setup-ide clean build tests
 
@@ -27,7 +27,7 @@ test:
 setup-ide:
 	python3 -m venv .venv
 	./.venv/bin/pip install cmake pybind11 pre-commit
-	cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dpybind11_DIR=$(shell ./.venv/bin/python -m pybind11 --cmakedir)
+	cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dpybind11_DIR=$(shell .venv/bin/python -m pybind11 --cmakedir)
 	ln -sf build/compile_commands.json .
 
 clean:
