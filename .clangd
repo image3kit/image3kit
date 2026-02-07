@@ -1,0 +1,17 @@
+# Portable clangd config
+CompileFlags:
+  # CompilationDatabase: .
+  Add:
+    - "-DVMMLIB"
+    - "-DSVG"
+    - "-DLPNG"
+    - "-DTIFLIB"
+    - "-DZLIB"
+    - "-DOpenMP"
+    - "-DDUMMY=1"
+    - "-std=c++23"
+
+
+# Indexing settings
+Index:
+  Background: Build

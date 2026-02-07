@@ -29,11 +29,11 @@ template<typename T> inline py::tuple to3(var3<T> v) { return py::make_tuple(v.x
 
 
 inline InputFile pyCastInput(py::dict dic) {
-    InputFile inp;
-    for (const auto &kv : dic) {
+  InputFile inp;
+  for (const auto &kv : dic) {
         inp.add(kv.first.cast<std::string>(), py::str(kv.second).cast<std::string>());
-    }
-    return inp;
+  }
+  return inp;
 }
 
 
@@ -43,23 +43,32 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &) requires(sizeof(VxT)>=3) {
 template<typename VxT>
 void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) {
 
-    using SelfT = voxelImageT<VxT>;
+  using SelfT = voxelImageT<VxT>;
 
-    m.def("segment2", [](SelfT &m, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
-                        double noisev, double localF, double flatnes, double resolution, double gradFactor,
-                        int krnl, int nItrs, int writedumps) {
-            return segment2(m, int(th.size())-1, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
-        },
-        arg("thresholds")=std::vector<int>(), arg("min_sizes")=std::vector<int>(),
-        arg("noise_val")=2., arg("local_factor")=0.05, arg("flatnes")=0.1, arg("effective_resolution")=2.,
-        arg("gradient_factor")=0., arg("kernel_radius")=2, arg("n_iterations")=13, arg("write_dumps")=0
-    )
-    .def("segment", [](SelfT &m, int nSegs, std::vector<int> trshlds, std::vector<int> minSizs, std::string smoot, double noisev, double resolutionSqr, int writedumps) {
-         return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
-        }, arg("n_segments")=2, arg("thresholds"), arg("min_sizes"), arg("smooth_image")="",
-        arg("noise_val")=16.0, arg("resolution_sq")=2.0, arg("write_dumps")=0
-    )
-    ;
+  m.def("segment2",
+       [](SelfT &m, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
+          double noisev, double localF, double flatnes, double resolution,
+          double gradFactor, int krnl, int nItrs, int writedumps) {
+         return segment2(m, int(th.size())-1, th, minSizs, noisev, localF,
+                         flatnes, resolution, gradFactor, krnl, nItrs,
+                         writedumps);
+       },
+       arg("thresholds") = std::vector<int>(),
+       arg("min_sizes") = std::vector<int>(), arg("noise_val") = 2.,
+       arg("local_factor") = 0.05, arg("flatnes") = 0.1,
+       arg("effective_resolution") = 2., arg("gradient_factor") = 0.,
+       arg("kernel_radius") = 2, arg("n_iterations") = 13,
+       arg("write_dumps") = 0)
+      .def("segment",
+          [](SelfT &m, int nSegs, std::vector<int> trshlds,
+             std::vector<int> minSizs, std::string smoot, double noisev,
+             double resolutionSqr, int writedumps) {
+            return MCTProcessing::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
+          },
+          arg("n_segments") = 2, arg("thresholds") = std::vector<int>(),
+          arg("min_sizes") = std::vector<int>(), arg("smooth_image") = "",
+          arg("noise_val") = 16.0, arg("resolution_sq") = 2.0,
+          arg("write_dumps") = 0);
 }
 
 template<typename VxT>
@@ -79,9 +88,9 @@ void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=1) {
 template<typename VxT>
 void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
-using SelfT = voxelImageT<VxT>;
+  using SelfT = voxelImageT<VxT>;
 
-auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
+  auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
 .def_buffer([](SelfT &m) -> py::buffer_info {
         return py::buffer_info(
             m.data(), sizeof(VxT),  py::format_descriptor<VxT>::format(),
@@ -135,10 +144,10 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     .def("threshold101", &SelfT::threshold101, arg("min"), arg("max"),
          "Apply a threshold to binarize the image, set voxel-values to convert to 0 in between the min and max thresholds and 1 outside of it")
     .def("writeAConnectedPoreVoxel", &SelfT::writeAConnectedPoreVoxel, arg("filename"), "Write a specific connected pore voxel to file.")
-    .def("AND", &SelfT::AND, arg("other"), "Voxel-by-voxel AND operation.")
-    .def("NOT", &SelfT::NOT, "Voxel-by-voxel NOT operation.")
-    .def("OR", &SelfT::OR, arg("other"), "Voxel-by-voxel OR operation.")
-    .def("XOR", &SelfT::XOR, arg("other"), "Voxel-by-voxel XOR operation.")
+    .def("AND", &SelfT::AND, arg("image2"), "Voxel-by-voxel inplace AND operation.")
+    .def("NOT", &SelfT::NOT, arg("image2"), "Voxel-by-voxel inplace NOT operation, alias for img = img & !img2.")
+    .def("OR",  &SelfT::OR,  arg("image2"), "Voxel-by-voxel inplace OR operation.")
+    .def("XOR", &SelfT::XOR, arg("image2"), "Voxel-by-voxel inplace XOR operation.")
     .def("resampleMode", [&](SelfT &m, double nReSampleNotSafe) { return resampleMode(m,nReSampleNotSafe); }, arg("factor"),
         "Downsample the image, setting voxel values to mode of original encompassing voxel values.")
     .def("resampleMax", [&](SelfT &m, double nReSampleNotSafe) { return resampleMax(m,nReSampleNotSafe); }, arg("factor"),
@@ -274,8 +283,8 @@ auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
     .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255,
     "Set outer tubing of a circular core-holder image to fill_val")
     ;
-    addDodgyFuncsInt(clas);
-    addDodgyFuncsU8(clas);
+  addDodgyFuncsInt(clas);
+  addDodgyFuncsU8(clas);
 }
 
 } // namespace VxlPy

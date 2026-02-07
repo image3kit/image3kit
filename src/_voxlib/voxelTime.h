@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "typses.h"
 #include "voxelImage.h"
 #include <filesystem>

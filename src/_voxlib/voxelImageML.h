@@ -244,7 +244,9 @@ voxelImageT<T> magGradient(const voxelImageT<T>& vImg, double diffuseLSqr) {
 
 
 template<typename T>
-void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp, float sigmaSqr=16, float sharpFact=0.05, float sigmaGaussSqr=2., float capmin=0, float capmax=maxT(T)) {
+void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp,
+                float sigmaSqr=16, float sharpFact=0.05, float sigmaGaussSqr=2.,
+                float capmin=0, float capmax=fmaxT(T)) {
     (std::cout<<" bilateralX  ").flush();
 
 
@@ -312,7 +314,8 @@ template<typename T>  bool _bilateralX(voxelImageT<T>& vImg, int nItrs, int kern
 
 
 template<typename T>
-void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float sharpFact=0.05, float sigmaGaussSqr=2., float capmin=0, float capmax=maxT(T))
+void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float sharpFact=0.05,
+                    float sigmaGaussSqr=2., float capmin=0, float capmax=fmaxT(T))
 {
     (std::cout<<" bilateralGauss  ").flush();
 

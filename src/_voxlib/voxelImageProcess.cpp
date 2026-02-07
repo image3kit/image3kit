@@ -71,7 +71,7 @@ int main(int argc, char *argv[])  {
   unique_ptr<voxelImageTBase> vxlImage = readImage(header);
 
   if (extra=="UChar")  {
-    voxelImage vImgUChar(vxlImage->size3(), vxlImage->dx(), vxlImage->X0(), 0);
+    voxelImage vImgUChar(vxlImage->size3(), 0, vxlImage->dx(), vxlImage->X0());
     //forAlliii_(vImgUChar)      vImgUChar(iii) = vxlImage->getInt(iii);
     resetFromImageT<SupportedVoxTyps>(vImgUChar,vxlImage.get());
     vImgUChar.write(outputName);
