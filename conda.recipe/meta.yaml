@@ -38,6 +38,7 @@ test:
     - numpy
   source_files:
     - tests
+    - pyproject.toml
   commands:
     - pytest tests
 
