@@ -12,10 +12,11 @@ help:
 	@echo "  make test         # Run tests"
 
 all: setup_venv
+	.venv/bin/pip uninstall -y image3kit || true
 	.venv/bin/pip install .
-	@$(MAKE) test
 	@$(MAKE) stubgen
 	@$(MAKE) pre-commit
+	@$(MAKE) test
 
 stubgen:
 	@[ -f .venv/bin/pybind11-stubgen ] || (set -x && .venv/bin/pip install pybind11-stubgen)

@@ -38,10 +38,10 @@ inline InputFile pyCastInput(py::dict dic) {
 
 
 template<typename VxT>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &) requires(sizeof(VxT)>=3) {}
+void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &) requires(sizeof(VxT)>=3) {}
 
 template<typename VxT>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) {
+void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=2) {
 
   using SelfT = voxelImageT<VxT>;
 
@@ -72,10 +72,10 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=2) 
 }
 
 template<typename VxT>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &) requires(sizeof(VxT)>=2) {
+void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &) requires(sizeof(VxT)>=2) {
 }
 template<typename VxT>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxT>> &m) requires(sizeof(VxT)<=1) {
+void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
     m
     .def("distMapExtrude", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
         m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR); },
@@ -90,8 +90,8 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
   using SelfT = voxelImageT<VxT>;
 
-  auto clas = py::class_<SelfT>(mod, VxTypS, py::buffer_protocol())
-.def_buffer([](SelfT &m) -> py::buffer_info {
+  auto clas = py::class_<SelfT, voxelImageTBase>(mod, VxTypS, py::buffer_protocol())
+    .def_buffer([](SelfT &m) -> py::buffer_info {
         return py::buffer_info(
             m.data(), sizeof(VxT),  py::format_descriptor<VxT>::format(),
             3, { size_t(m.nx()), size_t(m.ny()), size_t(m.nz()) },             // Dimensions
@@ -100,31 +100,43 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     })
     .def(py::init([](py::tuple nxyz, VxT value) { return SelfT({nxyz[0].cast<int>(), nxyz[1].cast<int>(), nxyz[2].cast<int>()}, value); }),
          arg("shape")=py::make_tuple(0,0,0), arg("value") = 0, "Initialize a new image of size tuple (nx, ny, nz) with the fill value.")
-    .def("__repr__", [VxTypS](const SelfT &m) {
-        return "<" + std::string(VxTypS) + " shape=("+_s(m.size3())+")>";
-    })
     .def(py::init( // readConvertFromHeader
         [](py::object filepath, bool processKeys)  { return SelfT(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }),
         arg("filepath"), arg("processKeys")=true,
         "Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw")
-    .def("data", [](py::object self) {
+    .def(py::init( // duplicate and convert
+        [](voxelImageTBase *m)  { SelfT img; if (m) resetFromImageT<VxT, SupportedVoxTyps>(img, m);  return img; }),
+        arg("image"),
+        "Initialize (duplicate and convert) from another voxelImageT object")
+    .def("copy", [](SelfT &m) { return SelfT(m); }, "duplicate the image data")
+    .def("__repr__", [VxTypS](const SelfT &m) {
+        return "<" + std::string(VxTypS) + " shape=("+_s(m.size3())+")>";
+    })
+    .def("__array__", [](py::object self) {
         auto& m = self.cast<SelfT&>();
-        return py::array_t<VxT>(
-            { m.nx(), m.ny(), m.nz() },
-            { long(sizeof(VxT)), long(sizeof(VxT) *m.nx()), long(sizeof(VxT) * m.nxy()) },
-            m.data(),
-            self);
+        std::vector<ssize_t> shape = { (ssize_t)m.nx(), (ssize_t)m.ny(), (ssize_t)m.nz() };
+        std::vector<ssize_t> strides = { (ssize_t)sizeof(VxT), (ssize_t)(sizeof(VxT) * m.nx()), (ssize_t)(sizeof(VxT) * m.nxy()) };
+        return py::array_t<VxT>(shape, strides, m.data(), self);
         }, "Get the raw data buffer as a numpy array.")
-    .def("nx", &SelfT::nx)
-    .def("ny", &SelfT::ny)
-    .def("nz", &SelfT::nz)
-    .def("scaleDx", [](SelfT &m, double s) { m.dxCh() *= s;  m.X0Ch() *= s; }, arg("scale"), "Scale the voxel size (dx, dy, dz) and origin by a factor.")
-    .def("setVoxelSize", [](SelfT &m, py::tuple tpl) { m.dxCh() = tov3<double>(tpl); }, arg("voxelSize"), "Set the voxel size (dx, dy, dz).")
-    .def("voxelSize", [](SelfT &m) { return to3(m.dx()); }, "Get the voxel size (dx, dy, dz).")
-    .def("setOrigin", [](SelfT &m, py::tuple tpl) { m.X0Ch() = tov3<double>(tpl); }, arg("origin"), "Set the origin value (x0, y0, z0).")
-    .def("origin", [](SelfT &m) { return to3(m.X0()); }, "Get the origin value (x0, y0, z0).")
+    .def_property_readonly("data", [](py::object self) {
+        return self.attr("__array__")();
+        }, "Get the raw data buffer as a numpy array.")
+    .def("__getitem__", [](SelfT &m, py::tuple idx) {
+        if (idx.size() != 3) throw py::index_error("Index must be a 3-tuple");
+        return m(idx[0].cast<int>(), idx[1].cast<int>(), idx[2].cast<int>());
+    })
+    .def("__setitem__", [](SelfT &m, py::tuple idx, VxT val) {
+        if (idx.size() != 3) throw py::index_error("Index must be a 3-tuple");
+        m(idx[0].cast<int>(), idx[1].cast<int>(), idx[2].cast<int>()) = val;
+    })
+    .def_property_readonly("shape", [&](SelfT &m) { return to3(m.size3()); })
+    .def_property_readonly("nx", &SelfT::nx)
+    .def_property_readonly("ny", &SelfT::ny)
+    .def_property_readonly("nz", &SelfT::nz)
+    .def_property_readonly("voxelSize", [](SelfT &m) { return to3(m.dx()); }, "Get the voxel size (dx, dy, dz).")
+    .def_property_readonly("origin", [](SelfT &m) { return to3(m.X0()); }, "Get the origin value (x0, y0, z0).")
+    .def("setOrigin", [](SelfT &m, dbl3 off) { m.X0Ch() = off; }, arg("origin"), "Set the spatial offset (x0, y0, z0).")
     .def("printInfo", &SelfT::printInfo)
-    .def("shape", [&](SelfT &m) { return to3(m.size3()); })
     .def("write", &SelfT::write, arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
     .def("writeNoHeader", &SelfT::writeNoHdr, arg("filename"), "Write the raw image data without a header.")
     // .def("writeHeader", &SelfT::writeHeader)
@@ -174,7 +186,6 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     //     }, arg("normalAxis"), arg("filename"), arg("sliceIndex")=0, arg("val_min")=0, arg("val_max")=255, "Read a slice from a Png image")
     // Member functions and wrappers
     .def("rescaleValues", [](SelfT &m, VxT min, VxT max) { rescaleValues(m, min, max); }, arg("min"), arg("max"), "Rescale image values to [min, max].")
-    .def("setOffset", [](SelfT &m, dbl3 off) { m.X0Ch() = off; }, arg("offset"), "Set the spatial offset (origin).")
     .def("redirect", &SelfT::rotate, "Swap X axis with the given axis (y or z).")
     .def("direction", &SelfT::rotate, "Get direction?")
     .def("grow0", &SelfT::growPore, "Grow pore phase (voxel values of 0).")
@@ -187,7 +198,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
          "Replace values in range [min, max] with val.")
     .def("write8bit", [](SelfT &m, std::string outName, double minv, double maxv) { _write8bit(m, outName, minv, maxv); },
          arg("filename"), arg("min")=0.0, arg("max")=-0.5,
-         "Write as 8-bit image scaled between min and max.")
+         "Write as 8-bit image scaled between min(=>0) and max(=>255).")
     .def("readFromHeader", [](SelfT &m, std::string s) { m.reset(int3(0), 0); m.readFromHeader(s); }, arg("filename"), "Reset and read image from file.")
     .def("readBin", [](SelfT &m, std::string s, int nSkipBytes) { m.readBin(s, nSkipBytes); }, arg("filename"), arg("nSkipBytes")=0,
          "Read image data from  a .raw, .raw/.raw.gz, or reset and read from a .am or .tif file.")
@@ -206,7 +217,9 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
          "Face median grow to/from labels.")
     .def("delense032", [](SelfT &m, int nItrs, int nAdj0,  int nAdj1, intOr<VxT> lbl0, intOr<VxT> lbl1) { _delense032(m, nItrs, nAdj0, nAdj1, lbl0, lbl1); }, arg("iterations"), arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"),
      "Delense operation.")
-    .def("circleOut", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); }, arg("x"), arg("y"), arg("r"), arg("d"), arg("val"), "Circle out operation.")
+    .def("circleOut", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); },
+        arg("x"), arg("y"), arg("r"), arg("normal_axis"), arg("val"),
+        "set values outside circular region centered at (x,y) of radius r along normal_axis to val")
     .def("growLabel", &SelfT::growLabel)
     .def("keepLargest", [](SelfT &m, VxT minvv, VxT maxvv) { keepLargestvv(m, minvv, maxvv); }, arg("min"), arg("max"), "Keep largest singly-connected region with values in [min, max].")
     //.def("maskWriteFraction", &SelfT::maskWriteFraction)
@@ -227,7 +240,6 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
         arg("alpha_image")=nullptr, arg("alpha_min")=0, arg("alpha_max")=-1000001,
         "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
     .def("mode26", [](SelfT &m, int nMinD) { return mode26(m,nMinD); })
-    .def("copy", [](SelfT &m) { return SelfT(m); }, "duplicate the image data")
     .def("growingThreshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) {
         ::growingThreshold(m, t1, t2, t3, t4, nIter);
     }, arg("startMin"), arg("startMax"), arg("finalMin"), arg("finalMax"), arg("iterations")=4)

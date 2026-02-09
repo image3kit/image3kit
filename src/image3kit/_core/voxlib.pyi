@@ -26,7 +26,7 @@ __all__: list[str] = [
     "voxelImageTBase",
 ]
 
-class VxlImgF32:
+class VxlImgF32(voxelImageTBase):
     def AND(self, image2: VxlImgF32) -> None:
         """
         Voxel-by-voxel inplace AND operation.
@@ -47,10 +47,15 @@ class VxlImgF32:
         """
         Voxel-by-voxel inplace XOR operation.
         """
+    def __array__(self) -> numpy.typing.NDArray[numpy.float32]:
+        """
+        Get the raw data buffer as a numpy array.
+        """
     def __buffer__(self, flags):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
+    def __getitem__(self, arg0: tuple) -> float: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsFloat = 0) -> None:
         """
@@ -61,11 +66,17 @@ class VxlImgF32:
         """
         Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw
         """
+    @typing.overload
+    def __init__(self, image: voxelImageTBase) -> None:
+        """
+        Initialize (duplicate and convert) from another voxelImageT object
+        """
     def __release_buffer__(self, buffer):
         """
         Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
+    def __setitem__(self, arg0: tuple, arg1: typing.SupportsFloat) -> None: ...
     def addSurfNoise(
         self,
         mask1: typing.SupportsInt,
@@ -108,10 +119,15 @@ class VxlImgF32:
         Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.
         """
     def circleOut(
-        self, x: typing.SupportsInt, y: typing.SupportsInt, r: typing.SupportsInt, d: str, val: typing.SupportsFloat
+        self,
+        x: typing.SupportsInt,
+        y: typing.SupportsInt,
+        r: typing.SupportsInt,
+        normal_axis: str,
+        val: typing.SupportsFloat,
     ) -> None:
         """
-        Circle out operation.
+        set values outside circular region centered at (x,y) of radius r along normal_axis to val
         """
     def copy(self) -> VxlImgF32:
         """
@@ -138,10 +154,6 @@ class VxlImgF32:
         shift_y: typing.SupportsInt = 0,
         fill_val: typing.SupportsInt = 0,
     ) -> None: ...
-    def data(self) -> numpy.typing.NDArray[numpy.float32]:
-        """
-        Get the raw data buffer as a numpy array.
-        """
     def delense032(
         self,
         iterations: typing.SupportsInt,
@@ -248,13 +260,6 @@ class VxlImgF32:
     def modeNSames(self, nSameNeighbors: typing.SupportsInt) -> int:
         """
         Apply mode filter based on nearest 6 neighbor voxels.
-        """
-    def nx(self) -> int: ...
-    def ny(self) -> int: ...
-    def nz(self) -> int: ...
-    def origin(self) -> tuple:
-        """
-        Get the origin value (x0, y0, z0).
         """
     def otsu_threshold(
         self, min_val: typing.SupportsInt = 0, max_val: typing.SupportsInt = 256
@@ -397,23 +402,10 @@ class VxlImgF32:
         """
         Reslice along the Z axis.
         """
-    def scaleDx(self, scale: typing.SupportsFloat) -> None:
+    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
         """
-        Scale the voxel size (dx, dy, dz) and origin by a factor.
+        Set the spatial offset (x0, y0, z0).
         """
-    def setOffset(self, offset: image3kit._core.sirun.dbl3) -> None:
-        """
-        Set the spatial offset (origin).
-        """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the origin value (x0, y0, z0).
-        """
-    def setVoxelSize(self, voxelSize: tuple) -> None:
-        """
-        Set the voxel size (dx, dy, dz).
-        """
-    def shape(self) -> tuple: ...
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -440,17 +432,13 @@ class VxlImgF32:
         """
         Set outer tubing of a circular core-holder image to fill_val
         """
-    def voxelSize(self) -> tuple:
-        """
-        Get the voxel size (dx, dy, dz).
-        """
     def write(self, filename: str) -> None:
         """
         Write the image to a file (.mhd, .raw, .ra.gz formats).
         """
     def write8bit(self, filename: str, min: typing.SupportsFloat = 0.0, max: typing.SupportsFloat = -0.5) -> None:
         """
-        Write as 8-bit image scaled between min and max.
+        Write as 8-bit image scaled between min(=>0) and max(=>255).
         """
     def writeAConnectedPoreVoxel(self, filename: str) -> None:
         """
@@ -464,8 +452,31 @@ class VxlImgF32:
         """
         Write the raw image data without a header.
         """
+    @property
+    def data(self) -> typing.Any:
+        """
+        Get the raw data buffer as a numpy array.
+        """
+    @property
+    def nx(self) -> int: ...
+    @property
+    def ny(self) -> int: ...
+    @property
+    def nz(self) -> int: ...
+    @property
+    def origin(self) -> tuple:
+        """
+        Get the origin value (x0, y0, z0).
+        """
+    @property
+    def shape(self) -> tuple: ...
+    @property
+    def voxelSize(self) -> tuple:
+        """
+        Get the voxel size (dx, dy, dz).
+        """
 
-class VxlImgI32:
+class VxlImgI32(voxelImageTBase):
     def AND(self, image2: VxlImgI32) -> None:
         """
         Voxel-by-voxel inplace AND operation.
@@ -486,10 +497,15 @@ class VxlImgI32:
         """
         Voxel-by-voxel inplace XOR operation.
         """
+    def __array__(self) -> numpy.typing.NDArray[numpy.int32]:
+        """
+        Get the raw data buffer as a numpy array.
+        """
     def __buffer__(self, flags):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
+    def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt = 0) -> None:
         """
@@ -500,11 +516,17 @@ class VxlImgI32:
         """
         Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw
         """
+    @typing.overload
+    def __init__(self, image: voxelImageTBase) -> None:
+        """
+        Initialize (duplicate and convert) from another voxelImageT object
+        """
     def __release_buffer__(self, buffer):
         """
         Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
+    def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt) -> None: ...
     def addSurfNoise(
         self,
         mask1: typing.SupportsInt,
@@ -547,10 +569,15 @@ class VxlImgI32:
         Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.
         """
     def circleOut(
-        self, x: typing.SupportsInt, y: typing.SupportsInt, r: typing.SupportsInt, d: str, val: typing.SupportsInt
+        self,
+        x: typing.SupportsInt,
+        y: typing.SupportsInt,
+        r: typing.SupportsInt,
+        normal_axis: str,
+        val: typing.SupportsInt,
     ) -> None:
         """
-        Circle out operation.
+        set values outside circular region centered at (x,y) of radius r along normal_axis to val
         """
     def copy(self) -> VxlImgI32:
         """
@@ -577,10 +604,6 @@ class VxlImgI32:
         shift_y: typing.SupportsInt = 0,
         fill_val: typing.SupportsInt = 0,
     ) -> None: ...
-    def data(self) -> numpy.typing.NDArray[numpy.int32]:
-        """
-        Get the raw data buffer as a numpy array.
-        """
     def delense032(
         self,
         iterations: typing.SupportsInt,
@@ -687,13 +710,6 @@ class VxlImgI32:
     def modeNSames(self, nSameNeighbors: typing.SupportsInt) -> int:
         """
         Apply mode filter based on nearest 6 neighbor voxels.
-        """
-    def nx(self) -> int: ...
-    def ny(self) -> int: ...
-    def nz(self) -> int: ...
-    def origin(self) -> tuple:
-        """
-        Get the origin value (x0, y0, z0).
         """
     def otsu_threshold(
         self, min_val: typing.SupportsInt = 0, max_val: typing.SupportsInt = 256
@@ -832,23 +848,10 @@ class VxlImgI32:
         """
         Reslice along the Z axis.
         """
-    def scaleDx(self, scale: typing.SupportsFloat) -> None:
+    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
         """
-        Scale the voxel size (dx, dy, dz) and origin by a factor.
+        Set the spatial offset (x0, y0, z0).
         """
-    def setOffset(self, offset: image3kit._core.sirun.dbl3) -> None:
-        """
-        Set the spatial offset (origin).
-        """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the origin value (x0, y0, z0).
-        """
-    def setVoxelSize(self, voxelSize: tuple) -> None:
-        """
-        Set the voxel size (dx, dy, dz).
-        """
-    def shape(self) -> tuple: ...
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -875,17 +878,13 @@ class VxlImgI32:
         """
         Set outer tubing of a circular core-holder image to fill_val
         """
-    def voxelSize(self) -> tuple:
-        """
-        Get the voxel size (dx, dy, dz).
-        """
     def write(self, filename: str) -> None:
         """
         Write the image to a file (.mhd, .raw, .ra.gz formats).
         """
     def write8bit(self, filename: str, min: typing.SupportsFloat = 0.0, max: typing.SupportsFloat = -0.5) -> None:
         """
-        Write as 8-bit image scaled between min and max.
+        Write as 8-bit image scaled between min(=>0) and max(=>255).
         """
     def writeAConnectedPoreVoxel(self, filename: str) -> None:
         """
@@ -899,8 +898,31 @@ class VxlImgI32:
         """
         Write the raw image data without a header.
         """
+    @property
+    def data(self) -> typing.Any:
+        """
+        Get the raw data buffer as a numpy array.
+        """
+    @property
+    def nx(self) -> int: ...
+    @property
+    def ny(self) -> int: ...
+    @property
+    def nz(self) -> int: ...
+    @property
+    def origin(self) -> tuple:
+        """
+        Get the origin value (x0, y0, z0).
+        """
+    @property
+    def shape(self) -> tuple: ...
+    @property
+    def voxelSize(self) -> tuple:
+        """
+        Get the voxel size (dx, dy, dz).
+        """
 
-class VxlImgU16:
+class VxlImgU16(voxelImageTBase):
     def AND(self, image2: VxlImgU16) -> None:
         """
         Voxel-by-voxel inplace AND operation.
@@ -921,10 +943,15 @@ class VxlImgU16:
         """
         Voxel-by-voxel inplace XOR operation.
         """
+    def __array__(self) -> numpy.typing.NDArray[numpy.uint16]:
+        """
+        Get the raw data buffer as a numpy array.
+        """
     def __buffer__(self, flags):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
+    def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt = 0) -> None:
         """
@@ -935,11 +962,17 @@ class VxlImgU16:
         """
         Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw
         """
+    @typing.overload
+    def __init__(self, image: voxelImageTBase) -> None:
+        """
+        Initialize (duplicate and convert) from another voxelImageT object
+        """
     def __release_buffer__(self, buffer):
         """
         Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
+    def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt) -> None: ...
     def addSurfNoise(
         self,
         mask1: typing.SupportsInt,
@@ -982,10 +1015,15 @@ class VxlImgU16:
         Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.
         """
     def circleOut(
-        self, x: typing.SupportsInt, y: typing.SupportsInt, r: typing.SupportsInt, d: str, val: typing.SupportsInt
+        self,
+        x: typing.SupportsInt,
+        y: typing.SupportsInt,
+        r: typing.SupportsInt,
+        normal_axis: str,
+        val: typing.SupportsInt,
     ) -> None:
         """
-        Circle out operation.
+        set values outside circular region centered at (x,y) of radius r along normal_axis to val
         """
     def copy(self) -> VxlImgU16:
         """
@@ -1012,10 +1050,6 @@ class VxlImgU16:
         shift_y: typing.SupportsInt = 0,
         fill_val: typing.SupportsInt = 0,
     ) -> None: ...
-    def data(self) -> numpy.typing.NDArray[numpy.uint16]:
-        """
-        Get the raw data buffer as a numpy array.
-        """
     def delense032(
         self,
         iterations: typing.SupportsInt,
@@ -1122,13 +1156,6 @@ class VxlImgU16:
     def modeNSames(self, nSameNeighbors: typing.SupportsInt) -> int:
         """
         Apply mode filter based on nearest 6 neighbor voxels.
-        """
-    def nx(self) -> int: ...
-    def ny(self) -> int: ...
-    def nz(self) -> int: ...
-    def origin(self) -> tuple:
-        """
-        Get the origin value (x0, y0, z0).
         """
     def otsu_threshold(
         self, min_val: typing.SupportsInt = 0, max_val: typing.SupportsInt = 256
@@ -1267,10 +1294,6 @@ class VxlImgU16:
         """
         Reslice along the Z axis.
         """
-    def scaleDx(self, scale: typing.SupportsFloat) -> None:
-        """
-        Scale the voxel size (dx, dy, dz) and origin by a factor.
-        """
     def segment(
         self,
         n_segments: typing.SupportsInt = 2,
@@ -1294,19 +1317,10 @@ class VxlImgU16:
         n_iterations: typing.SupportsInt = 13,
         write_dumps: typing.SupportsInt = 0,
     ) -> bool: ...
-    def setOffset(self, offset: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
         """
-        Set the spatial offset (origin).
+        Set the spatial offset (x0, y0, z0).
         """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the origin value (x0, y0, z0).
-        """
-    def setVoxelSize(self, voxelSize: tuple) -> None:
-        """
-        Set the voxel size (dx, dy, dz).
-        """
-    def shape(self) -> tuple: ...
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -1333,17 +1347,13 @@ class VxlImgU16:
         """
         Set outer tubing of a circular core-holder image to fill_val
         """
-    def voxelSize(self) -> tuple:
-        """
-        Get the voxel size (dx, dy, dz).
-        """
     def write(self, filename: str) -> None:
         """
         Write the image to a file (.mhd, .raw, .ra.gz formats).
         """
     def write8bit(self, filename: str, min: typing.SupportsFloat = 0.0, max: typing.SupportsFloat = -0.5) -> None:
         """
-        Write as 8-bit image scaled between min and max.
+        Write as 8-bit image scaled between min(=>0) and max(=>255).
         """
     def writeAConnectedPoreVoxel(self, filename: str) -> None:
         """
@@ -1357,8 +1367,31 @@ class VxlImgU16:
         """
         Write the raw image data without a header.
         """
+    @property
+    def data(self) -> typing.Any:
+        """
+        Get the raw data buffer as a numpy array.
+        """
+    @property
+    def nx(self) -> int: ...
+    @property
+    def ny(self) -> int: ...
+    @property
+    def nz(self) -> int: ...
+    @property
+    def origin(self) -> tuple:
+        """
+        Get the origin value (x0, y0, z0).
+        """
+    @property
+    def shape(self) -> tuple: ...
+    @property
+    def voxelSize(self) -> tuple:
+        """
+        Get the voxel size (dx, dy, dz).
+        """
 
-class VxlImgU8:
+class VxlImgU8(voxelImageTBase):
     def AND(self, image2: VxlImgU8) -> None:
         """
         Voxel-by-voxel inplace AND operation.
@@ -1379,10 +1412,15 @@ class VxlImgU8:
         """
         Voxel-by-voxel inplace XOR operation.
         """
+    def __array__(self) -> numpy.typing.NDArray[numpy.uint8]:
+        """
+        Get the raw data buffer as a numpy array.
+        """
     def __buffer__(self, flags):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
+    def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt = 0) -> None:
         """
@@ -1393,11 +1431,17 @@ class VxlImgU8:
         """
         Read image dimensions/metadata from a (header) file. SUpported file types are .am, .raw
         """
+    @typing.overload
+    def __init__(self, image: voxelImageTBase) -> None:
+        """
+        Initialize (duplicate and convert) from another voxelImageT object
+        """
     def __release_buffer__(self, buffer):
         """
         Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
+    def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt) -> None: ...
     def addSurfNoise(
         self,
         mask1: typing.SupportsInt,
@@ -1440,10 +1484,15 @@ class VxlImgU8:
         Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.
         """
     def circleOut(
-        self, x: typing.SupportsInt, y: typing.SupportsInt, r: typing.SupportsInt, d: str, val: typing.SupportsInt
+        self,
+        x: typing.SupportsInt,
+        y: typing.SupportsInt,
+        r: typing.SupportsInt,
+        normal_axis: str,
+        val: typing.SupportsInt,
     ) -> None:
         """
-        Circle out operation.
+        set values outside circular region centered at (x,y) of radius r along normal_axis to val
         """
     def copy(self) -> VxlImgU8:
         """
@@ -1470,10 +1519,6 @@ class VxlImgU8:
         shift_y: typing.SupportsInt = 0,
         fill_val: typing.SupportsInt = 0,
     ) -> None: ...
-    def data(self) -> numpy.typing.NDArray[numpy.uint8]:
-        """
-        Get the raw data buffer as a numpy array.
-        """
     def delense032(
         self,
         iterations: typing.SupportsInt,
@@ -1590,13 +1635,6 @@ class VxlImgU8:
     def modeNSames(self, nSameNeighbors: typing.SupportsInt) -> int:
         """
         Apply mode filter based on nearest 6 neighbor voxels.
-        """
-    def nx(self) -> int: ...
-    def ny(self) -> int: ...
-    def nz(self) -> int: ...
-    def origin(self) -> tuple:
-        """
-        Get the origin value (x0, y0, z0).
         """
     def otsu_threshold(
         self, min_val: typing.SupportsInt = 0, max_val: typing.SupportsInt = 256
@@ -1735,10 +1773,6 @@ class VxlImgU8:
         """
         Reslice along the Z axis.
         """
-    def scaleDx(self, scale: typing.SupportsFloat) -> None:
-        """
-        Scale the voxel size (dx, dy, dz) and origin by a factor.
-        """
     def segment(
         self,
         n_segments: typing.SupportsInt = 2,
@@ -1762,19 +1796,10 @@ class VxlImgU8:
         n_iterations: typing.SupportsInt = 13,
         write_dumps: typing.SupportsInt = 0,
     ) -> bool: ...
-    def setOffset(self, offset: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
         """
-        Set the spatial offset (origin).
+        Set the spatial offset (x0, y0, z0).
         """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the origin value (x0, y0, z0).
-        """
-    def setVoxelSize(self, voxelSize: tuple) -> None:
-        """
-        Set the voxel size (dx, dy, dz).
-        """
-    def shape(self) -> tuple: ...
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -1801,17 +1826,13 @@ class VxlImgU8:
         """
         Set outer tubing of a circular core-holder image to fill_val
         """
-    def voxelSize(self) -> tuple:
-        """
-        Get the voxel size (dx, dy, dz).
-        """
     def write(self, filename: str) -> None:
         """
         Write the image to a file (.mhd, .raw, .ra.gz formats).
         """
     def write8bit(self, filename: str, min: typing.SupportsFloat = 0.0, max: typing.SupportsFloat = -0.5) -> None:
         """
-        Write as 8-bit image scaled between min and max.
+        Write as 8-bit image scaled between min(=>0) and max(=>255).
         """
     def writeAConnectedPoreVoxel(self, filename: str) -> None:
         """
@@ -1824,6 +1845,29 @@ class VxlImgU8:
     def writeNoHeader(self, filename: str) -> None:
         """
         Write the raw image data without a header.
+        """
+    @property
+    def data(self) -> typing.Any:
+        """
+        Get the raw data buffer as a numpy array.
+        """
+    @property
+    def nx(self) -> int: ...
+    @property
+    def ny(self) -> int: ...
+    @property
+    def nz(self) -> int: ...
+    @property
+    def origin(self) -> tuple:
+        """
+        Get the origin value (x0, y0, z0).
+        """
+    @property
+    def shape(self) -> tuple: ...
+    @property
+    def voxelSize(self) -> tuple:
+        """
+        Get the voxel size (dx, dy, dz).
         """
 
 class cube(shape):
@@ -1850,5 +1894,5 @@ class voxelImageTBase:
 def labelImage(arg0: VxlImgU8, arg1: typing.SupportsFloat, arg2: typing.SupportsFloat) -> VxlImgI32: ...
 def readImageBase(filename: typing.Any, processKeys: typing.SupportsInt = 1) -> voxelImageTBase:
     """
-    Global helper to read an image from a file.
+    Global helper to read an image from a file, use VxlImg..() constructors instead.
     """

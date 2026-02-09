@@ -8,11 +8,16 @@ and analysing 3D images such as those obtained using X-ray micro-tomography.
 
 ## Installation
 
+To install the version released on PyPI, run:
+
 ```bash
 pip install image3kit
 ```
 
-If you are interested to modify the code, the Makefile can be used for local build and testing in a local Linux node.
+The `main` branch (experimental) can be installed with the command:
+```bash
+pip install git+https://github.com/image3kit/image3kit.git
+```
 
 ## Licenses
 

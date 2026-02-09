@@ -24,8 +24,6 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     auto sirun = mod.def_submodule("sirun", "The sirun submodule");
 
-    // using namespace MCTProcessing;
-
     py::class_<var3<int>>(sirun, "int3")
     .def(py::init<>())
     .def(py::init<int, int, int>())
@@ -111,14 +109,15 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     voxlib.def("labelImage", [](voxelImage &m, double minvv, double maxvv) {
         auto lbls = labelImage(m, (unsigned char)(minvv), (unsigned char)(maxvv));
-      compressLabelImage(lbls);
+        compressLabelImage(lbls);
         return lbls;
     });
 
-    voxlib.def("readImageBase", [](py::object filename, int processKeys) {
-        return readImage(py::str(filename).cast<std::string>(), processKeys);
-    }, py::arg("filename"), py::arg("processKeys")=1, "Global helper to read an image from a file.");
-
+    voxlib.def("readImageBase",
+        [](py::object filename, int processKeys) {
+            return readImage(py::str(filename).cast<std::string>(), processKeys);
+        }, py::arg("filename"), py::arg("processKeys")=1,
+        "Global helper to read an image from a file, use VxlImg..() constructors instead.");
 
 
     // Bind docstrings or versions to the main module or submodules as needed

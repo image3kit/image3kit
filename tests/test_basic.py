@@ -20,7 +20,7 @@ def test_voxlibI():
     img = ik.VxlImgU8((20, 20, 1), 22)
 
     assert np.array(img, copy=False)[0, 0, 0] == 22
-    assert ik.VxlImgU8((20, 20, 1), 22).data()[0, 0, 0] == 22
+    assert ik.VxlImgU8((20, 20, 1), 22)[0, 0, 0] == 22
 
 
 def test_writePng():
@@ -31,7 +31,7 @@ def test_writePng():
     img.plotSlice(filename="cross_x.png", normal_axis="x", slice_index=lnt // 2, min_val=0, max_val=2, color_map="RGB")
     img.plotSlice(filename="cross_y.png", normal_axis="y", slice_index=rad, min_val=0, max_val=2, color_map="RGB")
     img.plotSlice(filename="cross_z.png", normal_axis="z", slice_index=rad, min_val=0, max_val=2, color_map="RGB")
-    indices = np.where(img.data() == 0)
+    indices = np.where(img.data == 0)
     print(indices)
     print(lnt * rad * rad * 4)
 
