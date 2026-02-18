@@ -309,9 +309,6 @@ voxelImage readImageU8(const InputFile& inp) {
 
   voxelImage VImage(fnam,readOpt::procAndConvert);
 
-  if(string vxlkys=inp.kwrd("VxlPro"); vxlkys.size())
-    vxlProcess(vxlkys, VImage,"MSE:VxlPro");
-
   return VImage;
 }
 

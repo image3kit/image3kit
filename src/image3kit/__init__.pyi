@@ -1,5 +1,5 @@
 """
-The _core (PyBind11 wrapper) of image3 module of containing sirun and VxlImg submodules.
+Auto-generated _core (PyBind11) of image3kit package containing sirun and voxlib submodules.
 """
 
 from __future__ import annotations

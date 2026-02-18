@@ -1,28 +1,21 @@
 
-
-#include "VxlImgXX.hpp"
+#include "bind_common.hpp"
 #include "shapeToVoxel.h"
 
 namespace py = pybind11;
 
-// Explicit instantiation to ensure symbol is generated, WTF: crap macOS clang++
-template void voxelField<unsigned char>::reset(var3<int>, unsigned char);
-template void voxelField<unsigned short>::reset(var3<int>, unsigned short);
-template void voxelField<int>::reset(var3<int>, int);
-template void voxelField<float>::reset(var3<int>, float);
-template void voxelField<var3<float>>::reset(var3<int>, var3<float>);
-
-template voxelImageT<unsigned char>::voxelImageT(const std::string&, readOpt);
-template voxelImageT<unsigned short>::voxelImageT(const std::string&, readOpt);
-template voxelImageT<int>::voxelImageT(const std::string&, readOpt);
-template voxelImageT<float>::voxelImageT(const std::string&, readOpt);
+// Forward declarations
+void bind_VxlImgU8(pybind11::module &m, const char* name);
+void bind_VxlImgU16(pybind11::module &m, const char* name);
+void bind_VxlImgI32(pybind11::module &m, const char* name);
+void bind_VxlImgF32(pybind11::module &m, const char* name);
 
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace VxlPy;
 
     // **************** sirun submodule ***************
 
-    auto sirun = mod.def_submodule("sirun", "The sirun submodule");
+    auto sirun = mod.def_submodule("sirun", "The sirun submodule, not to be used directly atm");
 
     py::class_<var3<int>>(sirun, "int3")
     .def(py::init<>())
@@ -74,7 +67,7 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     // **************** sirun submodule ***************
 
-    auto voxlib = mod.def_submodule("voxlib", "The VxlImg template classes");
+    auto voxlib = mod.def_submodule("voxlib", "Auto-generated wrapper for voxelImageT template C++ classes.");
 
     auto _voxelImageTBase = py::class_<voxelImageTBase>(voxlib, "voxelImageTBase")
     ;
@@ -102,10 +95,10 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     ;
 
     // TODO switch to int32_t...
-    bind_VxlImg<unsigned char>(voxlib, "VxlImgU8");
-    bind_VxlImg<unsigned short>(voxlib, "VxlImgU16");
-    bind_VxlImg<int>(voxlib, "VxlImgI32");
-    bind_VxlImg<float>(voxlib, "VxlImgF32");
+    bind_VxlImgU8(voxlib, "VxlImgU8");
+    bind_VxlImgU16(voxlib, "VxlImgU16");
+    bind_VxlImgI32(voxlib, "VxlImgI32");
+    bind_VxlImgF32(voxlib, "VxlImgF32");
 
     voxlib.def("labelImage", [](voxelImage &m, double minvv, double maxvv) {
         auto lbls = labelImage(m, (unsigned char)(minvv), (unsigned char)(maxvv));
@@ -114,14 +107,14 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     });
 
     voxlib.def("readImageBase",
-        [](py::object filename, int processKeys) {
-            return readImage(py::str(filename).cast<std::string>(), processKeys);
-        }, py::arg("filename"), py::arg("processKeys")=1,
+        [](py::object filename) {
+            return readImage(py::str(filename).cast<std::string>(), 0);
+        }, py::arg("filename"),
         "Global helper to read an image from a file, use VxlImg..() constructors instead.");
 
 
     // Bind docstrings or versions to the main module or submodules as needed
-    mod.doc() = "The _core (PyBind11 wrapper) of image3 module of containing sirun and VxlImg submodules.";
+    mod.doc() = "Auto-generated _core (PyBind11) of image3kit package containing sirun and voxlib submodules.";
 
 #ifdef VERSION_INFO
     mod.attr("__version__") = TOSTRING(VERSION_INFO);

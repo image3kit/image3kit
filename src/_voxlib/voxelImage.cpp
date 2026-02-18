@@ -19,6 +19,8 @@ your option) any later version. see <http://www.gnu.org/licenses/>.
 #ifdef TIFLIB
 #include "voxelTiff.h"
 #endif
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "voxelPng_stbi.h"
 
 #include "globals.h"  // ensure...
@@ -36,130 +38,6 @@ using namespace std; //cin cout endl string stringstream  istream istringstream 
 
 
 int maxNz = 1000000, _maxNz = 1000000|12; // use `reset maxNz 100` to limit the number of layers processed during fine-tuning of image processing params
-
-
-namespace MCTProcessing{
-  template<typename T>  VxlFuncs<T> namedProcesses();
-}
-
-template<typename T>
-class  voxelplugins {
-  public:
-
-  VxlFuncs<T> key_funs;
-  const VxlFuncs<T>& operator()() const { return key_funs; }
-  voxelplugins() {
-    key_funs = MCTProcessing::namedProcesses<T>();
-  };
-
-  int vxProcess(const InputFile& inp, voxelImageT<T>& img, string nam="") const  { // nam is ignored here
-    #ifdef _VoxBasic8
-    static_assert(sizeof(T)==1);
-    #endif
-    if(inp.data().size()>2) std::cout<<std::endl;
-    if ((_maxNz&12)!=12) return 1; // #LicenseCheck
-    for(const auto& ky:inp.data())  {
-      auto paer = key_funs.find(ky.first);
-      if (paer!=key_funs.end())  {
-        (cout<<" "<<ky.first<<": ").flush();
-        stringstream ss(ky.second);
-        (*(paer->second))(ss, img);
-        if(inp.data().size()>2) cout<<endl;
-      }
-      else {
-        if(ky.first!="end") { cout<<"  stopped executing "+inp.fileName()+" ("+nam+") before \""+ky.first+"\"  :/ ";
-                        return -1; }
-        break;
-      }
-    }
-    return 0;
-  };
-  int vxProcess(const string&  keystr, voxelImageT<T>& img, string nam)  const {  return  vxProcess(InputFile(keystr,nam,false), img);   }
-  /*int process(      istream& keyins, voxelImageT<T>& img, string nam)  {  return  process(InputFile(keyins,nam,false), img);
-    //while (true)  {
-      //std::streampos begLine = keyins.tellg();
-      //string ky;  keyins>>ky;
-      //if (keyins.fail())   {cout<<"  @"<<keyins.tellg()<<"  "<<nam<<" done."<<endl;  break; }
-      //else if (ky[0]=='{' || ky[0]=='}') { keyins.seekg(int(keyins.tellg())-ky.size()-1); continue; }
-      //else if (ky[0]=='#' || ky[0]=='\'' || ky[0]=='/' || ky[0]=='%')  keyins.ignore(10000,'\n');
-      //else  {
-        //auto paer = key_funs.find(ky);
-        //if (paer!=key_funs.end())  {
-          //(cout<<" "<<ky<<": ").flush();
-          //stringstream ss;  if(keyins.peek()!='\n') keyins.get (*(ss.rdbuf()));
-          //(*(paer->second))(ss,img);
-          //cout<<endl;
-        //}
-        //else  {
-          //cout<<"  stopped processing "<<nam<<" before \""<<ky<<"\" :/ "<<endl;
-          //keyins.clear(); keyins.seekg(begLine);
-          //return -1;
-        //}
-    //}  }
-    //return 0;
-  };*/
-
-};
-
-
-
-template<class InpT, typename T>  //! run voxel plugins
- int vxlProcess(const InpT& ins, voxelImageT<T>& img, string nam) {
-  #ifdef _VoxBasic8
-  static_assert(sizeof(T)==1);
-  #endif
-  return voxelplugins<T>().vxProcess(ins,img,nam);  }
-
-template<class InpT, typename First, typename... Rest>
- int vxlProcess(const InpT& ins, voxelImageTBase* imgPtr, string nam)  { //! detect type and run voxel plugins
-  if (auto img = dynamic_cast<voxelImageT<First>*>(imgPtr))
-    return vxlProcess<InpT,First>(ins,*img,nam);
-  else if (sizeof...(Rest))
-    return vxlProcess<InpT,Rest...>(ins, imgPtr, nam);
-  cout<<"Unknown image type."<<endl;
-  return 1313000001;
-}
-
-//TODO: break down and parallelize compilation
-template int vxlProcess<InputFile, SupportedVoxTyps>(const InputFile& inp, voxelImageTBase* imgPtr, string nam);
-template int vxlProcess<string, SupportedVoxTyps>(string const& ins, voxelImageTBase* imgPtr, string nam);
-
-
-string VxlKeysHelp(string keyname, string subkey)  {
-  //! Query and print MCTProcessing keyword usage messages
-
-  VxlFuncs<unsigned char> key_funs = voxelplugins<unsigned char>()();
-
-  voxelImage vImg;
-  stringstream keys;
-  if(keyname.size())  {
-    auto paer = key_funs.find(keyname);
-    if (paer!=key_funs.end())  {
-      stringstream ss(subkey.empty()?  "?" : "? "+subkey);
-      try                         {  (*(paer->second))(ss, vImg); }
-      catch (std::exception &exc) {  std::cerr <<keyname<<" KeyHelp not implemented:" << exc.what() << endl; }
-      catch (...)                 {  std::cerr <<keyname<<" KeyHelp not implemented:" << endl; }
-      return ss.str();
-    }
-    else
-      cout<<" Error: no such keyword "<<keyname<<endl;
-    keys<<"//!-*- C -*- keywords:\n";
-    for(const auto& proc:key_funs)   keys<<proc.first<<"\n";
-    keys<<" Error: no such keyword "<<keyname<<"\n\n";
-  }
-  else  {
-    std::vector<std::pair<string,VxlFunc<unsigned char>>> keyfuns(key_funs.begin(), key_funs.end());
-    std::sort(keyfuns.begin(), keyfuns.end());
-    for(const auto& proc:keyfuns)  if(proc.first.size()>1)  {
-      stringstream ss("?");
-      try                         {  (*(proc.second))(ss, vImg); }
-      catch (std::exception &exc) {  std::cerr <<proc.first<<" KeyHelp not implemented:" << exc.what() << endl; }
-      catch (...)                 {  std::cerr <<proc.first<<" KeyHelp not implemented:" << endl; }
-      keys<<"  "<< std::left<<std::setw(15)<<proc.first+":"<<" "<<replaceFromTo(ss.str(),"\n","\n                  ")<<"\n"; // Sync15_X1dsd
-    }
-  }
-  return keys.str();
-}
 
 
 template<typename T>
@@ -231,8 +109,7 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys)  {
     data=regex_replace(data,regex("^[^\n]*\n"), "", regex_constants::format_first_only);
     data=regex_replace(data,regex("\n|($)"),"\n   read "+hdrNam+"\n", regex_constants::format_first_only);
     for(auto&da:data)  { if(da=='p') da='.'; else if(da=='\n') break; }
-    cout<<"  filename keywords: {\n"<<data<<"  }"<<endl;
-    vxlProcess(data,vImg,hdrNam);
+    // vxlProcess(data,vImg,hdrNam); // removed from Python build for simplicity
     procesKeys=0;
   }
   else if (hasExt(hdrNam,"_header"))  {
@@ -292,8 +169,8 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys)  {
     vImg.X0_*=unit_;
     cout<<"\n  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
   }
-  static const voxelplugins<T> plagins;
-  if (procesKeys) plagins.vxProcess(InputFile(fil,hdrNam),vImg);
+  // static const voxelplugins<T> plagins;
+  // if (procesKeys) plagins.vxProcess(InputFile(fil,hdrNam),vImg);
   cout<<"."<<endl;
 }
 

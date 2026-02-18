@@ -27,7 +27,7 @@ install_global:
 
 test:
 	@[ -f .venv/bin/pytest ] || (set -x && .venv/bin/pip install pytest)
-	.venv/bin/pytest
+	.venv/bin/python -m pytest
 
 .PHONY: setup_venv clean build tests
 

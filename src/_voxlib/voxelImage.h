@@ -267,18 +267,6 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
 //template<typename T> voxelImageT<T>  resampleMean(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
 //template<typename T> voxelImageT<T> growBounds(const voxelImageT<T>& vxls, int nLayers)
 
-std::string VxlKeysHelp(std::string keyname="", std::string subkey="");
-
-
-template <typename T> using VxlFunc  = bool(*)(std::stringstream&, voxelImageT<T>&);
-template <typename T> using VxlFuncs = std::unordered_map<std::string, VxlFunc<T>>;
-
-template<class InpT, typename T>
-int vxlProcess(const InpT& inks, voxelImageT<T>& img, std::string nam="");// InpT= string or InputFile
-
-template<class InpT, typename First=uint8_t, typename... Rest>
-int vxlProcess(const InpT& inks, voxelImageTBase* ptr, std::string nam="");
-
 
 std::unique_ptr<voxelImageTBase> readImage(std::string hdrNam /*headername or image type*/, int procesKeys = 1 );
 

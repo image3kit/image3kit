@@ -1,40 +1,11 @@
-
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
-#include "pybind11/pytypes.h"
-#ifdef min
-#undef min
-#undef max
-#endif
-#include "typses.h"
-#include "voxelEndian.h"
-#include "voxelImage.h"
-#include "voxelImageI.h"
-#include "shapeToVoxel.h"
-#include "InputFile.h"
-#include "VxlStrips.h"
-#include "voxelImageProcess.h"
-#include "voxelNoise.h"
+#pragma once
+#include "bind_common.hpp"
 
 
 namespace VxlPy {
 namespace py = pybind11;
 using py::arg;
 using namespace VoxLib;
-
-
-template<typename T> inline var3<T> tov3(py::tuple v) { return var3<T>(v[0].cast<T>(), v[1].cast<T>(), v[2].cast<T>()); }
-template<typename T> inline py::tuple to3(var3<T> v) { return py::make_tuple(v.x, v.y, v.z); }
-
-
-inline InputFile pyCastInput(py::dict dic) {
-  InputFile inp;
-  for (const auto &kv : dic) {
-        inp.add(kv.first.cast<std::string>(), py::str(kv.second).cast<std::string>());
-  }
-  return inp;
-}
 
 
 template<typename VxT>
@@ -114,8 +85,8 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     })
     .def("__array__", [](py::object self) {
         auto& m = self.cast<SelfT&>();
-        std::vector<ssize_t> shape = { (ssize_t)m.nx(), (ssize_t)m.ny(), (ssize_t)m.nz() };
-        std::vector<ssize_t> strides = { (ssize_t)sizeof(VxT), (ssize_t)(sizeof(VxT) * m.nx()), (ssize_t)(sizeof(VxT) * m.nxy()) };
+        std::vector<py::ssize_t> shape = { (py::ssize_t)m.nx(), (py::ssize_t)m.ny(), (py::ssize_t)m.nz() };
+        std::vector<py::ssize_t> strides = { (py::ssize_t)sizeof(VxT), (py::ssize_t)(sizeof(VxT) * m.nx()), (py::ssize_t)(sizeof(VxT) * m.nxy()) };
         return py::array_t<VxT>(shape, strides, m.data(), self);
         }, "Get the raw data buffer as a numpy array.")
     .def_property_readonly("data", [](py::object self) {
