@@ -16,7 +16,7 @@ pip install image3kit
 
 The `main` branch (experimental) can be installed with the command:
 ```bash
-pip install git+https://github.com/image3kit/image3kit.git
+pip install git+https://github.com/DigiPorFlow/image3kit.git
 ```
 
 ## Licenses

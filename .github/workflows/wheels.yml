@@ -81,6 +81,7 @@ jobs:
     - uses: pypa/cibuildwheel@v3.3
       env:
         CIBW_ENABLE: cpython-prerelease
+        CIBW_SKIP: "cp39-win_arm64 cp310-win_arm64 cp311-win_arm64"
         CIBW_ARCHS_WINDOWS: ${{ matrix.os == 'windows-11-arm' && 'ARM64' || 'auto' }}
         MACOSX_DEPLOYMENT_TARGET: "15.0"
         CIBW_ENVIRONMENT_WINDOWS: SKBUILD_CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"

@@ -6,14 +6,14 @@ build-backend = "scikit_build_core.build"
 [project]
 name = "image3kit"
 version = "0.0.2-alpha"
-license = "MIT"
+license = "BSD-3-Clause"
 license-files = ["LICENSE", "pkgs/pybind11/LICENSE"]
 description="image3kit - 3D image processing toolkit"
 readme = "README.md"
 authors = [
   { name = "Ali Q Raeini", email = "A.Qaseminejad_Raeini@hw.ac.uk" },
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3 :: Only",
@@ -23,9 +23,12 @@ classifiers = [
 ]
 dependencies = ["numpy"]
 
+[project.urls]
+Repository = "https://github.com/DigiPorFlow/image3kit"
+
 
 [dependency-groups]
-test = ["pytest"]
+test = ["pytest", "tomli>=1.1.0; python_version < '3.11'"]
 dev = [{ include-group = "test" }]
 
 
