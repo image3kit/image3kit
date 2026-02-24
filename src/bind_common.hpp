@@ -8,19 +8,10 @@
 #undef max
 #endif
 #include "typses.h"
-#include "voxelEndian.h"
-#include "voxelImage.h"
-#include "voxelImageI.h"
-#include "shapeToVoxel.h"
 #include "InputFile.h"
-#include "VxlStrips.h"
-#include "voxelImageProcess.h"
-#include "voxelNoise.h"
 
 namespace VxlPy {
 namespace py = pybind11;
-using py::arg;
-using namespace VoxLib;
 
 
 template<typename T> inline var3<T> tov3(py::tuple v) { return var3<T>(v[0].cast<T>(), v[1].cast<T>(), v[2].cast<T>()); }

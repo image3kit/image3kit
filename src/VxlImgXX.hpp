@@ -1,6 +1,14 @@
 #pragma once
 #include "bind_common.hpp"
 
+#include "voxelEndian.h"
+#include "voxelImage.h"
+#include "voxelImageI.h"
+#include "shapeToVoxel.h"
+#include "InputFile.h"
+#include "VxlStrips.h"
+#include "voxelImageProcess.h"
+#include "voxelNoise.h"
 
 namespace VxlPy {
 namespace py = pybind11;
