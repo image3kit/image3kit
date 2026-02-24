@@ -1,6 +1,7 @@
 
 #include "bind_common.hpp"
 #include "shapeToVoxel.h"
+#include "voxelRegions.h"
 
 namespace py = pybind11;
 
@@ -12,6 +13,7 @@ void bind_VxlImgF32(pybind11::module &m, const char* name);
 
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace VxlPy;
+    using namespace VoxLib;
 
     // **************** sirun submodule ***************
 

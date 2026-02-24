@@ -1,6 +1,21 @@
 #pragma once
 #include "bind_common.hpp"
 
+#include "voxelEndian.h"
+#include "voxelImage.h"
+#include "voxelImageI.h"
+#include "shapeToVoxel.h"
+#include "InputFile.h"
+#include "VxlStrips.h"
+#include "voxelImageProcess.h"
+#include "voxelNoise.h"
+
+
+void vxlToFoam(voxelImage& vxlImg);
+void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
+void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0);
+void vxlToSurfMesh(InputFile& inp, voxelImage& vimage, std::string outputSurface);
+
 
 namespace VxlPy {
 namespace py = pybind11;
@@ -53,6 +68,19 @@ void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(
         arg("distMapDict")=py::dict(), arg("offset")=0.5, arg("scale")=1.0, arg("power")=1.0,
         "Extrude proportional to distance map"
     )
+    .def("vxlToFoam", [](voxelImage& m) { vxlToFoam(m); }, "Convert image to OpenFOAM mesh")
+    .def("vxlToFoamPar", [](voxelImage& m, py::tuple nPar, bool resetX0, bool keepBCs) { vxlToFoamPar(m, tov3<int>(nPar), resetX0, keepBCs); },
+        arg("nPar")=py::make_tuple(1,1,1), arg("resetX0")=false, arg("keepBCs")=false,
+        "Convert image to a parallel OpenFOAM mesh")
+    .def("vxlToFoamPar_seq", [](voxelImage& m, py::tuple nPar, bool resetX0) { vxlToFoamPar_seq(m, tov3<int>(nPar), resetX0); },
+        arg("nPar")=py::make_tuple(1,1,1), arg("resetX0")=false,
+        "Convert image to a parallel OpenFOAM mesh sequentially (one processor mesh at a time)")
+    .def("vxlToSurfMesh", [](voxelImage& m, py::dict inpDic, std::string outputSurface) {
+            InputFile inp(pyCastInput(inpDic));
+            vxlToSurfMesh(inp, m, outputSurface);
+        },
+        arg("inp")=py::dict(), arg("outputSurface")="surface.obj",
+        "Convert image to surface mesh")
     ;
 }
 
@@ -69,7 +97,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
             { long(sizeof(VxT)), long(sizeof(VxT)*m.nx()), long(sizeof(VxT) * m.nxy()) } // Strides (in bytes)
         );
     })
-    .def(py::init([](py::tuple nxyz, VxT value) { return SelfT({nxyz[0].cast<int>(), nxyz[1].cast<int>(), nxyz[2].cast<int>()}, value); }),
+    .def(py::init([](py::tuple nxyz, VxT value) { return SelfT(tov3<int>(nxyz), value); }),
          arg("shape")=py::make_tuple(0,0,0), arg("value") = 0, "Initialize a new image of size tuple (nx, ny, nz) with the fill value.")
     .def(py::init( // readConvertFromHeader
         [](py::object filepath, bool processKeys)  { return SelfT(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead); }),
@@ -106,7 +134,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def_property_readonly("nz", &SelfT::nz)
     .def_property_readonly("voxelSize", [](SelfT &m) { return to3(m.dx()); }, "Get the voxel size (dx, dy, dz).")
     .def_property_readonly("origin", [](SelfT &m) { return to3(m.X0()); }, "Get the origin value (x0, y0, z0).")
-    .def("setOrigin", [](SelfT &m, dbl3 off) { m.X0Ch() = off; }, arg("origin"), "Set the spatial offset (x0, y0, z0).")
+    .def("setOrigin", [](SelfT &m, py::tuple off) { m.X0Ch() = tov3<double>(off); }, arg("origin"), "Set the spatial offset (x0, y0, z0).")
     .def("printInfo", &SelfT::printInfo)
     .def("write", &SelfT::write, arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
     .def("writeNoHeader", &SelfT::writeNoHdr, arg("filename"), "Write the raw image data without a header.")
@@ -114,9 +142,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("readAscii", &SelfT::readAscii, arg("filename"), "Read image data from an ASCII file.")
     // .def("readRLE", &SelfT::readRLE)
     .def("cropD", [](SelfT &m, py::tuple bgn, py::tuple end, int emptyLayers, VxT emptyLayersValue, bool verbose) {
-         int3 b(bgn[0].cast<int>(), bgn[1].cast<int>(), bgn[2].cast<int>());
-         int3 e(end[0].cast<int>(), end[1].cast<int>(), end[2].cast<int>());
-         m.cropD(b, e, emptyLayers, emptyLayersValue, verbose);
+         m.cropD(tov3<int>(bgn), tov3<int>(end), emptyLayers, emptyLayersValue, verbose);
     }, arg("begin"), arg("end"), arg("emptyLayers")=0, arg("emptyLayersValue")=1, arg("verbose")=false,
          "Crop the image (inplace) from begin index tupe ix,iy,iz (inclusive) to and and end index (not inclusive) tuple.")
     .def("growBox", &SelfT::growBox, arg("num_layers"),

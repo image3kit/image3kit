@@ -10,8 +10,6 @@ import typing
 import numpy
 import numpy.typing
 
-import image3kit._core.sirun
-
 __all__: list[str] = [
     "VxlImgF32",
     "VxlImgI32",
@@ -53,10 +51,6 @@ class VxlImgF32(voxelImageTBase):
         """
         Get the raw data buffer as a numpy array.
         """
-    def __buffer__(self, flags):
-        """
-        Return a buffer object that exposes the underlying memory of the object.
-        """
     def __getitem__(self, arg0: tuple) -> float: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsFloat | typing.SupportsIndex = 0) -> None:
@@ -72,10 +66,6 @@ class VxlImgF32(voxelImageTBase):
     def __init__(self, image: voxelImageTBase) -> None:
         """
         Initialize (duplicate and convert) from another voxelImageT object
-        """
-    def __release_buffer__(self, buffer):
-        """
-        Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
     def __setitem__(self, arg0: tuple, arg1: typing.SupportsFloat | typing.SupportsIndex) -> None: ...
@@ -438,7 +428,7 @@ class VxlImgF32(voxelImageTBase):
         """
         Reslice along the Z axis.
         """
-    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: tuple) -> None:
         """
         Set the spatial offset (x0, y0, z0).
         """
@@ -550,10 +540,6 @@ class VxlImgI32(voxelImageTBase):
         """
         Get the raw data buffer as a numpy array.
         """
-    def __buffer__(self, flags):
-        """
-        Return a buffer object that exposes the underlying memory of the object.
-        """
     def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt | typing.SupportsIndex = 0) -> None:
@@ -569,10 +555,6 @@ class VxlImgI32(voxelImageTBase):
     def __init__(self, image: voxelImageTBase) -> None:
         """
         Initialize (duplicate and convert) from another voxelImageT object
-        """
-    def __release_buffer__(self, buffer):
-        """
-        Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
     def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt | typing.SupportsIndex) -> None: ...
@@ -935,7 +917,7 @@ class VxlImgI32(voxelImageTBase):
         """
         Reslice along the Z axis.
         """
-    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: tuple) -> None:
         """
         Set the spatial offset (x0, y0, z0).
         """
@@ -1047,10 +1029,6 @@ class VxlImgU16(voxelImageTBase):
         """
         Get the raw data buffer as a numpy array.
         """
-    def __buffer__(self, flags):
-        """
-        Return a buffer object that exposes the underlying memory of the object.
-        """
     def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt | typing.SupportsIndex = 0) -> None:
@@ -1066,10 +1044,6 @@ class VxlImgU16(voxelImageTBase):
     def __init__(self, image: voxelImageTBase) -> None:
         """
         Initialize (duplicate and convert) from another voxelImageT object
-        """
-    def __release_buffer__(self, buffer):
-        """
-        Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
     def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt | typing.SupportsIndex) -> None: ...
@@ -1455,7 +1429,7 @@ class VxlImgU16(voxelImageTBase):
         n_iterations: typing.SupportsInt | typing.SupportsIndex = 13,
         write_dumps: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> bool: ...
-    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: tuple) -> None:
         """
         Set the spatial offset (x0, y0, z0).
         """
@@ -1567,10 +1541,6 @@ class VxlImgU8(voxelImageTBase):
         """
         Get the raw data buffer as a numpy array.
         """
-    def __buffer__(self, flags):
-        """
-        Return a buffer object that exposes the underlying memory of the object.
-        """
     def __getitem__(self, arg0: tuple) -> int: ...
     @typing.overload
     def __init__(self, shape: tuple = (0, 0, 0), value: typing.SupportsInt | typing.SupportsIndex = 0) -> None:
@@ -1586,10 +1556,6 @@ class VxlImgU8(voxelImageTBase):
     def __init__(self, image: voxelImageTBase) -> None:
         """
         Initialize (duplicate and convert) from another voxelImageT object
-        """
-    def __release_buffer__(self, buffer):
-        """
-        Release the buffer object that exposes the underlying memory of the object.
         """
     def __repr__(self) -> str: ...
     def __setitem__(self, arg0: tuple, arg1: typing.SupportsInt | typing.SupportsIndex) -> None: ...
@@ -1985,7 +1951,7 @@ class VxlImgU8(voxelImageTBase):
         n_iterations: typing.SupportsInt | typing.SupportsIndex = 13,
         write_dumps: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> bool: ...
-    def setOrigin(self, origin: image3kit._core.sirun.dbl3) -> None:
+    def setOrigin(self, origin: tuple) -> None:
         """
         Set the spatial offset (x0, y0, z0).
         """
@@ -2020,6 +1986,22 @@ class VxlImgU8(voxelImageTBase):
     ) -> float:
         """
         Set outer tubing of a circular core-holder image to fill_val
+        """
+    def vxlToFoam(self) -> None:
+        """
+        Convert image to OpenFOAM mesh
+        """
+    def vxlToFoamPar(self, nPar: tuple = (1, 1, 1), resetX0: bool = False, keepBCs: bool = False) -> None:
+        """
+        Convert image to a parallel OpenFOAM mesh
+        """
+    def vxlToFoamPar_seq(self, nPar: tuple = (1, 1, 1), resetX0: bool = False) -> None:
+        """
+        Convert image to a parallel OpenFOAM mesh sequentially (one processor mesh at a time)
+        """
+    def vxlToSurfMesh(self, inp: dict = {}, outputSurface: str = "surface.obj") -> None:
+        """
+        Convert image to surface mesh
         """
     def write(self, filename: str) -> None:
         """

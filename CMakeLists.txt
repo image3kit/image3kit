@@ -123,7 +123,18 @@ set(CMAKE_WARN_DEPRECATED
 # this)
 file(GLOB PyBind_SRCS CONFIGURE_DEPENDS "src/*.cpp")
 set(VOXLIB_SRC src/_voxlib/voxelImage.cpp src/_voxlib/VxlStrips.cpp)
-python_add_library(_core MODULE ${VOXLIB_SRC} ${PyBind_SRCS} WITH_SOABI)
+set(VXL_TOOLS_SRC
+    src/_vxlToFoam/voxelToFoam.cpp
+    src/_vxlToFoam/voxelToFoamPar.cpp
+    src/_vxlToFoam/voxelToFoamPar_seq.cpp
+    src/_vxlToSurf/voxelToSurfMesh.cpp
+    src/_vxlToSurf/voxelSurface.cpp
+    src/_vxlToSurf/voxelSurface_write.cpp
+    src/_vxlToSurf/smoothGauss.cpp)
+
+python_add_library(_core MODULE ${VOXLIB_SRC} ${PyBind_SRCS} ${VXL_TOOLS_SRC}
+                   WITH_SOABI)
+
 target_compile_definitions(
   _core
   PRIVATE SVG
@@ -132,12 +143,15 @@ target_compile_definitions(
           ZLIB
           OpenMP
           VMMLIB
+          IMAGE3KIT_PYTHON_BINDINGS
           DUMMY=1)
-# find_package(pybind11 CONFIG REQUIRED PATHS ./build)
+
 target_link_libraries(_core PRIVATE pybind11::headers)
 
 target_include_directories(_core PRIVATE src/_include)
 target_include_directories(_core PRIVATE src/_voxlib)
+target_include_directories(_core PRIVATE src/_vxlToFoam)
+target_include_directories(_core PRIVATE src/_vxlToSurf)
 target_include_directories(_core PRIVATE pkgs/optim)
 target_include_directories(_core PRIVATE pkgs/optim/primitives)
 target_include_directories(_core PRIVATE pkgs/stb)
@@ -147,15 +161,12 @@ target_include_directories(_core PRIVATE pkgs/svplot)
 target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 set_property(TARGET _core PROPERTY CXX_STANDARD 23)
-# Toolset: gcc-linux:
 
 if(MSVC)
-  target_compile_options(_core PRIVATE /openmp:llvm /diagnostics:caret /bigobj
-  )# /W4
+  target_compile_options(_core PRIVATE /openmp:llvm /diagnostics:caret /bigobj)
   target_compile_definitions(_core PRIVATE NOMINMAX)
 else()
   target_compile_options(_core PRIVATE -Wall -Wextra -Wpedantic)
-  # target_compile_options(_core PRIVATE -Werror)
 endif()
 
 target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB TIFF::tiff
@@ -168,7 +179,6 @@ install(TARGETS _core DESTINATION image3kit)
 include(cmake/PackageConfig.cmake)
 
 # Add targets for local includes to ensure they appear in compile_commands.json
-# This fixes tooling errors in headers like typses.h
 add_subdirectory(src/_include)
 add_subdirectory(src/_voxlib)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # use .clangd instead
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
