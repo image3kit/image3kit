@@ -1,0 +1,21 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# If image3kit depends on other packages, find them here
+find_dependency(ZLIB)
+find_dependency(TIFF)
+find_dependency(OpenMP)
+
+if(NOT TARGET image3kit::headers)
+  include("${CMAKE_CURRENT_LIST_DIR}/image3kitTargets.cmake")
+  # Manually attach dependencies to the imported target to bypass export
+  # limitations
+  set_property(
+    TARGET image3kit::headers
+    APPEND
+    PROPERTY INTERFACE_LINK_LIBRARIES
+             "ZLIB::ZLIB;TIFF::tiff;OpenMP::OpenMP_CXX")
+endif()
+
+check_required_components(image3kit)

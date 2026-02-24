@@ -164,6 +164,9 @@ target_link_libraries(_core PRIVATE Python::Module ZLIB::ZLIB TIFF::tiff
 # The install directory is the output (wheel) directory
 install(TARGETS _core DESTINATION image3kit)
 
+# Handle installation of headers and CMake package configuration
+include(cmake/PackageConfig.cmake)
+
 # Add targets for local includes to ensure they appear in compile_commands.json
 # This fixes tooling errors in headers like typses.h
 add_subdirectory(src/_include)
