@@ -1,11 +1,5 @@
 /*-------------------------------------------------------------------------*\
-You can redistribute this code and/or modify this code under the
-terms of the GNU General Public License (GPL) as published by the
-Free Software Foundation, either version 3 of the License, or (at
-your option) any later version. see <http://www.gnu.org/licenses/>.
-
-For further information please contact me by email:
-Ali Q Raeini:    a.q.raeini@gmail.com
+Image registration
 \*-------------------------------------------------------------------------*/
 
 
@@ -22,9 +16,6 @@ using namespace std;
 
 
 template<typename T>  int3 toInt3(const Vctr<3,T>& d){   int3 n;   for(size_t i=0; i<3; ++i) n[i]=d[i];   return n;   }
-//inline Vctr3d toVctr3d(const int3& n)   {   Vctr3d d;    for(size_t i=0; i<3; ++i) d[i]=n[i];   return d;   }
-
-
 
 
 #define CrsFctr  3

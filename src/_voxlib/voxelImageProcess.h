@@ -1,11 +1,5 @@
 #pragma once
 /*-------------------------------------------------------------------------*\
-You can redistribute this code and/or modify this code under the
-terms of the GNU General Public License (GPL) as published by the
-Free Software Foundation, either version 3 of the License, or (at
-your option) any later version. see <http://www.gnu.org/licenses/>.
-
-
 Developed by:
   - Ali Qaseminejad Raeini (2015-2021), Email: a.q.raeini@gmail.com
 \*-------------------------------------------------------------------------*/
