@@ -67,8 +67,8 @@ extern int maxNz;
 
 enum class readOpt {
   procAndConvert = 1,
-  convertOnly = 2,
-  procOnly = 3,
+  convertOnly = 2, // not used atm
+  procOnly = 3, // for documentation atm, same as procAndConvert
   justRead = 4
 };
 
@@ -95,7 +95,7 @@ class voxelField {
   bool readAscii(std::string);
   void readAscii(std::ifstream& in);
   int  readBin(std::string fileName, int nSkipBytes=0);
-  int  readBin(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1, int nSkipBytes=0);
+  int  readBir(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1, int nSkipBytes=0);
   void writeNoHdr(std::string fileName) const;
   void writeBin(std::string fileName) const;
   void writeBin(std::string fileName,int iBgn,int iEndp1 , int jBgn,int jEndp1 , int kBgn,int kEndp1 ) const;
@@ -294,6 +294,21 @@ voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
 #endif
 
 typedef voxelImageT<unsigned char> voxelImage;   //! default image type
+
+// moved here / inlined to avoid link misterious link errors
+template<typename T> inline  void voxelField<T>::reset(int3 nnn)  {
+  nij_=(long long)(nnn.x)*nnn.y;
+  this->data_.resize((long long)(nnn.z)*nij_+128); // 128 extra memory for readRLE, sync: XADSDAS
+  this->data_.resize((long long)(nnn.z)*nij_);
+  nnn_=nnn;
+}
+
+template<typename T> inline  void voxelField<T>::reset(int3 nnn, T value)  {
+  nij_=(long long)(nnn.x)*nnn.y;
+  this->data_.resize((long long)(nnn.z)*nij_+128,value); // 128 extra memory for readRLE, sync: XADSDAS
+  this->data_.resize((long long)(nnn.z)*nij_);
+  nnn_=nnn;
+}
 
 
 

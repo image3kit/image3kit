@@ -36,13 +36,6 @@ typedef int sdsdsdsdsdsds;
 #include "voxelTiff.h"
 #endif
 
-#if (__cplusplus < 201403L)
-  template< bool B, class T = void >
-  using enable_if_t = typename std::enable_if<B,T>::type;
-#else
-  using std::enable_if_t;
-#endif
-
 template<typename T> Tint sum6Nei(const voxelImageT<T>& vf, const T* vp)  {
   return Tint(vf.v_i(-1,vp))+vf.v_i( 1,vp)+  vf.v_j(-1,vp)+vf.v_j( 1,vp)+ vf.v_k(-1,vp)+vf.v_k( 1,vp); }
 
@@ -158,31 +151,11 @@ vars<dbls> vxlDist(const voxelFieldT& vf, int nsteps=32, double minV=3e38, doubl
 }
 
 
-
-
-template<typename T> inline  void voxelField<T>::reset(int3 nnn)  {
-  nij_=(long long)(nnn.x)*nnn.y;
-  this->data_.resize((long long)(nnn.z)*nij_+128); // 128 extra memory for readRLE, sync: XADSDAS
-  this->data_.resize((long long)(nnn.z)*nij_);
-  nnn_=nnn;
-}
-
-template<typename T> inline  void voxelField<T>::reset(int3 nnn, T value)  {
-  nij_=(long long)(nnn.x)*nnn.y;
-  this->data_.resize((long long)(nnn.z)*nij_+128,value); // 128 extra memory for readRLE, sync: XADSDAS
-  this->data_.resize((long long)(nnn.z)*nij_);
-  nnn_=nnn;
-}
-
-
 template<typename T>   void voxelField<T>::getSize(int& n1, int& n2, int& n3) const {
   n3 = (*this).nz();
   if (n3>0) { n1 = (*this).nx();  n2 = (*this).ny();  }
   else      { n1 = 0;  n2 = 0; }
 }
-
-
-
 
 
 
@@ -364,9 +337,11 @@ template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipByt
 
 
 template<typename T>
-int voxelField<T>::readBin(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
+int voxelField<T>::readBir(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
+  /// readBinaryToBlockRange, risky (not enough bound/type checking)
   if(hasExt(fnam,".tif")) {
-    voxelImageT<T> vxls(fnam);
+    voxelImageT<T> vxls;
+    vxls.readBin(fnam);
     if (vxls.nx()!=iE-iS)  std::cout<<"Error in reading "<<fnam<<", unexpected size: Nx="<<vxls.nx()<<"  !="<<iE-iS<<std::endl;
     setBlock(iS,jS,kS, vxls);
     return 0;
@@ -1458,7 +1433,7 @@ void voxelImageT<T>::threshold101(T Bgn,T  End)  {
   forAllvp_((*this))  {  T vv = *vp;   *vp= vv<Bgn || End<vv;  }
 }
 
-template<typename T,  enable_if_t<std::is_arithmetic<T>::value, int> = 0>
+template<typename T,  std::enable_if_t<std::is_arithmetic<T>::value, int> = 0>
 void rescaleValues(voxelImageT<T>& img, T newMin,T  newMax)  {
   T vmin = std::numeric_limits<T>::max();
   T vmax = std::numeric_limits<T>::min();
@@ -1560,10 +1535,10 @@ void replaceRange(voxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)  {
 
 
 
-template<typename T, enable_if_t<!std::is_arithmetic<T>::value, int> = 0 >
+template<typename T, std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0 >
 void printInfo(const voxelImageT<T>&){}
 
-template<typename T, enable_if_t<std::is_arithmetic<T>::value, int> = 0 >
+template<typename T, std::enable_if_t<std::is_arithmetic<T>::value, int> = 0 >
 void printInfo(const voxelImageT<T>& vImage)  {
   int3 nnn=vImage.size3();
   if constexpr (std::is_integral<T>::value)  {

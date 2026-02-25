@@ -221,7 +221,7 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,  int procesKeys)  {
       string ky;  fil>>ky;
       stringstream ss;
       if(fil.peek()!='\n') fil.get (*(ss.rdbuf()));
-      if (fil.fail()) {  cout<<"\n\n\nWarning: readImage, 'ElementType =' not set in "<<hdrNam<<endl; break; }
+      if (fil.fail()) {  cout<<"\n\n\nWarning: in read-image, 'ElementType =' not set in "<<hdrNam<<", assuming MET_UCHAR"<<endl; break; }
       if (ky == "ElementType")  {  ss >> typ >> typ;  break; }
     }
   }
