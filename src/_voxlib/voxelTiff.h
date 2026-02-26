@@ -105,8 +105,11 @@ int readTif( voxelField<T>&  aa, std::string fnam )
 
 
   for (int pn=0;pn<npages;++pn) {
-    TIFFReadEncodedStrip( tif, static_cast<tstrip_t>(0), static_cast<void *>(&aa(0,0,pn)), static_cast<tsize_t>(nx * ny) * sizeof(T) );
-    //for (row = 0; row < ny; row++) {    if (TIFFReadScanline(tif, &aa(0,row,pn), row, 0) < 0)    break;  }
+    for (uint32_t row = 0; row < ny; row++) {
+      if (TIFFReadScanline(tif, &aa(0,row,pn), row, 0) < 0) {
+        break;
+      }
+    }
     TIFFReadDirectory(tif);
   }
     TIFFClose(tif);
