@@ -428,10 +428,6 @@ class VxlImgF32(voxelImageTBase):
         """
         Reslice along the Z axis.
         """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the spatial offset (x0, y0, z0).
-        """
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -503,15 +499,19 @@ class VxlImgF32(voxelImageTBase):
     @property
     def origin(self) -> tuple:
         """
-        Get the origin value (x0, y0, z0).
+        Get/set the origin value (x0, y0, z0).
         """
+    @origin.setter
+    def origin(self, arg1: tuple) -> None: ...
     @property
     def shape(self) -> tuple: ...
     @property
     def voxelSize(self) -> tuple:
         """
-        Get the voxel size (dx, dy, dz).
+        Get/set the voxel size (dx, dy, dz).
         """
+    @voxelSize.setter
+    def voxelSize(self, arg1: tuple) -> None: ...
 
 class VxlImgI32(voxelImageTBase):
     def AND(self, image2: VxlImgI32) -> None:
@@ -917,10 +917,6 @@ class VxlImgI32(voxelImageTBase):
         """
         Reslice along the Z axis.
         """
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the spatial offset (x0, y0, z0).
-        """
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -992,15 +988,19 @@ class VxlImgI32(voxelImageTBase):
     @property
     def origin(self) -> tuple:
         """
-        Get the origin value (x0, y0, z0).
+        Get/set the origin value (x0, y0, z0).
         """
+    @origin.setter
+    def origin(self, arg1: tuple) -> None: ...
     @property
     def shape(self) -> tuple: ...
     @property
     def voxelSize(self) -> tuple:
         """
-        Get the voxel size (dx, dy, dz).
+        Get/set the voxel size (dx, dy, dz).
         """
+    @voxelSize.setter
+    def voxelSize(self, arg1: tuple) -> None: ...
 
 class VxlImgU16(voxelImageTBase):
     def AND(self, image2: VxlImgU16) -> None:
@@ -1429,10 +1429,6 @@ class VxlImgU16(voxelImageTBase):
         n_iterations: typing.SupportsInt | typing.SupportsIndex = 13,
         write_dumps: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> bool: ...
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the spatial offset (x0, y0, z0).
-        """
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -1504,15 +1500,19 @@ class VxlImgU16(voxelImageTBase):
     @property
     def origin(self) -> tuple:
         """
-        Get the origin value (x0, y0, z0).
+        Get/set the origin value (x0, y0, z0).
         """
+    @origin.setter
+    def origin(self, arg1: tuple) -> None: ...
     @property
     def shape(self) -> tuple: ...
     @property
     def voxelSize(self) -> tuple:
         """
-        Get the voxel size (dx, dy, dz).
+        Get/set the voxel size (dx, dy, dz).
         """
+    @voxelSize.setter
+    def voxelSize(self, arg1: tuple) -> None: ...
 
 class VxlImgU8(voxelImageTBase):
     def AND(self, image2: VxlImgU8) -> None:
@@ -1951,10 +1951,6 @@ class VxlImgU8(voxelImageTBase):
         n_iterations: typing.SupportsInt | typing.SupportsIndex = 13,
         write_dumps: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> bool: ...
-    def setOrigin(self, origin: tuple) -> None:
-        """
-        Set the spatial offset (x0, y0, z0).
-        """
     def shrink0(self) -> None:
         """
         Shrink pore phase (voxel values of 0).
@@ -2042,15 +2038,19 @@ class VxlImgU8(voxelImageTBase):
     @property
     def origin(self) -> tuple:
         """
-        Get the origin value (x0, y0, z0).
+        Get/set the origin value (x0, y0, z0).
         """
+    @origin.setter
+    def origin(self, arg1: tuple) -> None: ...
     @property
     def shape(self) -> tuple: ...
     @property
     def voxelSize(self) -> tuple:
         """
-        Get the voxel size (dx, dy, dz).
+        Get/set the voxel size (dx, dy, dz).
         """
+    @voxelSize.setter
+    def voxelSize(self, arg1: tuple) -> None: ...
 
 class cube(shape):
     def __init__(self, p1: tuple, size: tuple, val: typing.SupportsInt | typing.SupportsIndex) -> None:
