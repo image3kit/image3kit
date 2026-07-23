@@ -950,7 +950,7 @@ voxelImageT<T>  resampleMode(const voxelImageT<T>& img, double nReSampleNotSafe)
     }
     tmp.dxCh()=img.dx()*nReS; //fixed
     tmp.X0Ch()=img.X0()*nReS; //fixed
-  return tmp;
+    return tmp;
   }
   else return img;
 }

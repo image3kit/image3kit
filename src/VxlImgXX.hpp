@@ -55,9 +55,8 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires
        [](SelfT &m, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
           double noisev, double localF, double flatnes, double resolution,
           double gradFactor, int krnl, int nItrs, int writedumps) {
-         return segment2(m, int(th.size())-1, th, minSizs, noisev, localF,
-                         flatnes, resolution, gradFactor, krnl, nItrs,
-                         writedumps);
+          segment2(m, int(th.size())-1, th, minSizs, noisev, localF, flatnes, resolution,
+                   gradFactor, krnl, nItrs, writedumps);
        },
        arg("thresholds") = std::vector<int>(),
        arg("min_sizes") = std::vector<int>(), arg("noise_val") = 2.,
@@ -69,7 +68,7 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires
           [](SelfT &m, int nSegs, std::vector<int> trshlds,
              std::vector<int> minSizs, std::string smoot, double noisev,
              double resolutionSqr, int writedumps) {
-             return VoxLib::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
+             VoxLib::segment(m, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
           },
           arg("n_segments") = 2, arg("thresholds") = std::vector<int>(),
           arg("min_sizes") = std::vector<int>(), arg("smooth_image") = "",
@@ -83,8 +82,9 @@ void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &) requires(s
 template<typename VxT>
 void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
     m
-    .def("extrude_dist_map", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) { // returns copy
-        m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR); },
+    .def("extrude_dist_map", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) {
+        m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR); // returns copy
+        },
         arg("config")=py::dict(), arg("offset")=0.5, arg("scale")=1.0, arg("power")=1.0,
         "Extrude proportional to distance map"
     )
@@ -174,12 +174,12 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("not_", &SelfT::NOT, arg("image2"), "Voxel-by-voxel inplace NOT operation, alias for img = img & !img2.")
     .def("or_",  &SelfT::OR,  arg("image2"), "Voxel-by-voxel inplace OR operation.")
     .def("xor_", &SelfT::XOR, arg("image2"), "Voxel-by-voxel inplace XOR operation.")
-    .def("resample_mode", [&](SelfT &m, double nReSampleNotSafe) { return resampleMode(m,nReSampleNotSafe); }, arg("factor"),
+    .def("resample_mode", [&](SelfT &m, double nReSampleNotSafe) { m = resampleMode(m, nReSampleNotSafe); }, arg("factor"),
          "Downsample the image, setting voxel values to mode of original encompassing voxel values.")
-    .def("resample_max", [&](SelfT &m, double nReSampleNotSafe) { return resampleMax(m,nReSampleNotSafe); }, arg("factor"),
+    .def("resample_max", [&](SelfT &m, double nReSampleNotSafe) { m = resampleMax(m, nReSampleNotSafe); }, arg("factor"),
          "Downsample the image, setting voxel values to maximum of original encompassing voxel values.")
-    .def("resample_mean", [&](SelfT &m, double nReSampleNotSafe) { return resampleMean(m,nReSampleNotSafe); }, arg("factor"), "Resample the image using mean interpolation.")
-    .def("reslice_z", [&](SelfT &m, double nReSampleNotSafe) { return resliceZ(m,nReSampleNotSafe); }, arg("factor"), "Reslice along the Z axis.")
+    .def("resample_mean", [&](SelfT &m, double nReSampleNotSafe) { m = resampleMean(m, nReSampleNotSafe); }, arg("factor"), "Resample the image using mean interpolation.")
+    .def("reslice_z", [&](SelfT &m, double nReSampleNotSafe) { m = resliceZ(m, nReSampleNotSafe); }, arg("factor"), "Reslice along the Z axis.")
     .def("paint"         , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setIn);    }, arg("shape"), "Paint (set values of) a shape into the image.")
     .def("paint_add"      , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, addTo);    }, arg("shape"), "Add (+) a shape's value to the image.")
     .def("paint_before"   , [&](SelfT &m, const shape& sh) { _SHAPERATEPy(m, sh, setBefor); }, arg("shape"), "Paint before the shape (plane...)")
@@ -217,8 +217,11 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("read_bin", [](SelfT &m, std::string s, int nSkipBytes, int maxNz) { m.readBin(s, nSkipBytes, maxNz); }, arg("filename"), arg("n_skip_bytes")=0, arg("max_nz")=-1,
          "Read image data from  a .raw, .raw/.raw.gz, or reset and read from a .am or .tif file.")
     // //.def("readAtZ", &SelfT::readAtZ)
-    .def("mode6", [](SelfT &m, const short n_same_nei) { return modeNSames(m, n_same_nei); }, arg("n_same_neighbors"),
-         "Apply mode filter based on nearest 6 neighbor voxels.")
+    .def("mode6", [](SelfT &m, const short n_same_nei) {
+        return modeNSames(m, n_same_nei);
+    }, arg("n_same_neighbors"),
+         "Apply mode filter based on nearest 6 neighbor voxels.\n"
+         "returns number of changed voxels used for iteration termination")
     .def("median_filter", [](SelfT &m) { m = median(m); }, "Apply a 1+6-neighbour median filter.")
     .def("median_x", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 voxels in x-direction")
     .def("median_y", [](SelfT &m) { m = mediany(m); }, "Apply median filter with kernel size of 1 voxels in y-direction")
@@ -265,36 +268,36 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
 
     // // Individual bindings for convenience
-    .def("average_with", [](SelfT &m, std::vector<std::string> filenames) {  return VoxLib::averageWith(m, filenames); })
-    .def("average_with_skip_extremes", [](SelfT &m, std::vector<std::string> filenames) { return VoxLib::averageWith_mBE(m, filenames); },
+    .def("average_with", [](SelfT &m, std::vector<std::string> filenames) {  VoxLib::averageWith(m, filenames); })
+    .def("average_with_skip_extremes", [](SelfT &m, std::vector<std::string> filenames) { VoxLib::averageWith_mBE(m, filenames); },
         arg("filenames"),
         "average image with list of other images (read from disk) while skipping the two outliers in color range, per voxel")
     .def("plot_all", [](SelfT &m, std::string fnam_, int minv, int maxv, int iSlice_, int nBins,
                         std::string normalAxis, bool grey, bool color, bool histogram, bool zProfile,
                         SelfT* img2Ptr, int mina, int maxa) {
                         int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
-                        return VoxLib::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
+                        VoxLib::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
                     },
         arg("filename")="pltAll", arg("min_val")=0, arg("max_val")=-1000001, arg("slice_index")=-1000000, arg("histogram_bins")=128,
         arg("normal_axis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("z_profile")=true,
         arg("alpha_image")=nullptr, arg("alpha_min")=0, arg("alpha_max")=-1000001,
         "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
-    .def("mode26", [](SelfT &m, int nMinD) { return mode26(m,nMinD); })
+    .def("mode26", [](SelfT &m, int nMinD) { mode26(m,nMinD); })
     .def("growing_threshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) { // outdated ?
         ::growingThreshold(m, t1, t2, t3, t4, nIter);
     }, arg("startMin"), arg("startMax"), arg("finalMin"), arg("finalMax"), arg("iterations")=4)
     .def("grow_outside_value", [](SelfT &m, int vo, int vnew, int nHoleSize) {
-        return VoxLib::growOutSideValue(m, vo, vnew, nHoleSize);
+        VoxLib::growOutSideValue(m, vo, vnew, nHoleSize);
     }, arg("val_old")=0, arg("val_new")=2, arg("hole_size")=5)
     .def("smooth_bilateral", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact) {
-        return VoxLib::smoothBilateral(m, nItrs, kernRad, sigmavv, sharpFact);
+        VoxLib::smoothBilateral(m, nItrs, kernRad, sigmavv, sharpFact);
     }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1,
     "bilateral smoothing filter")
     .def("plot_histogram", [](SelfT &m, std::string fnam, int nBins, double minV, double maxV) {
-        return VoxLib::svgHistogram(m, fnam, nBins, minV, maxV);
+        VoxLib::svgHistogram(m, fnam, nBins, minV, maxV);
     }, arg("filename")="aa.svg", arg("bins")=128, arg("min_val")=3e38, arg("max_val")=-3e38)
     .def("plot_z_profile", [](SelfT &m, std::string fnam, double minV, double maxV) {
-            return VoxLib::svgZProfile(m, fnam, VxT(minV), VxT(maxV));
+            VoxLib::svgZProfile(m, fnam, VxT(minV), VxT(maxV));
         }, arg("filename")="aa.svg", arg("min_val")=0, arg("max_val")=255) // Assuming 255 default for maxV based on typical usage, though maxT(T) is ideal
     .def("flip_endian", [](SelfT &m) { ::flipEndian(m); })
     .def("replace_range_by_image", [](SelfT &m, double minv, double maxv, std::string fnam) {
@@ -306,17 +309,17 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
         ::replaceByImageRange(m, VxT(minv), VxT(maxv), SelfT(fnam, readOpt::procAndConvert));
     }, arg("min_val"), arg("max_val"), arg("image_file"))
     .def("read_from_float", [](SelfT &m, std::string fname, float scale, float shift) {
-        return VoxLib::readFromFloat(m, fname, scale, shift);
+        VoxLib::readFromFloat(m, fname, scale, shift);
     }, arg("filename"), arg("scale")=1.0f, arg("shift")=0.0f)
     .def("bilateral_wide", [](SelfT &m, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
-         return ::_bilateralX(m, nItrs, kernRad, Xstp, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
+         ::_bilateralX(m, nItrs, kernRad, Xstp, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
     }, arg("iterations")=1, arg("kernel_radius")=1, arg("x_step")=2, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0,
     "Bilateral filter with Xtra large kernel radius, actual kernel size is: kernel_radius * x_step cubed.")
     .def("bilateral_gauss", [](SelfT &m, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
-         return ::_bilateralGauss(m, nItrs, kernRad, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
+         ::_bilateralGauss(m, nItrs, kernRad, sigmavv*sigmavv, sharpFact, sigmadd*sigmadd);
     }, arg("iterations")=1, arg("kernel_radius")=1, arg("sigma_val")=16.0, arg("sharpness")=0.1, arg("sigma_spatial")=2.0)
     .def("mean_wide", [](SelfT &m, int nW, int noisev, int avg, int delta, int nItrs, std::string smoothImg) {
-         return VoxLib::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
+         VoxLib::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
     }, arg("width")=0, arg("noise_val")=4, arg("average")=0, arg("delta")=20, arg("iterations")=15, arg("smooth_image")="",
     "computes a background image, used to correct for lens artifacts")
     .def("otsu_threshold", [](SelfT &m, int minv, int maxv) { return ::otsu_th(m, minv, maxv); }, arg("min_val")=0, arg("max_val")=256)
@@ -327,7 +330,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
        arg("nr")=0, arg("ntheta")=18, arg("nz")=0, arg("scale_dif_val")=1, arg("bilateral_shape")=0.05, arg("n_grow_box")=10, arg("write_dumps")=true)
     .def("adjust_brightness_with", [](SelfT &m, std::string imgName) { return VoxLib::adjustBrightnessWith(m, imgName); }, arg("image_file"))
     .def("adjust_slice_brightness", [](SelfT &m, voxelImage& mskA, voxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
-         return VoxLib::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
+         VoxLib::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
     }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
     .def("cut_outside", [](SelfT &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
             VoxLib::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); },
