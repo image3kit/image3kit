@@ -12,46 +12,11 @@
 #include "voxelImage.h"
 #include "voxelImageI.h"
 
-
 #include "InputFile.h"
 
-
-#ifndef IMAGE3KIT_PYTHON_BINDINGS
-
-int usage()  {
-  std::cout<<"\nvoxelToSurfMesh:\n converting 3D image file to  surface format"
-    <<"\nusages: \n"
-    <<"    voxelToSurfMesh inputMetaImage.mhd outPutFile.obj \n"
-    << std::endl;
-  return -1;
-}
-
-int main(int argc, char *argv[])  {
-
-  if(argc<2) return usage();
-
-  std::string fnam(argv[1]); // .mhd header or image name
-
-  InputFile inp(std::string(hasExt(fnam,".mhd")? fnam : ""), 0);
-  inp.echoKeywords(cout);
-
-  if(fnam.size()<4) return usage();
-  std::string outputSurface = (argc>2) ? string(argv[2]) :
-                inp.getOr("outputSurface", basePath(fnam)+".obj");
-
-
-
-  voxelImage vimage(fnam);
-
-  vxlToSurfMesh(inp, vimage, outputSurface);
-
-  return 0;
-}
-#endif
-#define MAIN
-#include "voxelImage.h"
-
 #include "surfUtils.h"
+
+
 surfMsh createSurface(InputFile& inp,  const voxelImage & vxlImg, const int nVVs, const std::string& outputSurface);
 
 using namespace std;
@@ -136,3 +101,32 @@ void vxlToSurfMesh(InputFile& inp, voxelImage& vimage, std::string outputSurface
 
   cout<< "end }" << endl;
 }
+
+
+#ifndef IMAGE3KIT_PYTHON_BINDINGS
+int main(int argc, char *argv[])  {
+
+    if(argc<2) {
+       std::cout<<"\nvoxelToSurfMesh:\n converting 3D image file to  surface format"
+                <<"\nusage: \n"
+                <<  "    voxelToSurfMesh inputMetaImage.mhd outPutFile.obj \n"
+                << std::endl;
+       return -1;
+    }
+
+    std::string fnam(argv[1]); // .mhd header or image name
+
+    InputFile inp(std::string(hasExt(fnam,".mhd")? fnam : ""), 0);
+    inp.echoKeywords(cout);
+
+    if(fnam.size()<4) return usage();
+    std::string outputSurface = (argc>2) ? string(argv[2]) :
+                  inp.getOr("outputSurface", basePath(fnam)+".obj");
+
+    voxelImage vimage(fnam);
+
+    vxlToSurfMesh(inp, vimage, outputSurface);
+
+    return 0;
+}
+#endif

@@ -11,10 +11,6 @@ Developed by:
 #include <sstream>
 
 
-#ifdef TIFLIB
-#include "voxelTiff.h"
-#endif
-
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "voxelPng_stbi.h"
@@ -30,6 +26,9 @@ Developed by:
 #include "vxlPro.cpp"
 #endif
 #include "InputFile.h"
+#include "voxelImgUtils.h"
+
+using namespace VoxLib;
 using namespace std; //cin cout endl string stringstream  istream istringstream regex*
 
 // use `reset maxNzGlobal 100` to limit the number of layers processed during fine-tuning of image processing params
@@ -38,8 +37,6 @@ int maxNzGlobal = 1000000, _maxNz = 1000000|12;
 
 string plotAll_normalAxis="xyz";
 int    plotAll_colrGrey=15;
-
-
 
 template<typename T>
 void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int maxNz)  {
@@ -60,93 +57,22 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
   double unit_=1.;
   int nSkipBytes(0);
   if (hasExt(hdrNam,".raw.gz") || hasExt(hdrNam,".raw") || hasExt(hdrNam,".dat") || hasExt(hdrNam,".txt"))  { // detect size and voxel size from image name.
-      string
-      data=replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(
-                    hdrNam,".gz$",""), ".raw$"," "), ".dat$"," "), ".txt$"," "),"__","\n"),"_"," ");
-
-      data = regex_replace(data, regex("_([0-9][0-9]*)"), "");
-
-      data=regex_replace(data,regex(".*/"), "");
-      data=regex_replace(data, regex("pt"), "p"); // voxel-spacing
-      data=regex_replace(data, regex(R"(\b[a-zA-Z_]\w*)"), "");
-
-      data=replaceFromTo(replaceFromTo(replaceFromTo(data,"voxel",""),"size"," "),"um ","\n");
-      data=regex_replace(data,regex("( [0-9][0-9]*)c"), " $1 $1 $1 ", regex_constants::format_first_only);
-      data=regex_replace(data,regex("( [0-9][0-9]*)[ x]*([0-9][0-9]*)[ x]*([0-9][0-9]* )"),
-                                              "\n   reset_NdX $1 $2 $3 ", regex_constants::format_first_only);
-      data=regex_replace(data,regex("^[^\n]*\n"), "", regex_constants::format_first_only);
-      // data=regex_replace(data,regex("\n|($)"),"\n   read "+hdrNam+"\n", regex_constants::format_first_only);
-      for(auto&da:data)  { if(da=='p') da='.'; else if(da=='\n') break; }  // voxel-spacing
       // vxlProcess(data,vImg,hdrNam); // removed from Python build for simplicity
       procesKeys=0;
-      stringstream ss(data);
-      string cmd;
-      while(ss >> cmd) {
-        if(cmd=="reset_NdX") {
-          ss >> nnn;
-          double dxv=1.0;
-          if (ss >> dxv) { vImg.dxCh()=dbl3(dxv,dxv,dxv); }
-        }
-      }
+      fileNameToImgInfo(hdrNam, nnn, vImg.dx_);
       // TODO support units nm and mm ?
       fnam = hdrNam;
   }
   else if (hasExt(hdrNam,".mhd") || hasExt(hdrNam,".py")) {
-    (cout<<" "<<hdrNam<<": ").flush();
-    std::ifstream fil{hdrNam};  ensure(fil,"Cannot open header file, "+hdrNam,-1);
-    while (true)  {
-      std::streampos begLine = fil.tellg();
-      string ky, tmp;   fil>>ky>>tmp;
-      stringstream ss;  if(fil.peek()!='\n') fil.get (*(ss.rdbuf()));
-      if (fil.fail()) break;
-      if (ky=="ObjectType")  {  ss>> tmp;  if (tmp != "Image") cout<<"  Warning: ObjectType != Image :="<<tmp<<endl;  }
-      else if (ky=="NDims")  {  ss>> tmp;  if (tmp != "3"    ) cout<<"  Warning: NDims != 3 :="<<tmp<<endl;  }
-      else if (ky=="ElementType")  { ss>> tmp;  if ((tmp != "MET_UCHAR") && (sizeof(T)==1)) cout<<"  Warning: ElementType != MET_UCHAR :="<<tmp<<endl;   }
-      else if (ky=="Offset")       { ss>> vImg.X0_;   cout<<"  X0: "<<vImg.X0_<<",  ";  X0read=true; }
-      else if (ky=="ElementSize"
-            || ky=="ElementSpacing")  { ss>> vImg.dx_;  cout<<"  dX: "<<vImg.dx_<<",  ";  dxread=true;  }
-      else if (ky=="DimSize")         { ss>> nnn;  if (nnn.z>1.1*maxNz) { nnn.z=maxNz; } cout<<"  Nxyz: "<<nnn<<",  ";  }
-      else if (ky=="ElementDataFile") { if (fnam.empty()) ss>> fnam;
-                                         if (size_t is=hdrNam.find_last_of("\\/"); is<hdrNam.size() && fnam[0]!='/' && fnam[1]!=':')
-                                             fnam=hdrNam.substr(0,is+1)+fnam;
-                                         cout<<"  Img: "<<fnam<<",  "; }
-      else if (ky=="BinaryData")  {  ss>> BinaryData;     cout<<"  BinaryData: "<<BinaryData<<"  "<<endl; }
-      else if (ky=="Unit")        {  ss>> unit_;  autoUnit=false;   cout<<"  Unit, OneMeter: "<<unit_<<endl;   }
-      else if (ky=="HeaderSize")  {  ss>> nSkipBytes;         cout<<"  Ski pHeaderSize: "<<nSkipBytes<<endl;  }
-      else if (ky=="OutputFormat" || ky=="DefaultImageFormat" )  {  if(tmp=="=") ss>> tmp;  cout<<"  OutputFormat: "<<tmp<<", suffix:"<<imgExt(tmp)<<"  "<<endl; }///. sets suffix+format
-      else if (ky=="BinaryDataByteOrderMSB" || ky=="ElementByteOrderMSB")  {  ss>> flipSigByt; }
-      else if (ky!="CompressedData" &&  ky!="CompressedDataSize" &&  ky!="TransformMatrix" &&
-           ky!="ElementNumberOfChannels" && ky!="CenterOfRotation" && ky!="AnatomicalOrientation" && ky!="AnatomicalOrientation")  {
-        fil.clear();  fil.seekg(begLine);
-        (cout<<"; ").flush();
-        break;
-      }
-    }
-    cout<<endl;
+    getMhdHeaderData(hdrNam, fnam, nnn, vImg.X0_, vImg.dx_, nSkipBytes,
+                     BinaryData, flipSigByt, unit_, X0read, dxread, autoUnit,
+                     maxNz, sizeof(T));
   }
   #ifdef TIFLIB
   else if (hasExt(hdrNam,".tif"))  {  readTif(vImg, hdrNam, maxNz);  return;  }
   #endif
   else if (hasExt(hdrNam,".am"))  {
     fnam=hdrNam;
-    procesKeys=0;
-  }
-  else if (hasExt(hdrNam,".raw.gz") || hasExt(hdrNam,".raw") || hasExt(hdrNam,".dat") || hasExt(hdrNam,".txt"))  { // detect size and voxel size from image name.
-    string
-    data=replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(replaceFromTo(
-                  hdrNam,".gz$",""), ".raw$"," "), ".dat$"," "), ".txt$"," "),"__","\n"),"_"," ");
-
-    data=regex_replace(data,regex(".*/"), "");
-    data=regex_replace(data, regex(R"(\b[a-zA-Z_]\w*)"), "");
-
-    data=replaceFromTo(replaceFromTo(replaceFromTo(data,"voxel",""),"size"," "),"um ","\n");
-    data=regex_replace(data,regex("( [0-9][0-9]*)c"), " $1 $1 $1 ", regex_constants::format_first_only);
-    data=regex_replace(data,regex("( [0-9][0-9]*)[ x]*([0-9][0-9]*)[ x]*([0-9][0-9]* )"),
-                                            "\n   reset Nd0 $1 $2 $3 ", regex_constants::format_first_only);
-    data=regex_replace(data,regex("^[^\n]*\n"), "", regex_constants::format_first_only);
-    data=regex_replace(data,regex("\n|($)"),"\n   read "+hdrNam+"\n", regex_constants::format_first_only);
-    for(auto&da:data)  { if(da=='p') da='.'; else if(da=='\n') break; }
-    // vxlProcess(data,vImg,hdrNam); // removed from Python build for simplicity
     procesKeys=0;
   }
 
@@ -223,14 +149,15 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,  int procesKeys, int m
     string vtype = getAmiraDataType(hdrNam);
     cout<<"reading '"<<vtype<<"'s from .am file"<<endl;
 
-    #ifndef _VoxBasic8
+    IF_MACRO_NOT_VoxBasic8( // if consteval may instantiate the expensive template(?)
     if (vtype=="int")       return readToUnique<int>(hdrNam, 0, maxNz);
-#ifdef _ExtraVxlTypes
-    if (vtype=="short")     return readToUnique<short>(hdrNam, 0, maxNz);
-#endif
     if (vtype=="ushort")    return readToUnique<unsigned short>(hdrNam, 0, maxNz);
-    #endif
-    if (vtype=="byte" || vtype=="uchar")
+    ) // #ifndef _VoxBasic8
+    IF_MACRO__ExtraVxlTypes(
+    if (vtype=="short")     return readToUnique<short>(hdrNam, 0, maxNz);
+    ) // #ifdef _ExtraVxlTypes
+    if (vtype=="byte" ||
+        vtype=="uchar")
                             return readToUnique<unsigned char>(hdrNam, 0, maxNz);
 
     alert("data type "+vtype+" not supported, when reading "+hdrNam, -1);
@@ -242,20 +169,13 @@ std::unique_ptr<voxelImageTBase> readImage(string hdrNam,  int procesKeys, int m
 
   string typ;
   std::ifstream fil(hdrNam); // header file
-  if(!fil)
-  {
+  if (!fil) {
     ensure(hdrNam.size()<4 || hdrNam[hdrNam.size()-4]!='.', "can not open header file '"+hdrNam+"', pwd: "+getpwd(), -1);
     typ = hdrNam; hdrNam="NO_READ";
   }
-  else if (hasExt(hdrNam,".mhd")) {
-    while (true)  {
-      string ky;  fil>>ky;
-      stringstream ss;
-      if(fil.peek()!='\n') fil.get (*(ss.rdbuf()));
-      if (fil.fail()) {  cout<<"\n\n\nWarning: in read-image, 'ElementType =' not set in "<<hdrNam<<", assuming MET_UCHAR"<<endl; break; }
-      if (ky == "ElementType")  {  ss >> typ >> typ;  break; }
-    }
-  }
+  else
+     typ = fileNameToElemType(hdrNam);
+
   fil.close();
 
   if (typ=="MET_UCHAR")        return readToUnique<unsigned char >(hdrNam, procesKeys, maxNz);

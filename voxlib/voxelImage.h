@@ -8,55 +8,14 @@ Developed by:
 
 \*-------------------------------------------------------------------------*/
 
-
-#ifdef _ExtraVxlTypes
-#  define SupportedVoxTyps  unsigned char,unsigned short,int,float,short,unsigned int,double,float3,dbl3
-#else
-#  ifdef _VoxBasic8
-#    define SupportedVoxTyps  unsigned char
-#  else
-#    define SupportedVoxTyps  unsigned char,unsigned short,int,float
-#  endif
-#endif //_ExtraVxlTypes
-
 #include <fstream>
-#include <iostream>
 #include <string>
-#include <cassert>
-#include <sstream>
-#include <memory>
-#include <algorithm>
-#include <unordered_map>
 
 #include "typses.h"
 
 #ifdef _STOR_PUB
 #include "SiRun.h" //_STOR
 #endif //_STOR_PUB
-
-//! suffix,  set/get default suffix, uses static storage.
-inline const std::string& imgExt(const std::string& defSuffix="") {
-  #ifdef ZLIB
-       static std::string defSuffix_=".raw.gz";
-  #else
-    #ifdef TIFLIB
-     static std::string defSuffix_=".tif";
-    #else
-       static std::string defSuffix_=".raw";
-    #endif //TIFLIB
-  #endif //ZLIB
-
-  ///. set via OutputFormat keyword
-  if (defSuffix.size()) {
-    if(defSuffix[0]!='.') defSuffix_="."+defSuffix;
-    else                  defSuffix_=defSuffix;
-    if( defSuffix_!=".tif" && defSuffix_!=".raw.gz" && defSuffix_!=".am" &&
-        defSuffix_!=".raw" && defSuffix_!=".dat" && defSuffix_!=".txt")
-      std::cout<<"\nError: wrong default image format: "<<defSuffix_<<"\n"<<std::endl;
-  }
-
-  return defSuffix_;
-}
 
 
 template<typename T>
@@ -244,22 +203,22 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
   }
 };
 
-// standalone functions TODO: uncomment
-//template<typename T> void copy(const voxelImageT<T>& img2, int3 frm,  int3 to, voxelImageT<T>& img, int3 at)
-//template<typename T> void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimage2);
-//template<typename T> void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimage2, T vmin, T vmax, double scale=0, T shift=0)
-//template<typename T> void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string fnam, unsigned char maskvv, T minIelm, T maxIelm)//  TODO to be tested
-//template<typename T> void circleOut(voxelImageT<T>& vImage, int X0,int Y0,int R, char dir = 'z', T outVal=std::numeric_limits<T>::max())//  TODO to be tested
-//template<typename T> voxelImageT<T> median(const voxelImageT<T>& vImage)
-//template<typename T> void replaceRange(voxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)
-//template<typename T> void rescaleValues(voxelImageT<T>& img, T theresholdMin,T  theresholdMax)
-//template<typename T> long long modeNSames(voxelImageT<T>& vImage, const short nSameNei, bool verbose=false)
-//template<typename T> void FaceMedGrowToFrom(voxelImageT<T>& vImg, T lbl0, T lbl1, int ndif=0)
-//template<typename T> voxelImageT<T> resampleMax(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
-//template<typename T> voxelImageT<T>  resampleMode(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
-//template<typename T> voxelImageT<T>  resliceZ(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
-//template<typename T> voxelImageT<T>  resampleMean(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
-//template<typename T> voxelImageT<T> growBounds(const voxelImageT<T>& vxls, int nLayers)
+#ifdef _ExtraVxlTypes
+#  define SupportedVoxTyps  unsigned char,unsigned short,int,float,short,unsigned int,double,float3,dbl3
+#  define IF_MACRO__ExtraVxlTypes(...) __VA_ARGS__
+#else
+#  define IF_MACRO__ExtraVxlTypes(...)
+#endif
+
+#ifdef _VoxBasic8
+#  define SupportedVoxTyps  unsigned char
+#  define IF_MACRO_NOT_VoxBasic8(...)
+#else
+#  ifndef _ExtraVxlTypes
+#    define SupportedVoxTyps  unsigned char,unsigned short,int,float
+#  endif
+#  define IF_MACRO_NOT_VoxBasic8(...) __VA_ARGS__
+#endif
 
 
 std::unique_ptr<voxelImageTBase> readImage(std::string hdrNam /*headername or image type*/, int procesKeys = 1, int maxNz = -1);

@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15...4.0)
 
 project(voxlib LANGUAGES CXX)
 
-add_library(voxlib STATIC voxelImage.cpp VxlStrips.cpp VxlDifImg.cpp)
+add_library(voxlib STATIC voxelImage.cpp VxlStrips.cpp VxlDifImg.cpp
+                          voxelImgUtils.cpp)
 
 target_include_directories(
   voxlib
@@ -28,3 +29,7 @@ target_compile_definitions(
 target_link_libraries(voxlib PRIVATE ZLIB::ZLIB TIFF::tiff OpenMP::OpenMP_CXX)
 
 set_target_properties(voxlib PROPERTIES CXX_STANDARD 23)
+
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

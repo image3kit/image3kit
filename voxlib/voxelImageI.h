@@ -22,9 +22,9 @@ Developed by:
 #endif
 
 
-#include <functional>
 
 #include "voxelImage.h"
+#include "voxelImgUtils.h"
 #include "globals.h"
 
 #ifdef ZLIB
@@ -34,6 +34,8 @@ Developed by:
 #ifdef TIFLIB
 #include "voxelTiff.h"
 #endif
+
+#include <functional>
 
 template<typename T> Tint sum6Nei(const voxelImageT<T>& vf, const T* vp)  {
   return Tint(vf.v_i(-1,vp))+vf.v_i( 1,vp)+  vf.v_j(-1,vp)+vf.v_j( 1,vp)+ vf.v_k(-1,vp)+vf.v_k( 1,vp); }
@@ -199,51 +201,6 @@ template<typename T>   bool voxelImageT<T>::readAscii(std::string fnam, int nSki
 }
 
 
-inline std::string getAmiraDataType(const std::string& fnam)  {
-  std::ifstream hdr(fnam);
-  ensure(hdr, "could not open "+fnam, -1);
-  std::string tmp;
-  while (true)  {
-    hdr>>tmp;
-    std::stringstream ss;
-    if(hdr.peek()!='\n') hdr.get (*(ss.rdbuf()));
-    if (hdr.fail()) {std::cout<<"Error reading "<<fnam<<",  after "<<tmp<<std::endl; break;}
-
-    if (tmp=="Content")  { ss >> tmp >> tmp;  break;  }
-    else if (tmp=="@1")    break;
-  }
-  if(tmp.size() && tmp.back()==',') tmp.resize(tmp.size()-1);
-  return tmp;
-}
-
-inline void getAmiraHeaderSize(const std::string& fnam, int3& nnn, dbl3& dx_, dbl3& X0_, int& nSkipBytes, int& RLE)  {
-  std::ifstream hdr(fnam);
-  while (true)  {
-    std::string tmpStr;    hdr>>tmpStr;
-
-    std::stringstream ss;
-    if(hdr.peek()!='\n') hdr.get (*(ss.rdbuf()));
-    if (hdr.fail()) {std::cout<<"Error reading "<<fnam<<",  after "<<tmpStr<<std::endl; break;}
-    std::string tmp;
-    if (tmpStr == "define")  {
-      ss >> tmp  >>nnn;
-      if (tmp != "Lattice") std::cout<<" Warning: define != Lattice n3, read: "<<tmp<<std::endl;
-    }
-    else if (tmpStr == "BoundingBox")  {
-      ss >> X0_.x >> dx_.x >> X0_.y >> dx_.y >> X0_.z >> dx_.z;
-      int3 nn=nnn;
-      for (int i:{0,1,2})  nn[i] = std::max(nn[i]-1, 1); // Why nnn-1? either Avizo did not properly convert voxel size to bounding box, or its users made a mistake!
-      dx_=(dx_-X0_)/nn;
-    }
-    else if (tmpStr=="@1")     break;
-    else if(tmpStr=="Lattice")  {
-      while (tmpStr[0]!='@' && ss)    ss>>tmpStr;
-      RLE = tmpStr.size()>11 && tmpStr.compare(3,9,"HxByteRLE") == 0;
-    }
-  }
-  nSkipBytes = hdr.tellg(); ++nSkipBytes; //++ is for '\n' after "@1"
-}
-
 template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipBytes, int maxNz)  {
   int3 nnn = size3();
   int RLEcompressed=0;
@@ -256,7 +213,7 @@ template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipByt
 
   if(hasExt(fnam,".am")) {
     dbl3  X0, dx;
-    getAmiraHeaderSize(fnam, nnn, dx, X0, nSkipBytes, RLEcompressed);
+    VoxLib::getAmiraHeaderSize(fnam, nnn, dx, X0, nSkipBytes, RLEcompressed);
     (std::cout<<", .am  format").flush();
     if (maxNz > 0 && nnn.z > maxNz)  nnn.z = maxNz;
     this->reset(nnn);

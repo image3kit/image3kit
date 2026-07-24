@@ -199,26 +199,26 @@ inline std::unique_ptr<voxelImageTBase>  readTifAnyT(std::string fnam, int maxNz
     case SAMPLEFORMAT_UINT:
     default:
       if (nbits==8)  return _readTiffToPtr<unsigned char>(fnam, maxNz);
-  #ifndef _VoxBasic8
+      IF_MACRO_NOT_VoxBasic8(
       if (nbits==16) return _readTiffToPtr<unsigned short>(fnam, maxNz);
-#ifdef _ExtraVxlTypes
+      ) // #ifndef _VoxBasic8
+      IF_MACRO__ExtraVxlTypes(
       if (nbits==32) return _readTiffToPtr<unsigned int>(fnam, maxNz);
-#endif
+      ) // #ifdef _ExtraVxlTypes
       break;
     case SAMPLEFORMAT_INT:
-#ifdef _ExtraVxlTypes
+      IF_MACRO__ExtraVxlTypes(
       if (nbits==16) return _readTiffToPtr<short>(fnam, maxNz);
       if (nbits==8)  return _readTiffToPtr<char>(fnam, maxNz);
-#endif
+      ) // #ifdef _ExtraVxlTypes
       if (nbits==32) return _readTiffToPtr<int>(fnam, maxNz);
       break;
     case SAMPLEFORMAT_IEEEFP:
-#ifdef _ExtraVxlTypes
+      IF_MACRO__ExtraVxlTypes(
       if (nbits==64) return _readTiffToPtr<double>(fnam, maxNz);
-#endif
+      ) // #ifdef _ExtraVxlTypes
       if (nbits==32) return _readTiffToPtr<float>(fnam, maxNz);
       break;
-  #endif
     }
   return nullptr;
 }

@@ -79,11 +79,9 @@ template<typename T>  bool averageWith_mBE(voxelImageT<T>& vImg, const std::vect
 }
 
 
-template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, std::string img2Nam) {
+template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, const voxelImageT<T>& image2) {
   cout<<"   adjasting contrast,  ";
   double meanvimg = otsu_th(vImg, Tint(1), TImax(T)-1, 0.2)[3];
-
-  _dbgetOrReadImg(T,image2,img2Nam);
 
   double meantovxls = otsu_th(image2, Tint(1), TImax(T)-1, 0.2)[3];
 
@@ -511,7 +509,8 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
 template<typename T>  bool adjustBrightnessWith( stringstream& ins, voxelImageT<T>& vImg) {
   KeyHint("img2Nam ");
   string img2Nam;  ins >> img2Nam;
-  return adjustBrightnessWith(vImg, img2Nam);
+  _dbgetOrReadImg(T,image2,img2Nam);
+  return adjustBrightnessWith(vImg, image2);
 }
 
 template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& vImg) {

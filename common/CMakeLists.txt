@@ -24,5 +24,6 @@ target_compile_definitions(sirun_utils PRIVATE VMMLIB)
 add_executable(check_sirun test_sirun.cpp)
 target_link_libraries(check_sirun PRIVATE sirun_utils)
 
-add_executable(check_input test_input.cpp)
-target_link_libraries(check_input PRIVATE sirun_utils)
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

@@ -144,6 +144,11 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+option(BUILD_TESTING "Build unit tests" OFF)
+if(BUILD_TESTING)
+  enable_testing()
+endif()
+
 add_subdirectory(common)
 add_subdirectory(voxlib)
 add_subdirectory(vxlToFoam)

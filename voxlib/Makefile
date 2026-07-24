@@ -1,6 +1,6 @@
 
 mains := voxelImageProcess.cpp  voxelGrad.cpp performance.cpp
-srcs := voxelImage.cpp  vxlPro.cpp  vxlPro1.cpp  vxlPro2.cpp
+srcs := voxelImage.cpp  vxlPro.cpp  vxlPro1.cpp  vxlPro2.cpp voxelImgUtils.cpp
 tsts := test.py
 all: msCApp1
 #all: $(mains)
