@@ -2,6 +2,7 @@
 #include "bind_common.hpp"
 #include "shapeToVoxel.h"
 #include "voxelRegions.h"
+#include <pybind11/iostream.h>
 
 namespace py = pybind11;
 
@@ -14,6 +15,8 @@ void bind_VxlImgF32(pybind11::module &m, const char* name);
 PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     using namespace VxlPy;
     using namespace VoxLib;
+
+    py::add_ostream_redirect(mod, "ostream_redirect");
 
     // **************** sirun submodule ***************
 
@@ -76,6 +79,8 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     auto voxlib = mod.def_submodule("voxlib", "Auto-generated wrapper for voxelImageT template C++ classes.");
 
     auto _voxelImageTBase = py::class_<voxelImageTBase>(voxlib, "voxelImageTBase")
+    .def("write", &voxelImageTBase::write, py::arg("fileName"))
+    .def("print_info", &voxelImageTBase::printInfo)
     ;
 
     auto _shape = py::class_<shape>(voxlib, "shape");

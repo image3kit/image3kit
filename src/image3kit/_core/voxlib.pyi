@@ -191,21 +191,6 @@ class VxlImgF32(voxelImageTBase):
         """
         Get direction?
         """
-    def face_median06(
-        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
-    ) -> int:
-        """
-        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
-        """
-    def face_median_grow(
-        self,
-        label_to: typing.SupportsFloat | typing.SupportsIndex,
-        label_from: typing.SupportsFloat | typing.SupportsIndex,
-        n_diff: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Face median grow to/from labels.
-        """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         Fill closed holes in the image.
@@ -262,6 +247,31 @@ class VxlImgF32(voxelImageTBase):
     ) -> None:
         """
         computes a background image, used to correct for lens artifacts
+        """
+    def median032(
+        self,
+        nAdj0: typing.SupportsInt | typing.SupportsIndex,
+        nAdj1: typing.SupportsInt | typing.SupportsIndex,
+        lbl0: typing.SupportsFloat | typing.SupportsIndex,
+        lbl1: typing.SupportsFloat | typing.SupportsIndex,
+    ) -> None:
+        """
+        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
+        """
+    def median06(
+        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
+    ) -> int:
+        """
+        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
+        """
+    def median06_grow(
+        self,
+        label_to: typing.SupportsFloat | typing.SupportsIndex,
+        label_from: typing.SupportsFloat | typing.SupportsIndex,
+        n_diff: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Face median grow to/from labels.
         """
     def median_filter(self) -> None:
         """
@@ -371,16 +381,6 @@ class VxlImgF32(voxelImageTBase):
         min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
         max_val: typing.SupportsFloat | typing.SupportsIndex = 255,
     ) -> None: ...
-    def point_median032(
-        self,
-        nAdj0: typing.SupportsInt | typing.SupportsIndex,
-        nAdj1: typing.SupportsInt | typing.SupportsIndex,
-        lbl0: typing.SupportsFloat | typing.SupportsIndex,
-        lbl1: typing.SupportsFloat | typing.SupportsIndex,
-    ) -> None:
-        """
-        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
-        """
     def print_info(self) -> None: ...
     def range_to(
         self,
@@ -718,21 +718,6 @@ class VxlImgI32(voxelImageTBase):
         """
         Get direction?
         """
-    def face_median06(
-        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
-    ) -> int:
-        """
-        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
-        """
-    def face_median_grow(
-        self,
-        label_to: typing.SupportsInt | typing.SupportsIndex,
-        label_from: typing.SupportsInt | typing.SupportsIndex,
-        n_diff: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Face median grow to/from labels.
-        """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         Fill closed holes in the image.
@@ -789,6 +774,31 @@ class VxlImgI32(voxelImageTBase):
     ) -> None:
         """
         computes a background image, used to correct for lens artifacts
+        """
+    def median032(
+        self,
+        nAdj0: typing.SupportsInt | typing.SupportsIndex,
+        nAdj1: typing.SupportsInt | typing.SupportsIndex,
+        lbl0: typing.SupportsInt | typing.SupportsIndex,
+        lbl1: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
+        """
+    def median06(
+        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
+    ) -> int:
+        """
+        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
+        """
+    def median06_grow(
+        self,
+        label_to: typing.SupportsInt | typing.SupportsIndex,
+        label_from: typing.SupportsInt | typing.SupportsIndex,
+        n_diff: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Face median grow to/from labels.
         """
     def median_filter(self) -> None:
         """
@@ -898,16 +908,6 @@ class VxlImgI32(voxelImageTBase):
         min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
         max_val: typing.SupportsFloat | typing.SupportsIndex = 255,
     ) -> None: ...
-    def point_median032(
-        self,
-        nAdj0: typing.SupportsInt | typing.SupportsIndex,
-        nAdj1: typing.SupportsInt | typing.SupportsIndex,
-        lbl0: typing.SupportsInt | typing.SupportsIndex,
-        lbl1: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
-        """
     def print_info(self) -> None: ...
     def range_to(
         self,
@@ -1257,21 +1257,6 @@ class VxlImgU16(voxelImageTBase):
         """
         Get direction?
         """
-    def face_median06(
-        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
-    ) -> int:
-        """
-        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
-        """
-    def face_median_grow(
-        self,
-        label_to: typing.SupportsInt | typing.SupportsIndex,
-        label_from: typing.SupportsInt | typing.SupportsIndex,
-        n_diff: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Face median grow to/from labels.
-        """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         Fill closed holes in the image.
@@ -1328,6 +1313,31 @@ class VxlImgU16(voxelImageTBase):
     ) -> None:
         """
         computes a background image, used to correct for lens artifacts
+        """
+    def median032(
+        self,
+        nAdj0: typing.SupportsInt | typing.SupportsIndex,
+        nAdj1: typing.SupportsInt | typing.SupportsIndex,
+        lbl0: typing.SupportsInt | typing.SupportsIndex,
+        lbl1: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
+        """
+    def median06(
+        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
+    ) -> int:
+        """
+        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
+        """
+    def median06_grow(
+        self,
+        label_to: typing.SupportsInt | typing.SupportsIndex,
+        label_from: typing.SupportsInt | typing.SupportsIndex,
+        n_diff: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Face median grow to/from labels.
         """
     def median_filter(self) -> None:
         """
@@ -1437,16 +1447,6 @@ class VxlImgU16(voxelImageTBase):
         min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
         max_val: typing.SupportsFloat | typing.SupportsIndex = 255,
     ) -> None: ...
-    def point_median032(
-        self,
-        nAdj0: typing.SupportsInt | typing.SupportsIndex,
-        nAdj1: typing.SupportsInt | typing.SupportsIndex,
-        lbl0: typing.SupportsInt | typing.SupportsIndex,
-        lbl1: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
-        """
     def print_info(self) -> None: ...
     def range_to(
         self,
@@ -1843,21 +1843,6 @@ class VxlImgU8(voxelImageTBase):
         """
         Extrude proportional to distance map
         """
-    def face_median06(
-        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
-    ) -> int:
-        """
-        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
-        """
-    def face_median_grow(
-        self,
-        label_to: typing.SupportsInt | typing.SupportsIndex,
-        label_from: typing.SupportsInt | typing.SupportsIndex,
-        n_diff: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Face median grow to/from labels.
-        """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
         Fill closed holes in the image.
@@ -1914,6 +1899,31 @@ class VxlImgU8(voxelImageTBase):
     ) -> None:
         """
         computes a background image, used to correct for lens artifacts
+        """
+    def median032(
+        self,
+        nAdj0: typing.SupportsInt | typing.SupportsIndex,
+        nAdj1: typing.SupportsInt | typing.SupportsIndex,
+        lbl0: typing.SupportsInt | typing.SupportsIndex,
+        lbl1: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
+        """
+    def median06(
+        self, nAdj0: typing.SupportsInt | typing.SupportsIndex, nAdj1: typing.SupportsInt | typing.SupportsIndex
+    ) -> int:
+        """
+        Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels
+        """
+    def median06_grow(
+        self,
+        label_to: typing.SupportsInt | typing.SupportsIndex,
+        label_from: typing.SupportsInt | typing.SupportsIndex,
+        n_diff: typing.SupportsInt | typing.SupportsIndex,
+    ) -> None:
+        """
+        Face median grow to/from labels.
         """
     def median_filter(self) -> None:
         """
@@ -2023,16 +2033,6 @@ class VxlImgU8(voxelImageTBase):
         min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
         max_val: typing.SupportsFloat | typing.SupportsIndex = 255,
     ) -> None: ...
-    def point_median032(
-        self,
-        nAdj0: typing.SupportsInt | typing.SupportsIndex,
-        nAdj1: typing.SupportsInt | typing.SupportsIndex,
-        lbl0: typing.SupportsInt | typing.SupportsIndex,
-        lbl1: typing.SupportsInt | typing.SupportsIndex,
-    ) -> None:
-        """
-        Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels
-        """
     def print_info(self) -> None: ...
     def range_to(
         self,
@@ -2291,7 +2291,8 @@ class sphere(shape):
     ) -> None: ...
 
 class voxelImageTBase:
-    pass
+    def print_info(self) -> None: ...
+    def write(self, fileName: str) -> None: ...
 
 @typing.overload
 def connected_components(

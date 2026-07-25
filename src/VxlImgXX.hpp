@@ -229,11 +229,11 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("median_x", [](SelfT &m) { m = medianx(m); }, "Apply median filter with kernel size of 1 voxels in x-direction")
     .def("median_y", [](SelfT &m) { m = mediany(m); }, "Apply median filter with kernel size of 1 voxels in y-direction")
     .def("median_z", [](SelfT &m) { m = medianz(m); }, "Apply median filter with kernel size of 1 voxels in z-direction")
-    .def("face_median06", &SelfT::FaceMedian06, arg("nAdj0"), arg("nAdj1"),
+    .def("median06", &SelfT::FaceMedian06, arg("nAdj0"), arg("nAdj1"),
          "Set voxel value to 0/1 if it has more than nAdj0/1 neighbours with value 0/1, in its 6 nearest voxels")
-    .def("point_median032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"),
+    .def("median032", &SelfT::PointMedian032, arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"),
          "Set voxel value to lbl0/1 if it has more than nAdj0/1 neighbours with value lbl0/1, in its 6+26 nearest voxels")
-    .def("face_median_grow", [](SelfT &m, VxT lblFrm, VxT lblTo, int ndif) { // FIXME: invert order of to&from in C++ (FaceMedGrowToFrom)
+    .def("median06_grow", [](SelfT &m, VxT lblFrm, VxT lblTo, int ndif) { // FIXME: invert order of to&from in C++ (FaceMedGrowToFrom)
             FaceMedGrowToFrom(m, lblTo, lblFrm, ndif); },
         arg("label_to"), arg("label_from"), arg("n_diff"),
         "Face median grow to/from labels.")
@@ -286,7 +286,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
         arg("normal_axis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("z_profile")=true,
         arg("alpha_image")=nullptr, arg("alpha_min")=0, arg("alpha_max")=-1000001,
         "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
-    .def("mode26", [](SelfT &m, int nMinD) { mode26(m,nMinD); })
+    .def("mode26", [](SelfT &m, int nMinD) { mode26(m, nMinD); })
     .def("growing_threshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) { // outdated ?
             ::growingThreshold(m, t1, t2, t3, t4, nIter);
         }, arg("startMin"), arg("startMax"), arg("finalMin"), arg("finalMax"), arg("iterations")=4)
