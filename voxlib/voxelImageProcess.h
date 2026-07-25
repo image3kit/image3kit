@@ -81,9 +81,9 @@ template<typename T>  bool averageWith_mBE(voxelImageT<T>& vImg, const std::vect
 
 template<typename T> bool adjustBrightnessWith(voxelImageT<T>& vImg, const voxelImageT<T>& image2) {
   cout<<"   adjasting contrast,  ";
-  double meanvimg = otsu_th(vImg, Tint(1), TImax(T)-1, 0.2)[3];
+  double meanvimg = otsu_minAvgThresholdAvgMax(vImg, Tint(1), TImax(T)-1, 0.2)[3];
 
-  double meantovxls = otsu_th(image2, Tint(1), TImax(T)-1, 0.2)[3];
+  double meantovxls = otsu_minAvgThresholdAvgMax(image2, Tint(1), TImax(T)-1, 0.2)[3];
 
   Tint delC = meantovxls - meanvimg;
   cout<<"  adjust contrast by:  "<<int(meantovxls)<<" - "<<int(meanvimg)<<" = "<<delC<<",  "; cout.flush();
@@ -318,7 +318,7 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
       //voxls.write("dumpmedian.mhd");
       // voxelImageT<T> grad = magGradient(voxls, resolutionSqr);
       //grad.write("dumpGrad5.mhd");
-      // array<double,5> otst = otsu_th(grad, 0, maxT(T)-1);
+      // array<double,5> otst = otsu_minAvgThresholdAvgMax(grad, 0, maxT(T)-1);
 
       // forAlliii_seq(vImg) {
       //   int vv = vImg(iii);
@@ -329,27 +329,27 @@ template<typename T>  bool segment(voxelImageT<T>& vImg, int nSegs, std::vector<
     }
 
 
-
     if(nSegs>2)  {
       trshlds[0]=1; trshlds[nSegs]=254;
 
-      for (int iSg=1; iSg<nSegs; ++iSg)  if(trshlds[iSg]<=0)  trshlds[iSg]=trshlds[iSg-1]+(254-trshlds[iSg-1])/(nSegs-iSg);
-        cout<<"  Ges ranges: ";    for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
+      for (int iSg=1; iSg<nSegs; ++iSg)
+        if(trshlds[iSg]<=0)
+          trshlds[iSg]=trshlds[iSg-1]+(254-trshlds[iSg-1])/(nSegs-iSg);
+      cout<<"  Guess ranges: "<<rang(&trshlds[0], nSegs+1)<<endl;
 
 
-      for (int itr=0; itr<10; ++itr)
-      {
+      for (int itr=0; itr<10; ++itr) {
 
         for (int iSg=1; iSg<nSegs; ++iSg)
-          trshlds[iSg] = otsu_threshold(hist, trshlds[iSg-1], trshlds[iSg+1], 0, delta).first;
+          trshlds[iSg] = otsu_minAvThresholdAvMx(hist, trshlds[iSg-1], trshlds[iSg+1], 0, delta)[2];
 
 
-        cout<<"  New ranges: ";    for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
+        cout<<"  New ranges: "<<rang(&trshlds[0], nSegs+1)<<endl;
       }
     }
     else  {
       trshlds[0]=1; trshlds[nSegs]=254;
-      trshlds[1] = otsu_threshold(hist, trshlds[0], trshlds[2], 0, delta).first;
+      trshlds[1] = otsu_minAvThresholdAvMx(hist, trshlds[0], trshlds[2], 0, delta)[2];
 
       cout<<"  New ranges: ";    for (int i=0; i<=nSegs; ++i) {(cout<<" "<<int(trshlds[i])<<" ").flush(); }  cout<<" "<<endl;
 
@@ -401,7 +401,7 @@ template<typename T>  bool meanWide(voxelImageT<T>& vImg, int nW, int noisev, in
   std::cout<<"  meanWide:  nW:"<<nW<<"  noisev:"<<noisev<<"  avg:"<<avg <<"  delta:"<<delta <<"  nIterations:"<<nItrs<<"  smoothImg:"<<smoothImg<<std::endl;
 
   if(avg==0) {
-    array<double,5> thresholdsOtsu = otsu_th(vImg,0,254,0.2);
+    array<double,5> thresholdsOtsu = otsu_minAvgThresholdAvgMax(vImg,0,254,0.2);
     avg=thresholdsOtsu[3];
     std::cout<<"  avg:"<<avg<<"  nW:"<<nW <<std::endl;
   }
@@ -655,9 +655,9 @@ template<typename T>  bool print_otsu( stringstream& ins, voxelImageT<T>& vImg) 
   //char dir='z';
   ins >> minv >> maxv ;
 
-  ( cout<<"  otsu_th:"   ).flush();
+  ( cout<<"  otsu_minAvgThresholdAvgMax:"   ).flush();
 
-  otsu_th(vImg,minv,maxv);
+  otsu_minAvgThresholdAvgMax(vImg,minv,maxv);
 
   (cout<<".").flush();
   return true;

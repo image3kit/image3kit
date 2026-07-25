@@ -23,6 +23,7 @@ __all__: list[str] = [
     "read_image",
     "shape",
     "sphere",
+    "threshold01_otsu",
     "voxelImageTBase",
 ]
 
@@ -154,7 +155,7 @@ class VxlImgF32(voxelImageTBase):
         axis: str = "z",
         extra_out: typing.SupportsInt | typing.SupportsIndex = 0,
         threshold: typing.SupportsInt | typing.SupportsIndex = -1,
-        cut_highs: typing.SupportsInt | typing.SupportsIndex = 0,
+        cut_highs: bool = False,
         shift_x: typing.SupportsInt | typing.SupportsIndex = 0,
         shift_y: typing.SupportsInt | typing.SupportsIndex = 0,
         fill_val: typing.SupportsInt | typing.SupportsIndex = 0,
@@ -295,8 +296,11 @@ class VxlImgF32(voxelImageTBase):
     def otsu_threshold(
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
-        max_val: typing.SupportsInt | typing.SupportsIndex = 256,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]: ...
+        max_val: typing.SupportsInt | typing.SupportsIndex = 3.4028234663852886e38,
+    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+        """
+        returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
+        """
     def paint(self, shape: shape) -> None:
         """
         Paint (set values of) a shape into the image.
@@ -678,7 +682,7 @@ class VxlImgI32(voxelImageTBase):
         axis: str = "z",
         extra_out: typing.SupportsInt | typing.SupportsIndex = 0,
         threshold: typing.SupportsInt | typing.SupportsIndex = -1,
-        cut_highs: typing.SupportsInt | typing.SupportsIndex = 0,
+        cut_highs: bool = False,
         shift_x: typing.SupportsInt | typing.SupportsIndex = 0,
         shift_y: typing.SupportsInt | typing.SupportsIndex = 0,
         fill_val: typing.SupportsInt | typing.SupportsIndex = 0,
@@ -819,8 +823,11 @@ class VxlImgI32(voxelImageTBase):
     def otsu_threshold(
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
-        max_val: typing.SupportsInt | typing.SupportsIndex = 256,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]: ...
+        max_val: typing.SupportsInt | typing.SupportsIndex = 2147483647,
+    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+        """
+        returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
+        """
     def paint(self, shape: shape) -> None:
         """
         Paint (set values of) a shape into the image.
@@ -1178,9 +1185,10 @@ class VxlImgU16(voxelImageTBase):
         end: typing.SupportsInt | typing.SupportsIndex = 65535,
         shift: typing.SupportsFloat | typing.SupportsIndex = -1.0,
         span: typing.SupportsFloat | typing.SupportsIndex = 1.0,
+        mask: VxlImgU8 = None,
     ) -> None:
         """
-        Search for an optimum weight, w, that minimizes variance of img1*w+(1-w)*img2
+        Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2
         """
     def circle_out(
         self,
@@ -1213,7 +1221,7 @@ class VxlImgU16(voxelImageTBase):
         axis: str = "z",
         extra_out: typing.SupportsInt | typing.SupportsIndex = 0,
         threshold: typing.SupportsInt | typing.SupportsIndex = -1,
-        cut_highs: typing.SupportsInt | typing.SupportsIndex = 0,
+        cut_highs: bool = False,
         shift_x: typing.SupportsInt | typing.SupportsIndex = 0,
         shift_y: typing.SupportsInt | typing.SupportsIndex = 0,
         fill_val: typing.SupportsInt | typing.SupportsIndex = 0,
@@ -1354,8 +1362,11 @@ class VxlImgU16(voxelImageTBase):
     def otsu_threshold(
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
-        max_val: typing.SupportsInt | typing.SupportsIndex = 256,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]: ...
+        max_val: typing.SupportsInt | typing.SupportsIndex = 65535,
+    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+        """
+        returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
+        """
     def paint(self, shape: shape) -> None:
         """
         Paint (set values of) a shape into the image.
@@ -1750,9 +1761,10 @@ class VxlImgU8(voxelImageTBase):
         end: typing.SupportsInt | typing.SupportsIndex = 255,
         shift: typing.SupportsFloat | typing.SupportsIndex = -1.0,
         span: typing.SupportsFloat | typing.SupportsIndex = 1.0,
+        mask: VxlImgU8 = None,
     ) -> None:
         """
-        Search for an optimum weight, w, that minimizes variance of img1*w+(1-w)*img2
+        Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2
         """
     def circle_out(
         self,
@@ -1785,7 +1797,7 @@ class VxlImgU8(voxelImageTBase):
         axis: str = "z",
         extra_out: typing.SupportsInt | typing.SupportsIndex = 0,
         threshold: typing.SupportsInt | typing.SupportsIndex = -1,
-        cut_highs: typing.SupportsInt | typing.SupportsIndex = 0,
+        cut_highs: bool = False,
         shift_x: typing.SupportsInt | typing.SupportsIndex = 0,
         shift_y: typing.SupportsInt | typing.SupportsIndex = 0,
         fill_val: typing.SupportsInt | typing.SupportsIndex = 0,
@@ -1936,8 +1948,11 @@ class VxlImgU8(voxelImageTBase):
     def otsu_threshold(
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
-        max_val: typing.SupportsInt | typing.SupportsIndex = 256,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]: ...
+        max_val: typing.SupportsInt | typing.SupportsIndex = 255,
+    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+        """
+        returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
+        """
     def paint(self, shape: shape) -> None:
         """
         Paint (set values of) a shape into the image.
@@ -2278,10 +2293,41 @@ class sphere(shape):
 class voxelImageTBase:
     pass
 
+@typing.overload
 def connected_components(
-    arg0: VxlImgU8, arg1: typing.SupportsFloat | typing.SupportsIndex, arg2: typing.SupportsFloat | typing.SupportsIndex
+    image: VxlImgU8,
+    min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
+    max_val: typing.SupportsFloat | typing.SupportsIndex = 255,
+) -> ...: ...
+@typing.overload
+def connected_components(
+    image: VxlImgU16,
+    min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
+    max_val: typing.SupportsFloat | typing.SupportsIndex = 65535,
 ) -> VxlImgI32: ...
 def read_image(filename: typing.Any, max_nz: typing.SupportsInt | typing.SupportsIndex = -1) -> voxelImageTBase:
     """
     Global helper to read an image from a file, use VxlImg..() constructors if you know image type.
+    """
+
+@typing.overload
+def threshold01_otsu(
+    image: VxlImgU8,
+    minvi: typing.SupportsInt | typing.SupportsIndex = 0,
+    maxvi: typing.SupportsInt | typing.SupportsIndex = 255,
+    skipFrac: typing.SupportsFloat | typing.SupportsIndex = 0.0,
+) -> VxlImgU8:
+    """
+    returns a binary (0&1) 8bit image obtained using Otsu thresholding of image
+    """
+
+@typing.overload
+def threshold01_otsu(
+    image: VxlImgU16,
+    minvi: typing.SupportsInt | typing.SupportsIndex = 0,
+    maxvi: typing.SupportsInt | typing.SupportsIndex = 65535,
+    skipFrac: typing.SupportsFloat | typing.SupportsIndex = 0.0,
+) -> VxlImgU8:
+    """
+    returns a binary (0&1) 8bit image obtained using Otsu thresholding of image
     """

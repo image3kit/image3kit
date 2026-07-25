@@ -4,4 +4,5 @@ template voxelImageT<unsigned short>::voxelImageT(const std::string&, readOpt, i
 
 void bind_VxlImgU16(pybind11::module &m, const char* name) {
     VxlPy::bind_VxlImg<unsigned short>(m, name);
+    VxlPy::bind_funcs<unsigned short>(m);
 }

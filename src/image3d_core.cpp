@@ -101,16 +101,11 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     ;
 
     // TODO switch to int32_t...
+    // order matters for stubgen
     bind_VxlImgU8(voxlib, "VxlImgU8");
-    bind_VxlImgU16(voxlib, "VxlImgU16");
     bind_VxlImgI32(voxlib, "VxlImgI32");
     bind_VxlImgF32(voxlib, "VxlImgF32");
-
-    voxlib.def("connected_components", [](voxelImage &m, double minvv, double maxvv) {
-        auto lbls = labelImage(m, (unsigned char)(minvv), (unsigned char)(maxvv));
-        compressLabelImage(lbls);
-        return lbls;
-    });
+    bind_VxlImgU16(voxlib, "VxlImgU16");
 
     // TODO: What does it return ? casted image or a base-class, we shall create an adaptor that does the cast automatically
     voxlib.def("read_image",

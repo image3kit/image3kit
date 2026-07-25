@@ -207,4 +207,45 @@ void getMhdHeaderData(const string& hdrNam, string& fnam, int3& nnn, dbl3& dx_, 
     cout<<endl;
 }
 
+array<double,5> otsu_minAvThresholdAvMx(const piece<double>& hist, int  ibgn, int  iend, double shift, double scale) {
+  /* binarization by Otsu's method based on maximization of inter-class variance */
+  double sumw(0), sumiw(0);
+  for (int i = ibgn; i <= iend; ++i) { sumw += hist[i];  sumiw += hist[i]*i; }
+
+  double sumB = 0;
+  double wB = 0;
+  double max_sigma = 0;
+  int ilevel=1;
+  double wL=1;
+  double sunL=1;
+  for (int ii = ibgn; ii <= iend; ii++) {
+    wB += hist[ii];
+    if (wB == 0 || wB == sumw)        continue;
+    sumB +=  ii * hist[ii];
+    //double dif = sumB*sumw  -  sumiw*wB   ; ///. <= sumB * (sumw-wB)  -  (sumiw-sumB) *wB;
+    //double  sigma =  dif * dif / (wB * (sumw-wB) ); ///. division is to componsate for above line
+    double dif = sumB*sumw  -  sumiw*wB   ; ///. <= sumB /wB  -  (sumiw-sumB) /(sumw-wB);
+    double  sigma =  dif * dif / (wB * (sumw-wB) ); ///. division is to componsate for above line
+    if ( sigma > max_sigma) {
+      ilevel = ii;
+      max_sigma = sigma;
+      sunL=sumB;
+      wL=wB;
+    }
+  }
+
+  double level = shift + ilevel*scale;
+  double minv = shift + ibgn*scale;
+  double maxv = shift + iend*scale;
+
+  double  avgs[2] = {sunL/wL, (sumB-sunL)/(wB-wL)};
+  cout<<"   Otsu: ** "<< level<<" **  N: "<< sumw<<",  cdf_"<<level<<": "<< std::setprecision(3)<<wL<<"  cdf_"<<maxv<<": "<< std::setprecision(3)<<wB;
+  cout<<"   segment 2   "<<minv<<"  "<< int(avgs[0]) <<"  "<<level<<"  "<<int(avgs[1])<<"  "<<maxv<<endl;
+
+
+  array<double,5> levels{{0.}};
+  levels[0]=minv;   levels[1]=avgs[0];   levels[2]=level;   levels[3]=avgs[1];   levels[4]=maxv;
+  return  levels;
+}
+
 } // namespace VoxLib

@@ -30,11 +30,11 @@ void VxlDifShort(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
 }
 
 template<typename VxT>
-void VxlMinizVar(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
-                 int bgn, int end, double shift, double span) {
+void blendMinVariance(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
+                 int bgn, int end, double shift, double span, const voxelImage* mask) {
     span = std::max(span - shift, 0.1);
     ensure(span > 0);
-    std::cout << "VxlMinizVar:  " << "img1" << " - " << "img2" << "  [" << bgn << " " << end << "]" << "  shift " << shift << "  span" << span << " {" << std::endl;
+    std::cout << "blendMinVariance:  " << "img1" << " - " << "img2" << "  [" << bgn << " " << end << "]" << "  shift " << shift << "  span" << span << " {" << std::endl;
 
     double var1 = (varianceDbl(img1, bgn, end));
     double var2 = (varianceDbl(img2, bgn, end));
@@ -50,7 +50,7 @@ void VxlMinizVar(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
         voxelImageT<int> img3(img1.size3());
         forAlliii_(img1) {
             int vv1 = img1(iii);
-            img3(iii) = (bgn <= vv1 && vv1 < end)
+            img3(iii) = (bgn <= vv1 && vv1 < end && (!mask || (*mask)(iii)))
                       ? vv1 * scale1 + scale2 * img2(iii)
                       : -1000000000;
         }
@@ -87,7 +87,7 @@ void mergePlots(const std::string& outnam, const std::string& key, const std::ve
 template void VxlDifShort<unsigned char>(voxelImageT<unsigned char>&, const voxelImageT<unsigned char>&, std::string, double, double, double, double, double, double);
 template void VxlDifShort<unsigned short>(voxelImageT<unsigned short>&, const voxelImageT<unsigned short>&, std::string, double, double, double, double, double, double);
 
-template void VxlMinizVar<unsigned char>(voxelImageT<unsigned char>&, const voxelImageT<unsigned char>&, int, int, double, double);
-template void VxlMinizVar<unsigned short>(voxelImageT<unsigned short>&, const voxelImageT<unsigned short>&, int, int, double, double);
+template void blendMinVariance<unsigned char>(voxelImageT<unsigned char>&, const voxelImageT<unsigned char>&, int, int, double, double, const voxelImage* mask);
+template void blendMinVariance<unsigned short>(voxelImageT<unsigned short>&, const voxelImageT<unsigned short>&, int, int, double, double, const voxelImage* mask);
 
 } // namespace

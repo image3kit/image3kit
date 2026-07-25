@@ -14,6 +14,7 @@ Developed by:
 #include "globals.h"
 #include "voxelImage.h"
 #include "voxelImageI.h"
+#include "voxelImgUtils.h"
 
 using namespace std;
 
@@ -479,51 +480,6 @@ void biLateralIterative(voxelImageT<T>& vImg, const int kernRad, const double si
 
 
 
-/*//void biLateralWeighted(voxelImageT<T>& vImg, voxelImageT<T>& grads, double sigmaVG, double sigmaVV, double sharpFact)
-//{
-//
-//    (std::cout<<"  bilatw ").flush();
-//  const voxelImageT<T> vxls = vImg;
-//
-//    for (int k=1; k<vxls.nz()-1; ++k)
-//    {
-//    if (k%20==10) (std::cout<<".").flush();
-//        for (int j=1; j<vxls.ny()-1; ++j)
-//        {
-//            for (int i=1; i<vxls.nx()-1; ++i)
-//            {
-//        double  vv=vxls(i,j,k);
-//                double neidiffSum(0.);
-//                double neiSumWei(0.);
-//                forAllNei(-1,1)
-//                {
-//            double  nv=_nei(vxls,i,j,k)-vv;//distSqrNei()
-//            double  ng=_nei(grads,i,j,k);//distSqrNei()
-//            double weit=1./(1.+nv*nv*ng*ng/sigmaVV/sigmaVG);
-//                    neidiffSum+=weit*nv;
-//                    neiSumWei+=weit;
-//                }
-//                //neidiffSum= neidiffSum/(neiSumWei-1.+1e-12) +vv;
-//                //vImg(i,j,k)=max(0,min(255,int(neidiffSum+sharpFact*(neidiffSum-vv)+0.5)));
-//
-//          neidiffSum = std::max(-vv,std::min(dmaxT(T)-vv,(neidiffSum/(neiSumWei-1.+1e-12)*(1.+sharpFact) )));
-//          int deltap6 = neidiffSum/6.+0.5;
-//          vImg(i  ,j,k)=std::max(0,std::min(255,vImg(i  ,j,k)+deltap6*6));
-//          vImg(i-1,j,k)=std::max(0,std::min(255,vImg(i-1,j,k)-deltap6));
-//          vImg(i+1,j,k)=std::max(0,std::min(255,vImg(i+1,j,k)-deltap6));
-//          vImg(i,j-1,k)=std::max(0,std::min(255,vImg(i,j-1,k)-deltap6));
-//          vImg(i,j+1,k)=std::max(0,std::min(255,vImg(i,j+1,k)-deltap6));
-//          vImg(i,j,k-1)=std::max(0,std::min(255,vImg(i,j,k-1)-deltap6));
-//          vImg(i,j,k+1)=std::max(0,std::min(255,vImg(i,j,k+1)-deltap6));
-//
-//            }
-//        }
-//    }
-//    (std::cout<<" ").flush();
-//
-//}*/
-
-
 template<typename T>
 void shrink(voxelImageT<T>& seged, T min,  T maks, const voxelImageT<T>& vImg) {
 
@@ -680,11 +636,9 @@ template<typename T>
 voxelImageT<T> mean(const voxelImageT<T>& vImg) {
   (std::cout<<"  mean ").flush();
   voxelImageT<T>  smooth=vImg;
-  forAllkji_1_(vImg)
-  {
+  forAllkji_1_(vImg) {
     int neiSum=0;
-    forAllNei(-1,1)
-    {
+    forAllNei(-1,1) {
       neiSum+=_nei(vImg,i,j,k);
     }
     smooth(i,j,k)=(0.5+neiSum/27.);
@@ -705,7 +659,6 @@ voxelImageT<T> maxWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB) {
                   max(max(vImg.v_j(-nW,vp), vImg.v_j( nW,vp)),
                       max(vImg.v_k(-nW,vp), vImg.v_k( nW,vp)))), upperB);
   }
-
   return vxls;
 }
 
@@ -727,39 +680,6 @@ voxelImageT<T> meanWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB, 
   return vxls;
 }
 
-/*//template<typename T> voxelImageT<T> meanWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB)
-//{
-  //(std::cout<<"  meanWide ").flush();
-  //voxelImageT<T> vxls=vImg;
-  //forAllkji_m_(nW,vImg)
-  //{  const T* vp=&vImg(i,j,k);
-    //if( *vp<lowerB || upperB<*vp)
-    //{
-      //std::array<T,7> vvs={{
-                //vImg.v_i(-nW,vp), vImg.v_i( nW,vp),
-                //vImg.v_j(-nW,vp), vImg.v_j( nW,vp),
-                //vImg.v_k(-nW,vp), vImg.v_k( nW,vp)
-                 //}};
-      //std::nth_element(vvs.begin(),vvs.begin()+3,vvs.end());
-      //vxls(i,j,k) = vvs[3];
-    //}
-  //}
-  //return vxls;
-//}
-
-//template<typename T>
-//voxelImageT<T> mean6Wide(const voxelImageT<T>& vImg, T lowerB, T upperB)
-//{
-  //(std::cout<<"  mean6Wide ").flush();
-  //voxelImageT<T> vxls=vImg;
-  //forAllkji_1_(vImg)
-  //{  const T* vp=&vImg(i,j,k);
-    //if( *vp<lowerB || upperB<*vp)
-      //vxls(i,j,k) = (sum6Nei(vImg,vp)+2)/6;
-  //}
-  //return vxls;
-//}
-*/
 
 template <typename T>
 dbls convertToDbls(piece<T> hist) {
@@ -770,98 +690,16 @@ dbls convertToDbls(piece<T> hist) {
 }
 
 
-template<typename OtT>
-inline pair<OtT, array<double,5>> otsu_threshold(const piece<double>& hist, int  ibgn, int  iend, OtT shift, OtT scale) {
-  /* binarization by Otsu's method based on maximization of inter-class variance */
-  double sumw(0), sumiw(0);
-  for (int i = ibgn; i <= iend; ++i) { sumw+=hist[i];  sumiw+=hist[i]*i; }
-
-  double sumB = 0;
-  double wB = 0;
-  double max_sigma = 0;
-  int ilevel=1;
-  double wL=1;
-  double sunL=1;
-  for (int ii = ibgn; ii <= iend; ii++) {
-    wB += hist[ii];
-    if (wB == 0 || wB == sumw)        continue;
-    sumB +=  ii * hist[ii];
-    //double dif = sumB*sumw  -  sumiw*wB   ; ///. <= sumB * (sumw-wB)  -  (sumiw-sumB) *wB;
-    //double  sigma =  dif * dif / (wB * (sumw-wB) ); ///. division is to componsate for above line
-    double dif = sumB*sumw  -  sumiw*wB   ; ///. <= sumB /wB  -  (sumiw-sumB) /(sumw-wB);
-    double  sigma =  dif * dif / (wB * (sumw-wB) ); ///. division is to componsate for above line
-    if ( sigma > max_sigma) {
-      ilevel = ii;
-      max_sigma = sigma;
-      sunL=sumB;
-      wL=wB;
-    }
-  }
-
-  OtT level = shift + ilevel*scale;
-  OtT minv = shift + ibgn*scale;
-  OtT maxv = shift + iend*scale;
-
-  double  avgs[2] = {sunL/wL, (sumB-sunL)/(wB-wL)};
-  cout<<"   Otsu: ** "<< level<<" **  N: "<< sumw<<",  cdf_"<<level<<": "<< std::setprecision(3)<<wL<<"  cdf_"<<maxv<<": "<< std::setprecision(3)<<wB;
-  cout<<"   segment 2   "<<minv<<"  "<< int(avgs[0]) <<"  "<<level<<"  "<<int(avgs[1])<<"  "<<maxv<<endl;
-
-
-  array<double,5> levels{{0.}};
-  levels[0]=minv;   levels[1]=avgs[0];   levels[2]=level;   levels[3]=avgs[1];   levels[4]=maxv;
-  return {level, levels};
-
-  /*
-  const int MaxVV = 256 ; // No. of gray levels
-  double prob[MaxVV]; // prob of graylevels
-  double myu[MaxVV], cdf[MaxVV];   // mean value for separation, omega is CDF
-  double max_sigma, sigma[MaxVV]; // inter-class variance
-  long long total(0);
-
-
-  // Histogram generation
-  for(int hi : hist)  { total+=hi; }
-
-  // calculation of probability density
-  for (int i = minv; i < maxv; i ++ )  prob[i] = (double)hist[i] / (total);
-
-  // cdf & myu generation
-  cdf[minv] = prob[minv];
-  myu[minv] = minv*prob[minv];       // 0. times prob[0] equals zero
-  for (int i = minv+1; i < maxv; ++i) {   cdf[i] = cdf[i-1] + prob[i];   myu[i] = myu[i-1] + i*prob[i];  }
-
-  // sigma maximization sigma stands for inter-class variance and determines optimal levelold value
-  int level = 0; // levelold for binarization
-  max_sigma = 0.;
-  for (int i = minv; i < maxv-1; ++i) {
-    if (cdf[i]!=0. && cdf[i]!=1.)  {   sigma[i] = pow(myu[maxv-1]*cdf[i]-myu[i], 2) /   (cdf[i]*(1.-cdf[i])); }
-    else      sigma[i] = 0.;
-    if (sigma[i] > max_sigma) {      max_sigma = sigma[i];      level = i;    }
-  }
-  //for(int i=minv; i<maxv; ++i)cout<<sigma[i]<<" ";cout<<endl;
-
-  double avgs[2] = {myu[level]/cdf[level], (myu[maxv-1]-myu[level])/(cdf[maxv-1]-cdf[level])};
-  cout<<"   Otsu levelold: ** "<< level<<" **  N: "<< total<<",  cdf_"<<level<<": "<< std::setprecision(3)<<cdf[level]<<"  cdf_"<<maxv-1<<": "<< std::setprecision(3)<<cdf[maxv-1];
-  cout<<"   segment 2   "<<minv<<"  "<< int(avgs[0]) <<"  "<<level<<"  "<<int(avgs[1])<<"  "<<maxv<<endl;
-
-
-  array<double,5> levels{{0.}};
-  levels[0]=minv;   levels[1]=avgs[0];   levels[2]=level;   levels[3]=avgs[1];   levels[4]=maxv;
-  return levels;
-  //forAllkji(vImg)    vImg(i,j,k) = vImg(i,j,k)>level;
-*/
-}
-
 
 template<typename T>
-array<double,5> otsu_th(const voxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, double skipFrac=0.)
+array<double,5> otsu_minAvgThresholdAvgMax(const voxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, double skipFrac=0.)
 {//! Warning doesn't work for negatives
   int3 nnn1=skipFrac*vImg.size3();
   int3 nnn2=(1.000000000001-skipFrac)*vImg.size3();
   T  minv=minvi, maxv=maxvi;
 
   const int nHist = std::min(maxvi-minvi, Tint(65536/10));
-  Tint delta = std::max((maxvi-minvi)/ nHist, Tint(T(1)));
+  double delta = std::max((maxvi-minvi)/ nHist, Tint(T(1)));
 
   vars<long long> hist(nHist+1, 0l);
 
@@ -872,13 +710,14 @@ array<double,5> otsu_th(const voxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, do
         if (minv<=vv && vv<maxv)  ++hist[(vv-minv)/delta];
       }
   dbls histd = convertToDbls(hist);
-  return otsu_threshold(histd, 0, nHist, minvi, delta).second;
+  return otsu_minAvThresholdAvMx(histd, 0, nHist, minvi, delta);
 }
 
 template<typename T>
-voxelImageT<uint8_t> otsu_th01(const voxelImageT<T>& vImg, int  minvi=0, int  maxvi=maxT(T), double skipFrac=0.)
+voxelImageT<uint8_t> threshold01_otsu(const voxelImageT<T>& vImg, int  minvi=0, int  maxvi=maxT(T), double skipFrac=0.)
 {//! Warning doesn't work for negatives
-  T otst2 = otsu_th(vImg,minvi,maxvi,skipFrac)[2];
+  // TODO expose this as image3kit.otsu_threshold01
+  T otst2 = otsu_minAvgThresholdAvgMax(vImg, minvi, maxvi, skipFrac)[2];
   voxelImageT<uint8_t> msk(vImg.size3(), 1, vImg.dx(),vImg.X0());
   forAlliii_(vImg)  if(vImg(iii)<otst2) msk(iii)=0;
   return msk;
@@ -1508,7 +1347,7 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
       //voxls.write("dumpmedian.mhd");
       voxelImageT<T> grad=magGradient(voxls, resolution);
       //grad.write("dumpGrad5.mhd");
-      array<double,5> otst = otsu_th(grad,0,maxT(T)-1);
+      array<double,5> otst = otsu_minAvgThresholdAvgMax(grad,0,maxT(T)-1);
 
       forAlliii_seq(vImg)
       {  int vv = vImg(iii);
@@ -1523,13 +1362,13 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
       cout<<"  Ges ranges: " <<th<<endl;
       for_i_(0,10)
       {
-        for_i_(1,nSegs)  th[i] = otsu_threshold(hist, th[i-1]/delta, th[i+1]/delta, 0, delta).first;
+        for_i_(1,nSegs)  th[i] = otsu_minAvThresholdAvMx(hist, th[i-1]/delta, th[i+1]/delta, 0, delta)[2];
         cout<<"  New ranges: "  <<th<<endl;
       }
     }
     else
     {  th[0]=1; th[nSegs]=i254;
-      th[1] = otsu_threshold(hist, th[0]/delta, th[2]/delta, 0, delta).first;
+      th[1] = otsu_minAvThresholdAvMx(hist, th[0]/delta, th[2]/delta, 0, delta)[2];
       cout<<"  New ranges: " <<th<<endl;
     }
   }

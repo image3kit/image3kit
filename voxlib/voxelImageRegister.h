@@ -423,7 +423,7 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
     ensure(maskImg.size3()==vxlsmot2.size3(),"",3);
   }
   else
-    maskImg = otsu_th01(vxlsmot2,0,maxT(T),0.3);
+    maskImg = threshold01_otsu(vxlsmot2, 0, maxT(T), 0.3);
 
 
 

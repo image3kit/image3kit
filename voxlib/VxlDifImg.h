@@ -3,6 +3,7 @@
 #include <vector>
 
 template <typename T> class voxelImageT;
+using voxelImage = voxelImageT<unsigned char>;
 
 namespace VoxLib {
 
@@ -12,8 +13,8 @@ void VxlDifShort(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
                  double shift1, double scale1, double shift2, double scale2);
 
 template<typename VxT>
-void VxlMinizVar(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
-                 int bgn, int end, double shift, double span);
+void blendMinVariance(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
+                 int bgn, int end, double shift, double span, const voxelImage* mask);
 
 void mergePlots(const std::string& outnam, const std::string& key, const std::vector<std::string>& fnames);
 

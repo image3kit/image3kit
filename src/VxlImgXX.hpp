@@ -10,6 +10,7 @@
 #include "voxelImageProcess.h"
 #include "voxelNoise.h"
 #include "VxlDifImg.h"
+#include "voxelRegions.h"
 
 
 void vxlToFoam(voxelImage& vxlImg);
@@ -44,12 +45,12 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires
         arg("shift2") = 0.0, arg("scale2") = 1.0,
         "Calculate difference between two images, linear or logarithmic scale")
    .def("blend_min_variance",
-        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span) {
-          VoxLib::VxlMinizVar(m, img2, bgn, end, shift, span);
+        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span, const voxelImage* mask) {
+          VoxLib::blendMinVariance(m, img2, bgn, end, shift, span, mask);
         },
         arg("image2"), arg("bgn") = 0, arg("end") = imaxT(VxT),
-        arg("shift") = -1.0, arg("span") = 1.0,
-        "Search for an optimum weight, w, that minimizes variance of img1*w+(1-w)*img2");
+        arg("shift") = -1.0, arg("span") = 1.0, arg("mask") = nullptr,
+        "Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2");
 
   m.def("segment2",
        [](SelfT &m, std::vector<intOr<VxT>> th, std::vector<int> minSizs,
@@ -325,7 +326,10 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
         VoxLib::meanWide(m, nW, noisev, avg, delta, nItrs, smoothImg);
       }, arg("width")=0, arg("noise_val")=4, arg("average")=0, arg("delta")=20, arg("iterations")=15, arg("smooth_image")="",
       "computes a background image, used to correct for lens artifacts")
-    .def("otsu_threshold", [](SelfT &m, int minv, int maxv) { return ::otsu_th(m, minv, maxv); }, arg("min_val")=0, arg("max_val")=256)
+    .def("otsu_threshold", [](SelfT &m, int minv, int maxv) { return ::otsu_minAvgThresholdAvgMax(m, minv, maxv); },
+        arg("min_val")=0, arg("max_val")=maxT(VxT),
+        "returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values"
+    )
     .def("dering", [](SelfT &m, int X0, int Y0, int X1, int Y1, int minV, int maxV, int nr, int ntheta, int nz, double scaleDifV, double bilateralSharpen, int nGrowBox, bool write_dumps) {
           ::deringImg(m, nr,ntheta,nz, VxT(minV),VxT(maxV), X0,Y0, X1,Y1, nGrowBox, scaleDifV, bilateralSharpen, write_dumps);
         }, arg("x0"), arg("y0"), arg("x1"), arg("y1"), arg("min_val")=0, arg("max_val")=255,
@@ -336,14 +340,32 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("adjust_slice_brightness", [](SelfT &m, voxelImage& mskA, voxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
          VoxLib::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
     }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
-    .def("cut_outside", [](SelfT &m, char dir, int nExtraOut, int threshold, int cuthighs, int nShiftX, int nShiftY, int outVal) {
+    .def("cut_outside", [](SelfT &m, char dir, int nExtraOut, int threshold, bool cuthighs, int nShiftX, int nShiftY, int outVal) {
             VoxLib::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); },
-         arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=0, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
+         arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=false, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
     .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255,
     "Set outer tubing of a circular core-holder image to fill_val")
     ;
   addDodgyFuncsInt(clas);
   addDodgyFuncsU8(clas);
 }
+
+template<typename VxT>
+void bind_funcs(py::module &voxlib) requires(sizeof(VxT)<=2) {
+
+    voxlib.def("connected_components", [](const voxelImageT<VxT> &m, double minvv, double maxvv) {
+        auto lbls = labelImage(m, VxT(minvv), VxT(maxvv));
+        compressLabelImage(lbls);
+        return lbls;
+    }, py::arg("image"), py::arg("min_val")=0, py::arg("max_val")=maxT(VxT));
+
+    voxlib.def("threshold01_otsu", ::threshold01_otsu<VxT>,
+        py::arg("image"), py::arg("minvi")=0, py::arg("maxvi")=maxT(VxT), py::arg("skipFrac")=0.0,
+        "returns a binary (0&1) 8bit image obtained using Otsu thresholding of image");
+
+}
+
+template<typename VxT>
+void bind_funcs(py::module &) requires(sizeof(VxT)>2) {}
 
 } // namespace VxlPy
