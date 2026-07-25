@@ -12,6 +12,7 @@ from ._core.voxlib import (
     cylinder,
     read_image,
     sphere,
+    threshold01_otsu,
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "int3",
     "read_image",
     "sphere",
+    "threshold01_otsu",
 ]

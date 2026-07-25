@@ -15,6 +15,7 @@ from image3kit._core.voxlib import (
     cylinder,
     read_image,
     sphere,
+    threshold01_otsu,
 )
 
 __all__: list = [
@@ -32,5 +33,6 @@ __all__: list = [
     "int3",
     "read_image",
     "sphere",
+    "threshold01_otsu",
 ]
-__version__: str = "0.1.0"
+__version__: str = "0.2.0"
