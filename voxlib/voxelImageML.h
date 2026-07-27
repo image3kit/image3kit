@@ -21,7 +21,7 @@ using namespace std;
 
 
 
-                namespace MCTProcessing _begins_
+namespace MCTProcessing {
 
 template<typename T>  bool variance(stringstream& ins, voxelImageT<T> & img)  {
   KeyHint("minV maxV ");
@@ -30,7 +30,7 @@ template<typename T>  bool variance(stringstream& ins, voxelImageT<T> & img)  {
   return true;
 }
 
-                _end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing
 
 
 

@@ -482,13 +482,13 @@ template<typename T>  bool readTransFrom( stringstream& ins, voxelImageT<T>& vIm
   string img2Nam;
   ins>>img2Nam;
   cout<<"{   mapping from  image "<<img2Nam;
-  Vctr3d  trans=Vctr3d::ZERO;
+  Vctr3d  trans(0.,0.,0.);
   Tnsr3d  rotat=Tnsr3d::IDENTITY();
   ins>>trans>>rotat;
   if(img2Nam.size()>4)
   {
     cout<<" trans: "<<trans<<",  rotat: "<< rotat<<endl;
-    voxelImageT<T> image2(img2Nam, readOpt::procOnly);
+    voxelImageT<T> image2(img2Nam, readOpt::procAndConvert);
     cout<<" OrigInfo: "<<endl;  vImg.printInfo();
     cout<<" Img2Info: "<<endl;  image2.printInfo();
     resetTransform(vImg,trans,rotat,image2);

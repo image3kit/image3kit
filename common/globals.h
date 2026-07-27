@@ -73,7 +73,6 @@ inline bool _cerr_(std::string msg="", int xit=0) {
 //!   \code{.cpp} ensure(condition, "message", int throw_on_error=false); \endcode
 #define EXPAND(x) x
 #define ensure(...) EXPAND((void)GET_MACRO3(__VA_ARGS__, ensure3, ensure2, ensure1, "Only 1 to 3 args please")(__VA_ARGS__))
-#define check(...) EXPAND(GET_MACRO3(__VA_ARGS__, ensure3, ensure2, ensure1, "Only 1 to 3 args please")(__VA_ARGS__))
 #define alert(...)  EXPAND((void)GET_MACRO3(false,__VA_ARGS__, ensure3, ensure2, "Only 1 to 2 args please")(false,__VA_ARGS__))
 
 

@@ -253,7 +253,7 @@ template<typename T>  bool plotAll(voxelImageT<T>& vImg,  int minv=0, int maxv=-
   voxelImageT<T>* img2Ptr=nullptr, int mina=0, int maxa=-1000001 // transparency
 )  {
   if(hasExt(fnam_,".png")) fnam_=fnam_.substr(0,fnam_.size()-4);
-  if(maxv==-1000001)  { minv = accumulate(vImg,std::min<T>, std::numeric_limits<T>::max());   maxv = accumulate(vImg,std::max<T>, std::numeric_limits<T>::min());  }
+  if(maxv==-1000001)  { minv = accumulate(vImg, [](T a, T b){ return std::min(a,b); }, std::numeric_limits<T>::max());   maxv = accumulate(vImg, [](T a, T b){ return std::max(a,b); }, std::numeric_limits<T>::min());  }
   (cout<<"slice2: "<<fnam_<<"*, minmaxv: "<<minv<<" "<<maxv<<" ... "<<nBins).flush();
   ensure (maxv>minv, "error maxv shall be bigger than minv, hint: the image may be empty, or has a single value");
 
@@ -424,7 +424,7 @@ template<typename T>  bool meanWide(voxelImageT<T>& vImg, int nW, int noisev, in
   T maxvnrw = min(avg+delta/2,imaxT(T)-2);
   voxelImageT<T> orig = vImg;
   if(smoothImg.empty()) bilateralX(vImg, 6,3, noisev*noisev, 0.05, 12);
-  voxelImageT<T> grad = smoothImg.size() ? magGradient(voxelImageT<T>(smoothImg, readOpt::procOnly), 16) : magGradient(median(mean(median(vImg))), 16);
+  voxelImageT<T> grad = smoothImg.size() ? magGradient(voxelImageT<T>(smoothImg, readOpt::procAndConvert), 16) : magGradient(median(mean(median(vImg))), 16);
   grad=median(grad);
   grad.write("dumpGrad5.raw");
   double threshGrad = 2.5*noisev;
@@ -463,7 +463,7 @@ template<typename T>  bool meanWide(voxelImageT<T>& vImg, int nW, int noisev, in
 
 template<typename T> bool readFromFloat(voxelImageT<T>& vImg, std::string header, float aa, float bb) {
   cout<<" Reading data from header "<<header<<" converting to T (short),  d = "<<aa<<"*x+"<<bb<<endl;
-  voxelImageT<float> vImgf(header, readOpt::procOnly); // readFromHeaderT
+  voxelImageT<float> vImgf(header, readOpt::procAndConvert); // readFromHeaderT
   vImg=voxelImageT<T>(vImgf.size3(), 0, vImgf.dx(), vImgf.X0());
   forAlliii_(vImg)  vImg(iii) = max(minT(T),T(min(fmaxT(T), aa*vImgf(iii)+bb)));
 
@@ -485,7 +485,7 @@ template<typename T>  bool averageWith( stringstream& ins, voxelImageT<T>& vImg)
     if(img2Nam.size()>4) imgNames.push_back(img2Nam);
     else { if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl; break; }
   }
-  return averageWith(vImg, imgNames);
+  return VoxLib::averageWith(vImg, imgNames);
 }
 
 template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& vImg) {
@@ -503,14 +503,14 @@ template<typename T>  bool averageWith_mBE( stringstream& ins, voxelImageT<T>& v
     }
     else { if(img2Nam.size()) cout<<"\n  not with  "<<img2Nam<<":  "<<endl; break; }
   }
-  return averageWith_mBE(vImg, img2Nams);
+  return VoxLib::averageWith_mBE(vImg, img2Nams);
 }
 
 template<typename T>  bool adjustBrightnessWith( stringstream& ins, voxelImageT<T>& vImg) {
   KeyHint("img2Nam ");
   string img2Nam;  ins >> img2Nam;
   _dbgetOrReadImg(T,image2,img2Nam);
-  return adjustBrightnessWith(vImg, image2);
+  return VoxLib::adjustBrightnessWith(vImg, image2);
 }
 
 template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT<T>& vImg) {
@@ -525,7 +525,7 @@ template<typename T>  bool adjustSliceBrightness( stringstream& ins, voxelImageT
     _dbgetOrReadImg(unsigned char, mskRegA, mskNamRegA);
     _dbgetOrReadImg(unsigned char, mskRegB, mskNamRegB);
     _dbgetOrReadImg(T,             img2   , img2Nam   );
-    adjustSliceBrightness(vImg, mskRegA, mskRegB, img2, nSmoothItr, nSmoothKrnl);
+    VoxLib::adjustSliceBrightness(vImg, mskRegA, mskRegB, img2, nSmoothItr, nSmoothKrnl);
   #else
     ensure(0, "adjustSliceBrightness not supported",-1);
   #endif
@@ -575,7 +575,8 @@ template<typename T>  bool mode26( stringstream& ins, voxelImageT<T>& vImg)  {
   KeyHint("nItrs nMinD");
   int nItrs=1, nMinD=2;
   ins >> nItrs >> nMinD;
-  return mode26(vImg, nItrs, nMinD);
+  for (int i=0; i<nItrs; ++i) ::mode26(vImg, short(nMinD));
+  return true;
 }
 
 template<typename T>  bool flipEndian( stringstream& ins, voxelImageT<T>& vImg)  {
@@ -596,7 +597,7 @@ template<typename T>  bool svgHistogram( stringstream& ins, voxelImageT<T>& vImg
   if (fnam.find('/')==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
 
   cout<<" >=> "<<fnam<<", nBins: "<<nBins<<", range: "<<minV<<" "<<maxV<<", ";
-  svgHistogram(vImg,fnam,nBins,minV,maxV);
+  VoxLib::svgHistogram(vImg,fnam,nBins,minV,maxV);
   return 0;
 }
 
@@ -607,7 +608,7 @@ template<typename T>  bool svgZProfile( stringstream& ins, voxelImageT<T>& vImg)
   if(!hasExt(fnam,".svg"))  fnam+=".svg";
   if (fnam.find('/')==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
   cout<<" >=> "<<fnam<<", range:"<<minV<<" "<<maxV<<"  ";
-  svgZProfile(vImg,fnam,T(minV),T(maxV));
+  VoxLib::svgZProfile(vImg,fnam,T(minV),T(maxV));
   return 0;
 }
 
@@ -623,13 +624,13 @@ template<typename T>  bool plotAll( stringstream& ins, voxelImageT<T>& vImg)  {
   if(len(alphaImg)) {
     #ifdef _STOR_PUB
       img2Ptr=vxlCast<T>(dbget(_STOR,alphaImg));
-      if(maxa==-1000001)  { mina = accumulate(*img2Ptr,(std::min<T>));   maxa = accumulate(*img2Ptr,(std::max<T>));  }
+      if(maxa==-1000001)  { mina = accumulate(*img2Ptr, [](T a, T b){ return std::min(a,b); }, T(255));   maxa = accumulate(*img2Ptr, [](T a, T b){ return std::max(a,b); }, T(0));  }
       (cout<<" alpha: "<<alphaImg<<"  minmaxa: "<<mina<<" "<<maxa).flush();
     #else
       (cout<<" alpha image not supported "<<maxa).flush();
     #endif
   }
-  return plotAll(vImg,  minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGrey, img2Ptr, mina, maxa);
+  return VoxLib::plotAll(vImg,  minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGrey, img2Ptr, mina, maxa);
 }
 #endif
 
@@ -703,7 +704,7 @@ template<typename T>  bool segment( stringstream& ins, voxelImageT<T>& vImg)  {
 
    ins >> smoot;
   ins >> noisev >> resolutionSqr >> writedumps;
-  return segment(vImg, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
+  return VoxLib::segment(vImg, nSegs, trshlds, minSizs, smoot, noisev, resolutionSqr, writedumps);
 }
 
 
@@ -719,7 +720,8 @@ template<typename T>  bool segment2( stringstream& ins, voxelImageT<T>& vImg)  {
   double noisev(2.),localF(0.05), flatnes(0.1), resolution(2), gradFactor(0); int krnl(2), nItrs(13), writedumps(0);
   ins >> noisev >> localF >> krnl >> flatnes >> resolution >> gradFactor >> nItrs >> writedumps;
 
-  return segment2(vImg, nSegs, th, minSizs, noisev, localF, flatnes, resolution, gradFactor, krnl, nItrs, writedumps);
+  multiSegment2(vImg, th, minSizs, resolution, noisev, localF, krnl, flatnes, gradFactor, nItrs, writedumps);
+  return true;
 }
 
 template<typename T>  bool vxlProCutOutside( stringstream& ins, voxelImageT<T>& vImg)  {
@@ -780,7 +782,7 @@ template<typename T>  bool readFromFloat( stringstream& ins, voxelImageT<T>& vIm
   vImg.reset(0, 0, 0, 0);
   string header;  float aa=1, bb=0;
   ins >> header >> aa >> bb; //!readFromFloat
-  return readFromFloat(vImg, header, aa, bb);
+  return VoxLib::readFromFloat(vImg, header, aa, bb);
 }
 
 template<typename T>  bool labelImage( stringstream& ins, voxelImageT<T>& vImg)  {
@@ -804,7 +806,7 @@ template<typename T>  bool meanWide( stringstream& ins, voxelImageT<T>& vImg)  {
   int nItrs = 15;
   string smoothImg;
   ins >> nW >> noisev >> avg >> delta >> nItrs >> smoothImg;
-  return meanWide(vImg, nW, noisev, avg, delta, nItrs, smoothImg);
+  return VoxLib::meanWide(vImg, nW, noisev, avg, delta, nItrs, smoothImg);
 }
 
 } // namespace MCTProcessing

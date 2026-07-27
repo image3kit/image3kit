@@ -108,9 +108,9 @@ inline double covarianceDbl(const voxelImageT<T1>& img1, const voxelImageT<T2>& 
   double sum12=0., sum11=0., sum22=0.;
   OMPFor(reduction(+:sum11) reduction(+:sum22) reduction(+:sum12))
   forAlliii_seq(img1) {   int v1=img1(iii), v2=img2(iii);
-   if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum11+=sqr(v1-mean1);  sum22+=sqr(v2-mean2); sum12+=(v1-mean1)*(v2-mean2); } }
-    //cout<<"cov: "<<sum12/sqrt(sum11*sum22)<<" "<<sum12<<" / "<<sum11<<"*"<<sum22<<" "<<count<<" xxx  ";
-  return sum12/sqrt(sum11*sum22);
+   if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum11+=(v1-mean1)*(v1-mean1);  sum22+=(v2-mean2)*(v2-mean2); sum12+=(v1-mean1)*(v2-mean2); } }
+    //cout<<"cov: "<<sum12/std::sqrt(sum11*sum22)<<" "<<sum12<<" / "<<sum11<<"*"<<sum22<<" "<<count<<" xxx  ";
+  return sum12/std::sqrt(sum11*sum22);
 }
 
 template<typename T> double varianceDbl(const voxelImageT<T>& img, int bgn, int end, bool verbose=false) {
@@ -122,7 +122,7 @@ template<typename T> double varianceDbl(const voxelImageT<T>& img, int bgn, int 
 
   sum=0.;
   OMPFor(reduction(+:sum))
-  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<end) { sum+=sqr(vv-mean); } }
+  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<end) { sum+=(vv-mean)*(vv-mean); } }
   if (verbose)  std::cout<<"stddv: "<<sum/(count-1)<<", count: "<<count<<", mean: "<<mean<<"  ";
   return sum/(count-1);
 }
@@ -1567,7 +1567,7 @@ template<typename T>
 void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string fnam, unsigned char maskvv, T minIelm, T maxIelm) {
   //  TODO to be tested
   voxelImageT<unsigned char> mask(maskname, readOpt::procAndConvert);
-  T maxvv = std::min(maxIelm, accumulate(vImage,(std::max<T>)));//(const T& (*)(const T&, const T&))(std::max<T>)
+  T maxvv = std::min(maxIelm, accumulate(vImage, [](T a, T b){ return std::max(a,b); }, T(0)));
   std::cout<<"  maxvv:"<<maxvv<<std::endl;
   std::vector<int> nMasked(maxvv+3,0);
   std::vector<int> nNotmsk(maxvv+3,0);

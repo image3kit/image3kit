@@ -341,7 +341,7 @@ template<typename T>  bool sliceMergeToPng(const voxelImageT<T> &vImg,
 }
 
 
-                namespace MCTProcessing _begins_
+namespace MCTProcessing {
 
 
 template<typename T>  bool sliceToPng( std::stringstream& ins, voxelImageT<T>& vImg)  {
@@ -388,4 +388,4 @@ template<typename T>  bool sliceToPngBW( std::stringstream& ins, voxelImageT<T>&
 }
 
 
-                _end_of_(namespace MCTProcessing)
+} // namespace MCTProcessing
