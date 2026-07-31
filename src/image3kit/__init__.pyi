@@ -18,6 +18,8 @@ from image3kit._core.voxlib import (
     threshold01_otsu,
 )
 
+from . import _core
+
 __all__: list = [
     "Input",
     "VxlImgF32",
@@ -26,6 +28,7 @@ __all__: list = [
     "VxlImgU16",
     "__doc__",
     "__version__",
+    "_core",
     "connected_components",
     "cube",
     "cylinder",

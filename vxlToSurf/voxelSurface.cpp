@@ -311,7 +311,7 @@ void correctbioti( facePiece & faces, labelList& fMarks, dbl3s& points, int stag
 
 
 
-surfMsh createSurface(InputFile& inp, const voxelImage & vxlImg, const int nVVs, const std::string& outputSurface)  {
+surfMsh createSurface(InputFile& inp, const VoxelImage& vxlImg, const int nVVs, const std::string& outputSurface)  {
   surfMsh srfmsh;
   facePieceList& faces_bs = srfmsh.faces_bs;
   DynamicField<point>& points = srfmsh.points;
@@ -366,7 +366,7 @@ surfMsh createSurface(InputFile& inp, const voxelImage & vxlImg, const int nVVs,
     for(int ib=0;ib<256;++ib)  { faces_bs[ib].reset(facePiece(&srfmsh.faces[nAll], nFaces[ib]));  nAll+=nFaces[ib]; }
   }
 
-  voxelField<int> point_mapper(n[0]+1,n[1]+1,n[2]+1,-1);
+  VoxelField<int> point_mapper(n[0]+1,n[1]+1,n[2]+1,-1);
 
 
 

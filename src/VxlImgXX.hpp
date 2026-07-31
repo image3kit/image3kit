@@ -13,10 +13,10 @@
 #include "voxelRegions.h"
 
 
-void vxlToFoam(voxelImage& vxlImg);
-void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
-void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0);
-void vxlToSurfMesh(InputFile& inp, voxelImage& vimage, std::string outputSurface);
+void vxlToFoam(VoxelImage& vxlImg);
+void vxlToFoamPar(VoxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
+void vxlToFoamPar_seq(VoxelImage& vimage, int3 nPar, bool resetX0);
+void vxlToSurfMesh(InputFile& inp, VoxelImage& vimage, std::string outputSurface);
 
 
 namespace VxlPy {
@@ -26,12 +26,12 @@ using namespace VoxLib;
 
 
 template<typename VxT>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &) requires(sizeof(VxT)>=3) {}
+void addDodgyFuncsInt(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &) requires(sizeof(VxT)>=3) {}
 
 template<typename VxT>
-void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=2) {
+void addDodgyFuncsInt(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &m) requires(sizeof(VxT)<=2) {
 
-  using SelfT = voxelImageT<VxT>;
+  using SelfT = VoxelImageT<VxT>;
 
   // TODO bind scaled_diff and vxl_miniz_var here, they should be generalized to support both u8 and u16 integers (6565535 and 65534 replaced with maxT(Typ) from _include/typses.h)
   m.def("scaled_diff",
@@ -45,7 +45,7 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires
         arg("shift2") = 0.0, arg("scale2") = 1.0,
         "Calculate difference between two images, linear or logarithmic scale")
    .def("blend_min_variance",
-        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span, const voxelImage* mask) {
+        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span, const VoxelImage* mask) {
           VoxLib::blendMinVariance(m, img2, bgn, end, shift, span, mask);
         },
         arg("image2"), arg("bgn") = 0, arg("end") = imaxT(VxT),
@@ -78,25 +78,25 @@ void addDodgyFuncsInt(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires
 }
 
 template<typename VxT>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &) requires(sizeof(VxT)>=2) {
+void addDodgyFuncsU8(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &) requires(sizeof(VxT)>=2) {
 }
 template<typename VxT>
-void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
+void addDodgyFuncsU8(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &m) requires(sizeof(VxT)<=1) {
     m
-    .def("extrude_dist_map", [](voxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) {
+    .def("extrude_dist_map", [](VoxelImageT<VxT> &m, py::dict dic, double offsetFactor, double scaleR, double powR) {
         m = distMapExtrude(m, pyCastInput(dic), offsetFactor, scaleR, powR); // returns copy
         },
         arg("config")=py::dict(), arg("offset")=0.5, arg("scale")=1.0, arg("power")=1.0,
         "Extrude proportional to distance map"
     )
-    .def("to_foam", [](voxelImage& m) { vxlToFoam(m); }, "Convert image to OpenFOAM mesh")
-    .def("to_foam_par", [](voxelImage& m, int3 nPar, bool resetX0, bool keepBCs) { vxlToFoamPar(m, nPar, resetX0, keepBCs); },
+    .def("to_foam", [](VoxelImage& m) { vxlToFoam(m); }, "Convert image to OpenFOAM mesh")
+    .def("to_foam_par", [](VoxelImage& m, int3 nPar, bool resetX0, bool keepBCs) { vxlToFoamPar(m, nPar, resetX0, keepBCs); },
         arg("n_par")=int3(1,1,1), arg("reset_x0")=false, arg("keep_bcs")=false,
         "Convert image to a parallel OpenFOAM mesh")
-    .def("to_foam_par_incremental", [](voxelImage& m, int3 nPar, bool resetX0) { vxlToFoamPar_seq(m, nPar, resetX0); },
+    .def("to_foam_par_incremental", [](VoxelImage& m, int3 nPar, bool resetX0) { vxlToFoamPar_seq(m, nPar, resetX0); },
         arg("n_par")=int3(1,1,1), arg("reset_x0")=false,
         "Convert image to a parallel OpenFOAM mesh sequentially (one processor mesh at a time)")
-    .def("to_surf_mesh", [](voxelImage& m, py::dict inpDic, std::string outputSurface) {
+    .def("to_surf_mesh", [](VoxelImage& m, py::dict inpDic, std::string outputSurface) {
             InputFile inp(pyCastInput(inpDic));
             vxlToSurfMesh(inp, m, outputSurface);
         },
@@ -108,9 +108,9 @@ void addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(
 template<typename VxT>
 void bind_VxlImg(py::module &mod, const char* VxTypS) {
 
-  using SelfT = voxelImageT<VxT>;
+  using SelfT = VoxelImageT<VxT>;
 
-  auto clas = py::class_<SelfT, voxelImageTBase>(mod, VxTypS, py::buffer_protocol())
+  auto clas = py::class_<SelfT, VoxelImagesBase>(mod, VxTypS, py::buffer_protocol())
     .def_buffer([](SelfT &m) -> py::buffer_info {
         return py::buffer_info(
             m.data(), sizeof(VxT),  py::format_descriptor<VxT>::format(),
@@ -123,9 +123,9 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def(py::init([](py::tuple nxyz, VxT value) { return SelfT(tov3<int>(nxyz), value); }), // just for type checkers!
          arg("shape")=py::make_tuple(0,0,0), arg("value") = 0, "Initialize a new image of size (nx, ny, nz) with the fill value.")
     .def(py::init( // duplicate and convert, order of constructors matters!
-        [](voxelImageTBase *m)  { SelfT img; if (m) resetFromImageT<VxT, SupportedVoxTyps>(img, m);  return img; }),
+        [](VoxelImagesBase *m)  { SelfT img; if (m) resetFromImageT<VxT, SupportedVoxTyps>(img, m);  return img; }),
         arg("image"),
-        "Initialize (duplicate and convert) from another voxelImageT object")
+        "Initialize (duplicate and convert) from another VoxelImageT object")
     .def(py::init( // readConvertFromHeader
         [](py::object filepath, bool processKeys, int maxNz)  { return SelfT(py::str(filepath).cast<std::string>(), processKeys? readOpt::procAndConvert : readOpt::justRead, maxNz); }),
         arg("filepath"), arg("processKeys")=true, arg("max_nz")=-1,
@@ -149,12 +149,12 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("__setitem__", [](SelfT &m, int3 idx, VxT val) {
         m(idx[0], idx[1], idx[2]) = val;
     })
-    .def_property_readonly("shape", [&](SelfT &m) { return to3(m.size3()); })
+    .def_property_readonly("shape", [&](SelfT &m) { return m.size3(); })
     .def_property_readonly("nx", &SelfT::nx)
     .def_property_readonly("ny", &SelfT::ny)
     .def_property_readonly("nz", &SelfT::nz)
-    .def_property("spacing", [](SelfT &m) { return to3(m.dx()); }, [](SelfT &m, dbl3 v) { m.dxCh() = v; }, "Get/set the voxel size (dx, dy, dz).")
-    .def_property("origin", [](SelfT &m) { return to3(m.X0()); }, [](SelfT &m, dbl3 v) { m.X0Ch() = v; }, "Get/set the origin value (x0, y0, z0).")
+    .def_property("spacing", [](SelfT &m) { return m.dx(); }, [](SelfT &m, dbl3 v) { m.dxCh() = v; }, "Get/set the voxel size (dx, dy, dz).")
+    .def_property("origin", [](SelfT &m) { return m.X0(); }, [](SelfT &m, dbl3 v) { m.X0Ch() = v; }, "Get/set the origin value (x0, y0, z0).")
     .def("print_info", &SelfT::printInfo)
     .def("write", &SelfT::write, arg("filename"), "Write the image to a file (.mhd, .raw, .ra.gz formats).")
     .def("write_no_header", &SelfT::writeNoHdr, arg("filename"), "Write the raw image data without a header.")
@@ -337,7 +337,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("adjust_brightness_with", [](SelfT &m, SelfT img2) { return VoxLib::adjustBrightnessWith(m, img2); },
         arg("img2"),
         "adjust image brightness with another image, assuming it has same type and fluid saturation")
-    .def("adjust_slice_brightness", [](SelfT &m, voxelImage& mskA, voxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
+    .def("adjust_slice_brightness", [](SelfT &m, VoxelImage& mskA, VoxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
          VoxLib::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
     }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
     .def("cut_outside", [](SelfT &m, char dir, int nExtraOut, int threshold, bool cuthighs, int nShiftX, int nShiftY, int outVal) {
@@ -353,7 +353,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
 template<typename VxT>
 void bind_funcs(py::module &voxlib) requires(sizeof(VxT)<=2) {
 
-    voxlib.def("connected_components", [](const voxelImageT<VxT> &m, double minvv, double maxvv) {
+    voxlib.def("connected_components", [](const VoxelImageT<VxT> &m, double minvv, double maxvv) {
         auto lbls = labelImage(m, VxT(minvv), VxT(maxvv));
         compressLabelImage(lbls);
         return lbls;

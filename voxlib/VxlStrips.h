@@ -85,8 +85,8 @@ public:
 
   VxlStrips(const InputFile& inp);
 
-  void setImageInfo(const InputFile& inp, const voxelImage& VImage);
-  void createStripsX(const voxelImage& VImage);
+  void setImageInfo(const InputFile& inp, const VoxelImage& VImage);
+  void createStripsX(const VoxelImage& VImage);
 
 public:
 
@@ -140,4 +140,4 @@ public:
 
 };
 
-voxelImage distMapExtrude(const voxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR);
+VoxelImage distMapExtrude(const VoxelImage& VImage, const InputFile& inp, double offsetR, double scaleR, double powerR);

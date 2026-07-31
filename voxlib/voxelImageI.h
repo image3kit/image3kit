@@ -37,25 +37,25 @@ Developed by:
 
 #include <functional>
 
-template<typename T> Tint sum6Nei(const voxelImageT<T>& vf, const T* vp)  {
+template<typename T> Tint sum6Nei(const VoxelImageT<T>& vf, const T* vp)  {
   return Tint(vf.v_i(-1,vp))+vf.v_i( 1,vp)+  vf.v_j(-1,vp)+vf.v_j( 1,vp)+ vf.v_k(-1,vp)+vf.v_k( 1,vp); }
 
-template<typename T> int nSam6Nei(const voxelImageT<T>& vf, const T* vp)  {/// \return number of adjacent voxels with same value, out of 6
+template<typename T> int nSam6Nei(const VoxelImageT<T>& vf, const T* vp)  {/// \return number of adjacent voxels with same value, out of 6
   return Tint(vf.v_i(-1,vp)==*vp)+ (vf.v_i( 1,vp)==*vp)+ (vf.v_j(-1,vp)==*vp)+
     (vf.v_j( 1,vp)==*vp)+ (vf.v_k(-1,vp)==*vp)+(vf.v_k( 1,vp)==*vp); }
 
-template<typename T> int nSam6Nei2(const voxelImageT<T>& vf, const T* vp)  {/// \return number of adjacent voxels with same value, out of 6, to add to nSameNei26
+template<typename T> int nSam6Nei2(const VoxelImageT<T>& vf, const T* vp)  {/// \return number of adjacent voxels with same value, out of 6, to add to nSameNei26
   return Tint(vf.v_i(-2,vp)==*vp)+ (vf.v_i( 2,vp)==*vp)+ (vf.v_j(-2,vp)==*vp)+
     (vf.v_j( 2,vp)==*vp)+ (vf.v_k(-2,vp)==*vp)+(vf.v_k( 2,vp)==*vp); }
 
-template<typename T> T maxNei(const voxelImageT<T>& image, int i, int j, int k, int r11, int r22)  {
+template<typename T> T maxNei(const VoxelImageT<T>& image, int i, int j, int k, int r11, int r22)  {
   T maxx=std::numeric_limits<T>::min();
   forAllNei(r11,r22)  maxx=std::max(maxx,_nei(image,i,j,k));
   return maxx;
 }
 
 template<typename T,typename TRes>
-TRes accumulate(const voxelField<T>& vf, TRes const & (*operatorFunc)(TRes const &,  TRes const&), TRes result=0)  {
+TRes accumulate(const VoxelField<T>& vf, TRes const & (*operatorFunc)(TRes const &,  TRes const&), TRes result=0)  {
   //result = std::accumulate(vf.data_.begin(), vf.data_.end(), result, operatorFunc);   return result;
 
   OMPragma("omp parallel")
@@ -73,7 +73,7 @@ TRes accumulate(const voxelField<T>& vf, TRes const & (*operatorFunc)(TRes const
 }
 
 template<typename T,typename TRes, typename TFunc>
-TRes accumulate(const voxelField<T>& vf, TFunc operatorFunc, TRes result=0)  {
+TRes accumulate(const VoxelField<T>& vf, TFunc operatorFunc, TRes result=0)  {
   //result = std::accumulate(vf.data_.begin(), vf.data_.end(), result, operatorFunc);   return result;
 
   OMPragma("omp parallel")
@@ -90,13 +90,13 @@ TRes accumulate(const voxelField<T>& vf, TFunc operatorFunc, TRes result=0)  {
 }
 
 template<typename T>
-T accumulateT(const voxelImage& vf, std::function<T(T, T)> operatorFunc, T result=0)  {
+T accumulateT(const VoxelImage& vf, std::function<T(T, T)> operatorFunc, T result=0)  {
   return std::accumulate(vf.data_.begin(), vf.data_.end(), result, operatorFunc);
 }
 
 
 template<typename T1, typename T2>
-inline double covarianceDbl(const voxelImageT<T1>& img1, const voxelImageT<T2>& img2, int bgn, int end) {
+inline double covarianceDbl(const VoxelImageT<T1>& img1, const VoxelImageT<T2>& img2, int bgn, int end) {
   double sum1=0., sum2=0.; size_t count=0;
   OMPFor(reduction(+:sum1) reduction(+:sum2) reduction(+:count))
   forAlliii_seq(img1) {   int v1=img1(iii), v2=img2(iii);
@@ -113,7 +113,7 @@ inline double covarianceDbl(const voxelImageT<T1>& img1, const voxelImageT<T2>& 
   return sum12/std::sqrt(sum11*sum22);
 }
 
-template<typename T> double varianceDbl(const voxelImageT<T>& img, int bgn, int end, bool verbose=false) {
+template<typename T> double varianceDbl(const VoxelImageT<T>& img, int bgn, int end, bool verbose=false) {
   double sum=0.; size_t count=0;
   OMPFor(reduction(+:sum) reduction(+:count))
   forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<end) { sum+=vv;  ++count; } }
@@ -153,7 +153,8 @@ vars<dbls> vxlDist(const voxelFieldT& vf, int nsteps=32, double minV=3e38, doubl
 }
 
 
-template<typename T>   void voxelField<T>::getSize(int& n1, int& n2, int& n3) const {
+template<typename T>
+void VoxelField<T>::getSize(int& n1, int& n2, int& n3) const {
   n3 = (*this).nz();
   if (n3>0) { n1 = (*this).nx();  n2 = (*this).ny();  }
   else      { n1 = 0;  n2 = 0; }
@@ -161,26 +162,28 @@ template<typename T>   void voxelField<T>::getSize(int& n1, int& n2, int& n3) co
 
 
 
-// image size are set in voxelImageT(fname) constructor, deduced from file name
-template<typename T>   void voxelField<T>::readAscii(std::ifstream& in)  {
+// image size are set in VoxelImageT(fname) constructor, deduced from file name
+template<typename T>
+void VoxelField<T>::readAscii(std::ifstream& in)  {
   forAllvr_seq((*this)) in>>vr;
 }
 
-template<>  inline  void voxelField<unsigned char>::readAscii(std::ifstream& in)  {
-  //!  overwrite voxelField<T>::readAscii(), as voxelField interprets  8bit numerical values as characters not integers
+template<>  inline  void VoxelField<unsigned char>::readAscii(std::ifstream& in)  {
+  //!  overwrite VoxelField<T>::readAscii(), as VoxelField interprets  8bit numerical values as characters not integers
   int tmp;
   forAllvr_seq((*this)) { in>>tmp;  vr=tmp; }
 }
 
-// If image is not allocated, use voxelImageT constructor instead
-template<typename T>   bool voxelField<T>::readAscii(std::string fnam)  {
+// If image is not allocated, use VoxelImageT constructor instead
+template<typename T>
+bool VoxelField<T>::readAscii(std::string fnam)  {
   std::cout<<" ascii, reading "<<fnam<<std::endl;
   std::ifstream in(fnam); ensure(in, "cannot open image file "+fnam,-1);
   readAscii(in);
   return !in.fail();
 }
 
-template<typename T>   bool voxelImageT<T>::readAscii(std::string fnam, int nSkipBytes)  {
+template<typename T>   bool VoxelImageT<T>::readAscii(std::string fnam, int nSkipBytes)  {
   std::cout<<" reading "<<fnam<<std::endl;
 
   std::ifstream in(fnam);
@@ -196,12 +199,13 @@ template<typename T>   bool voxelImageT<T>::readAscii(std::string fnam, int nSki
   }
   else
     in.seekg(nSkipBytes, in.beg);
-  voxelField<T>::readAscii(in);
+  VoxelField<T>::readAscii(in);
   return !in.fail();
 }
 
 
-template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipBytes, int maxNz)  {
+template<typename T>
+int VoxelField<T>::readBin(std::string fnam, int nSkipBytes, int maxNz)  {
   int3 nnn = size3();
   int RLEcompressed=0;
 
@@ -250,8 +254,8 @@ template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipByt
     char count=0;
     char val=0;
     //ensure(sizeof(T)==1,"Only 8bit .am files are supported");
-    char* vp = reinterpret_cast<char*>(&*voxelField<T>::data_.begin());
-    char* const ve =reinterpret_cast<char*>(&*voxelField<T>::data_.end());
+    char* vp = reinterpret_cast<char*>(&*VoxelField<T>::data_.begin());
+    char* const ve =reinterpret_cast<char*>(&*VoxelField<T>::data_.end());
     while(vp<ve)  { // this requires data_ has reserved extra memory  when maxNzGlobal is set, sync: XADSDAS
       in.get(count); in.get(val);
       if(count & static_cast<char>(0x80)) {
@@ -277,17 +281,17 @@ template<typename T>   int voxelField<T>::readBin(std::string fnam, int nSkipByt
 
 
 template<typename T>
-int voxelField<T>::readBir(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
+int VoxelField<T>::readBir(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE, int nSkipBytes)  {
   /// readBinaryToBlockRange, risky (not enough bound/type checking)
   if(hasExt(fnam,".tif")) {
-    voxelImageT<T> vxls;
+    VoxelImageT<T> vxls;
     vxls.readBin(fnam);
     if (vxls.nx()!=iE-iS)  std::cout<<"Error in reading "<<fnam<<", unexpected size: Nx="<<vxls.nx()<<"  !="<<iE-iS<<std::endl;
     setBlock(iS,jS,kS, vxls);
     return 0;
   }
   if(hasExt(fnam,".gz")) {
-    voxelField<T> vxls(int3(iE-iS, jE-jS, kE-kS));
+    VoxelField<T> vxls(int3(iE-iS, jE-jS, kE-kS));
     vxls.readBin(fnam);
     setBlock(iS,jS,kS, vxls);
     return 0;
@@ -309,7 +313,7 @@ int voxelField<T>::readBir(std::string fnam, int iS,int iE, int jS,int jE, int k
 }
 
 
-template<typename T>   void voxelField<T>::writeBin(std::string fnam) const  {
+template<typename T>   void VoxelField<T>::writeBin(std::string fnam) const  {
   int3 nnn = size3();
 
   if(hasExt(fnam,".tif")) {
@@ -349,7 +353,6 @@ template<typename T>   void voxelField<T>::writeBin(std::string fnam) const  {
     if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')  writeHeader(fnam,{0,0,0},nnn,{1.,1.,1.},{0.,0.,0.});
     mod = mod | std::ios::app;
   }
-  //else if(!hasExt(fnam,".tif")) writeHeader(fnam,{0,0,0},nnn); this overwrites voxelImage one
 
   std::ofstream of (fnam, mod);
   assert(of);
@@ -363,7 +366,7 @@ template<typename T>   void voxelField<T>::writeBin(std::string fnam) const  {
 
 
 template<typename T>
-void voxelField<T>::writeBin(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE ) const  {
+void VoxelField<T>::writeBin(std::string fnam, int iS,int iE, int jS,int jE, int kS,int kE ) const  {
 
 
   if (hasExt(fnam,".tif")) {
@@ -404,7 +407,7 @@ void voxelField<T>::writeBin(std::string fnam, int iS,int iE, int jS,int jE, int
     if(cs[0]!='@' || cs[1]!='1' || cs[2]!='\n')  writeHeader(fnam,{iS,jS,kS},{iE,jE,kE}, {1.,1.,1.}, {0.,0.,0.});
     mod = mod | std::ios::app;
   }
-  //else if(!hasExt(fnam, ".tif"))    writeHeader(fnam,{iS,jS,kS},{iE,jE,kE}, 1., 0.); this overwrites voxelImage one
+
   std::ofstream of(fnam, mod);
   assert(of);
   if(data_.size())
@@ -415,7 +418,7 @@ void voxelField<T>::writeBin(std::string fnam, int iS,int iE, int jS,int jE, int
 }
 
 template<typename T>
-void voxelField<T>::writeAscii(std::string fnam,int iS,int iE, int jS,int jE, int kS,int kE) const  {
+void VoxelField<T>::writeAscii(std::string fnam,int iS,int iE, int jS,int jE, int kS,int kE) const  {
   (std::cout<<"  writing ascii file "<<fnam<<";  ").flush();
 
   std::ofstream of (fnam);
@@ -432,7 +435,7 @@ void voxelField<T>::writeAscii(std::string fnam,int iS,int iE, int jS,int jE, in
 }
 
 template<> inline
-void voxelField<unsigned char>::writeAscii(std::string fnam,int iS,int iE, int jS,int jE, int kS,int kE) const  {
+void VoxelField<unsigned char>::writeAscii(std::string fnam,int iS,int iE, int jS,int jE, int kS,int kE) const  {
   (std::cout<<"  writing ascii file "<<fnam<<";  ").flush();
 
   std::ofstream of (fnam);
@@ -449,12 +452,12 @@ void voxelField<unsigned char>::writeAscii(std::string fnam,int iS,int iE, int j
   std::cout<<std::endl;
 }
 
-template<typename T>   void voxelField<T>::writeAscii(std::string fnam) const  {
+template<typename T>   void VoxelField<T>::writeAscii(std::string fnam) const  {
   int3 imgsize = size3();
   writeAscii(fnam,0, imgsize.x, 0,imgsize.y, 0,imgsize.z);
 }
 
-template<typename T>   void voxelField<T>::writeRotatedXZ(std::ofstream& of) const  {
+template<typename T>   void VoxelField<T>::writeRotatedXZ(std::ofstream& of) const  {
   for (int i=0; i<(*this).nx(); ++i) //reversed order with k
     for (int j=0; j<(*this).ny(); ++j)  {
       for (int k=0; k<(*this).nz(); k++) //reversed order with i
@@ -466,12 +469,12 @@ template<typename T>   void voxelField<T>::writeRotatedXZ(std::ofstream& of) con
 
 
 
-template<typename T> void voxelImageT<T>::writeHeader(std::string ofnam) const  {
-  voxelField<T>::writeHeader(ofnam, int3(0,0,0), voxelField<T>::size3(),dx_,X0_);
+template<typename T> void VoxelImageT<T>::writeHeader(std::string ofnam) const  {
+  VoxelField<T>::writeHeader(ofnam, int3(0,0,0), VoxelField<T>::size3(),dx_,X0_);
 }
 
 template<typename T>
-void voxelField<T>::writeHeader(std::string fnam, int3 iS, int3 iE, dbl3 dx, dbl3 X0) const  {
+void VoxelField<T>::writeHeader(std::string fnam, int3 iS, int3 iE, dbl3 dx, dbl3 X0) const  {
 
   if(dx.x<0)  {
     std::cerr<<"Error negative dx, writing abs value instead" ;
@@ -560,18 +563,18 @@ void voxelField<T>::writeHeader(std::string fnam, int3 iS, int3 iE, dbl3 dx, dbl
 }
 
 
-template<typename T> void voxelField<T>::writeNoHdr(std::string fnam) const  {
+template<typename T> void VoxelField<T>::writeNoHdr(std::string fnam) const  {
   if (hasExt(fnam,".mhd"))  fnam = fnam.substr(0,fnam.size()-4)+imgExt();
   if (hasExt(fnam,".dat") || hasExt(fnam,".txt"))  this->writeAscii(fnam);
   else if(fnam!="NO_WRITE") this->writeBin(fnam);
 }
 
-template<typename T> void voxelImageT<T>::writeNoHdr(std::string fnam) const  {
+template<typename T> void VoxelImageT<T>::writeNoHdr(std::string fnam) const  {
   if (hasExt(fnam,".am"))  writeHeader(fnam); // Warning: remember to append to this in writeBin
-  voxelField<T>::writeBin(fnam);
+  VoxelField<T>::writeBin(fnam);
 }
 
-template<typename T> void voxelImageT<T>::write(std::string fnam) const  {
+template<typename T> void VoxelImageT<T>::write(std::string fnam) const  {
 
   if (hasExt(fnam,".dat") || hasExt(fnam,".txt")) {
     this->writeAscii(fnam);
@@ -595,7 +598,7 @@ template<typename T> void voxelImageT<T>::write(std::string fnam) const  {
 
 
 template<typename T>
-void copy(const voxelImageT<T>& img2, int3 frm,  int3 to, voxelImageT<T>& img, int3 at)  {
+void copy(const VoxelImageT<T>& img2, int3 frm,  int3 to, VoxelImageT<T>& img, int3 at)  {
   for (int k=frm.z; k<to.z; k++)
     for (int j=frm.y; j<to.y; ++j)
       std::copy(&img2(frm.x,j,k), &img2(to.x,j,k), &img(at.x,at.y+j-frm.y,at.z+k-frm.z));
@@ -606,7 +609,7 @@ void copy(const voxelImageT<T>& img2, int3 frm,  int3 to, voxelImageT<T>& img, i
 
 
 template<typename T>
-void voxelImageT<T>::cropD( int3 frm,  int3 to, int emptylyrs, T eLyrsValue, bool verbose)  {
+void VoxelImageT<T>::cropD( int3 frm,  int3 to, int emptylyrs, T eLyrsValue, bool verbose)  {
   //crop(cropBgn.x,cropEnd.x-1,cropBgn.y,cropEnd.y-1,cropBgn.z,cropEnd.z-1,emptylyrs,eLyrsValue);
   {
     if(to.x<=0) to.x = this->nx()+to.x;
@@ -620,7 +623,7 @@ void voxelImageT<T>::cropD( int3 frm,  int3 to, int emptylyrs, T eLyrsValue, boo
 
   X0_+=(frm-emptylyrs)*dx_;
 
-  voxelImageT<T> tmp=*this;
+  VoxelImageT<T> tmp=*this;
 
   if (emptylyrs)
   {
@@ -635,7 +638,7 @@ void voxelImageT<T>::cropD( int3 frm,  int3 to, int emptylyrs, T eLyrsValue, boo
 
 
 
-template<typename T>  void voxelField<T>::setSlice(char dir, int ijk, T vv)  {
+template<typename T>  void VoxelField<T>::setSlice(char dir, int ijk, T vv)  {
   if(dir=='i')
    for ( size_t iii=ijk; iii<(*this).data_.size() ; iii+=(*this).nx())
     (*this).data_[iii]=vv;
@@ -647,23 +650,23 @@ template<typename T>  void voxelField<T>::setSlice(char dir, int ijk, T vv)  {
   else   std::cout<<"Error: wrong dir "<<dir<<std::endl;
 }
 
-template<typename T>  void voxelField<T>::setLayer(int k, const T* Values)  {
+template<typename T>  void VoxelField<T>::setLayer(int k, const T* Values)  {
   //(*this)[k]=Values;
   std::copy(Values, Values+(*this).nx()*(*this).ny(), &(*this)(0,0,k));
 
 }
-template<typename T>  void voxelField<T>::replacezLayer(int k, int fromj)  {
+template<typename T>  void VoxelField<T>::replacezLayer(int k, int fromj)  {
   this->setLayer(k,&(*this)(0,0,fromj));
 }
 
-template<typename T>  void voxelField<T>::replacexLayer(int i, int fromi)  {
+template<typename T>  void VoxelField<T>::replacexLayer(int i, int fromi)  {
 
    for (int k=0; k<(*this).nz(); ++k)
     for (int j=0; j<(*this).ny(); ++j)
         (*this)(i,j,k)=(*this)(fromi,j,k);
 
 }
-template<typename T>  void voxelField<T>::replaceyLayer(int j, int fromj)  {
+template<typename T>  void VoxelField<T>::replaceyLayer(int j, int fromj)  {
 
   for (int k=0; k<(*this).nz(); ++k)
       for (int i=0; i<(*this).nx(); ++i)
@@ -672,18 +675,18 @@ template<typename T>  void voxelField<T>::replaceyLayer(int j, int fromj)  {
 
 
 template<typename T>
-void voxelField<T>::setBlock(int n1, int n2, int n3, const voxelField<T>& Values)  {
+void VoxelField<T>::setBlock(int n1, int n2, int n3, const VoxelField<T>& Values)  {
   forAllkji_(Values)
       (*this)(i+n1,j+n2,k+n3)=Values(i,j,k);
 }
 template<typename T>
-void voxelField<T>::setFrom(const voxelField<T>&Values, int n1, int n2, int n3)  { // from image with  lager size,
+void VoxelField<T>::setFrom(const VoxelField<T>&Values, int n1, int n2, int n3)  { // from image with  lager size,
   forAllkji_(*this)  (*this)(i,j,k)=Values(i+n1,j+n2,k+n3);
 }
 
 template<typename T>
 template<typename T2>
-void voxelImageT<T>::resetFrom(const voxelImageT<T2>&Values)  {
+void VoxelImageT<T>::resetFrom(const VoxelImageT<T2>&Values)  {
   dx_= Values.dx();
   X0_ = Values.X0();
   this->reset(Values.size3(),T(0));
@@ -692,15 +695,15 @@ void voxelImageT<T>::resetFrom(const voxelImageT<T2>&Values)  {
 }
 
 template<class T, typename First=uint8_t, typename... Rest>
-int resetFromImageT(voxelImageT<T>& vImg, const voxelImageTBase* imgPtr) { //! cast to specified vImg type
-  if(auto img = dynamic_cast<const voxelImageT<First>*>(imgPtr)) { vImg.resetFrom(*img); return 0; }
+int resetFromImageT(VoxelImageT<T>& vImg, const VoxelImagesBase* imgPtr) { //! cast to specified vImg type
+  if(auto img = dynamic_cast<const VoxelImageT<First>*>(imgPtr)) { vImg.resetFrom(*img); return 0; }
   else if(sizeof...(Rest)) return resetFromImageT<T,Rest...>(vImg, imgPtr);
   alert("Unknown image type in resetFromImageT");
   return -1;
 }
 
 template<typename T> inline // inline is needed for crap macOS clang++
-voxelImageT<T>::voxelImageT(const std::string& fname, readOpt procConvert, int maxNz)
+VoxelImageT<T>::VoxelImageT(const std::string& fname, readOpt procConvert, int maxNz)
 : X0_(0.,0.,0.),dx_(1,1,1)
 { //! read image and if needed convert its type // readConvertFromHeader
   #ifdef _VoxBasic8
@@ -712,9 +715,9 @@ voxelImageT<T>::voxelImageT(const std::string& fname, readOpt procConvert, int m
     readFromHeader(fname, 1, maxNz);
     return;
   }
-  std::unique_ptr<voxelImageTBase> vImgUptr = readImage(fname, procConvert != readOpt::justRead, maxNz);
-  voxelImageTBase* imgPtr = vImgUptr.get();
-  if  (auto img = dynamic_cast<voxelImageT<T>*>(imgPtr)) {
+  std::unique_ptr<VoxelImagesBase> vImgUptr = readImage(fname, procConvert != readOpt::justRead, maxNz);
+  VoxelImagesBase* imgPtr = vImgUptr.get();
+  if  (auto img = dynamic_cast<VoxelImageT<T>*>(imgPtr)) {
     *this = std::move(*img);
   }
   else  {
@@ -726,7 +729,7 @@ voxelImageT<T>::voxelImageT(const std::string& fname, readOpt procConvert, int m
 }
 
 template<typename T>
-void voxelImageT<T>::setFrom(const voxelImageT<T>&Values, int n1, int n2, int n3)  { // from image with  lager size
+void VoxelImageT<T>::setFrom(const VoxelImageT<T>&Values, int n1, int n2, int n3)  { // from image with  lager size
   dx_= Values.dx();
   X0_.x = Values.X0().x+n1*dx_.x;
   X0_.y = Values.X0().y+n2*dx_.y;
@@ -736,7 +739,7 @@ void voxelImageT<T>::setFrom(const voxelImageT<T>&Values, int n1, int n2, int n3
 }
 
 // obselete, use growBounds instead
-template<typename T> void voxelImageT<T>::growBox(int nLayers) {
+template<typename T> void VoxelImageT<T>::growBox(int nLayers) {
 
   int3 nnn = (*this).size3();
   (*this).cropD(int3(0,0,0),nnn, nLayers,1,false);
@@ -753,7 +756,7 @@ template<typename T> void voxelImageT<T>::growBox(int nLayers) {
 
 
 template<typename T>
-void voxelImageT<T>::zeroGrad(int nLayers)  {
+void VoxelImageT<T>::zeroGrad(int nLayers)  {
 
   int3 nnn = (*this).size3();
   for (int i=0; i<nLayers; ++i)  {
@@ -767,10 +770,10 @@ void voxelImageT<T>::zeroGrad(int nLayers)  {
 }
 
 template<typename T>
-voxelImageT<T> growBounds(const voxelImageT<T>& vxls, int nLayers)  {
+VoxelImageT<T> growBounds(const VoxelImageT<T>& vxls, int nLayers)  {
   int3 nnn = vxls.size3();
 
-  voxelImageT<T> tmp;
+  VoxelImageT<T> tmp;
 
   tmp.reset(nnn+2*nLayers);
 
@@ -791,9 +794,9 @@ voxelImageT<T> growBounds(const voxelImageT<T>& vxls, int nLayers)  {
 }
 
 
-template<typename T>  void voxelImageT<T>::growLabel(T vl)  {
+template<typename T>  void VoxelImageT<T>::growLabel(T vl)  {
 
-  const voxelImageT<T> vxls=growBounds(*this,1);
+  const VoxelImageT<T> vxls=growBounds(*this,1);
 
   forAllkji_1_(vxls)  {
     if (vxls(i,j,k)==vl)  {
@@ -811,9 +814,9 @@ template<typename T>  void voxelImageT<T>::growLabel(T vl)  {
 
 
 template<typename T>
-voxelImageT<T>  resampleMean(const voxelImageT<T>& img, double nReSampleNotSafe) {//  TODO to be tested
+VoxelImageT<T>  resampleMean(const VoxelImageT<T>& img, double nReSampleNotSafe) {//  TODO to be tested
 
-  voxelImageT<T> tmp;
+  VoxelImageT<T> tmp;
   if (nReSampleNotSafe < .999)  {
     int nReS=1./nReSampleNotSafe+0.5;
     tmp.reset(nReS*img.size3());
@@ -845,10 +848,10 @@ class mapComparer  {  public: bool operator() (std::pair<const T,short>& i1, std
 
 
 template<typename T>
-voxelImageT<T>  resliceZ(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
+VoxelImageT<T>  resliceZ(const VoxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
 {
   if (nReSampleNotSafe<1e-64) { nReSampleNotSafe=img.dx().x/img.dx().z; (std::cout << " nResample: "<<nReSampleNotSafe<<", ").flush(); }
-  voxelImageT<T> tmp;
+  VoxelImageT<T> tmp;
   int3 nnn=img.size3();
   if (nReSampleNotSafe < .999)  {
     //int nReS=1./nReSampleNotSafe+0.5;
@@ -881,9 +884,9 @@ voxelImageT<T>  resliceZ(const voxelImageT<T>& img, double nReSampleNotSafe)//  
 
 
 template<typename T>
-voxelImageT<T>  resampleMode(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
+VoxelImageT<T>  resampleMode(const VoxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
 {
-  voxelImageT<T> tmp;
+  VoxelImageT<T> tmp;
   if (nReSampleNotSafe < .999)  {
     int nReS=1./nReSampleNotSafe+0.5;
     tmp.reset(nReS*img.size3());
@@ -916,9 +919,9 @@ voxelImageT<T>  resampleMode(const voxelImageT<T>& img, double nReSampleNotSafe)
 
 
 template<typename T>
-voxelImageT<T> resampleMax(const voxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
+VoxelImageT<T> resampleMax(const VoxelImageT<T>& img, double nReSampleNotSafe)//  TODO to be tested
 {
-  voxelImageT<T> tmp;
+  VoxelImageT<T> tmp;
   if (nReSampleNotSafe < .999)  {
     int nReS=1./nReSampleNotSafe+0.5;
     tmp.reset(nReS*img.size3());
@@ -946,17 +949,17 @@ voxelImageT<T> resampleMax(const voxelImageT<T>& img, double nReSampleNotSafe)//
 
 
 template<typename T>
-void voxelImageT<T>::rotate(char direction)  {// wrong X0
+void VoxelImageT<T>::rotate(char direction)  {// wrong X0
   int n1,n2,n3;
 
   (std::cout<<" x<->"<<direction<<" ").flush();
-  voxelField<T>::getSize(n1,n2,n3);
+  VoxelField<T>::getSize(n1,n2,n3);
   if (direction=='z' || direction=='Z')  {
     {
       double X0Tmp=X0_.x;  X0_.x=X0_.z;  X0_.z=X0Tmp;
       double dxTmp=dx_.x;   dx_.x=dx_.z;  dx_.z=dxTmp;
     }
-    voxelImageT<T> tmp=*this;
+    VoxelImageT<T> tmp=*this;
     this->reset(n3,n2,n1,T(0));
     size_t nij =this->nij_;
     OMPFor()
@@ -979,7 +982,7 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
       double dxTmp=dx_.x;  dx_.x=dx_.y;  dx_.y=dxTmp;
     }
 
-    voxelImageT<T> tmp=*this;
+    VoxelImageT<T> tmp=*this;
     this->reset(n2,n1,n3,T(0));
     for (int k=0; k<n3; ++k)
       for (int j=0; j<n2; ++j) {
@@ -995,7 +998,7 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
   }
   else if (direction=='-')  {
     std::cout<<" -> flipping image,  x origin will be invalid "<<std::endl;
-    voxelImageT<T> tmp=*this;
+    VoxelImageT<T> tmp=*this;
     for (int k=0; k<n3; ++k)
       for (int j=0; j<n2; ++j)
         for (int i=0; i<n1; ++i)
@@ -1008,12 +1011,12 @@ void voxelImageT<T>::rotate(char direction)  {// wrong X0
 
 
 template<typename T>
-void voxelImageT<T>::PointMedian032(int nAdj0,int nAdj1, T lbl0, T lbl1)  {
+void VoxelImageT<T>::PointMedian032(int nAdj0,int nAdj1, T lbl0, T lbl1)  {
   unsigned long nChanges(0);
-  int3 nnn = voxelField<T>::size3();
+  int3 nnn = VoxelField<T>::size3();
   for (int i=0; i<3; ++i) nnn[i]=nnn[i]+2;
 
-  voxelImageT<T> vxls(*this);
+  VoxelImageT<T> vxls(*this);
   //vxls.growBox(1);
 
 
@@ -1050,12 +1053,12 @@ void voxelImageT<T>::PointMedian032(int nAdj0,int nAdj1, T lbl0, T lbl1)  {
 
 
 template<typename T>
-void FaceMedGrowToFrom(voxelImageT<T>& vImg, T lblTo, T lblFrm, int ndif=0)  {
+void FaceMedGrowToFrom(VoxelImageT<T>& vImg, T lblTo, T lblFrm, int ndif=0)  {
   unsigned long nChanges(0);
   int3 nnn = vImg.size3();
   for (int i=0; i<3; ++i) nnn[i]=nnn[i]+2;
 
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   //vxls.growBox(1);
 
   forAllkji_1_sum_(vxls, reduction(+:nChanges))  {
@@ -1086,10 +1089,10 @@ void FaceMedGrowToFrom(voxelImageT<T>& vImg, T lblTo, T lblFrm, int ndif=0)  {
 
 
 template<typename T>
-size_t  voxelImageT<T>::FaceMedian06(int nAdj0,int nAdj1)  {
+size_t  VoxelImageT<T>::FaceMedian06(int nAdj0,int nAdj1)  {
   unsigned long long nChanges(0);
 
-  voxelImageT<T> vxls=*this;
+  VoxelImageT<T> vxls=*this;
   vxls.growBox(1);
 
   forAllkji_1_sum_(vxls, reduction(+:nChanges))  {
@@ -1112,9 +1115,9 @@ size_t  voxelImageT<T>::FaceMedian06(int nAdj0,int nAdj1)  {
 
 
 template<typename T>
-voxelImageT<T> medianx(const voxelImageT<T>& vImage)  {
+VoxelImageT<T> medianx(const VoxelImageT<T>& vImage)  {
   (std::cout<<"  median filter along x direction ").flush();
-  voxelImageT<T> vxls=vImage;
+  VoxelImageT<T> vxls=vImage;
   forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
     std::array<T,3> vvs={{ *vp, vImage.v_i(-1,vp), vImage.v_i( 1,vp) }};
 
@@ -1125,9 +1128,9 @@ voxelImageT<T> medianx(const voxelImageT<T>& vImage)  {
 }
 
 template<typename T>
-voxelImageT<T> mediany(const voxelImageT<T>& vImage)  {
+VoxelImageT<T> mediany(const VoxelImageT<T>& vImage)  {
   (std::cout<<"  median filter along y direction ").flush();
-  voxelImageT<T> vxls=vImage;
+  VoxelImageT<T> vxls=vImage;
   forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
     std::array<T,3> vvs={{ *vp, vImage.v_j(-1,vp), vImage.v_j( 1,vp) }};
 
@@ -1138,9 +1141,9 @@ voxelImageT<T> mediany(const voxelImageT<T>& vImage)  {
 }
 
 template<typename T>
-voxelImageT<T> medianz(const voxelImageT<T>& vImage)  {
+VoxelImageT<T> medianz(const VoxelImageT<T>& vImage)  {
   (std::cout<<"  median filter along z direction ").flush();
-  voxelImageT<T> vxls=vImage;
+  VoxelImageT<T> vxls=vImage;
   forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
     std::array<T,3> vvs={{ *vp, vImage.v_k(-1,vp), vImage.v_k( 1,vp) }};
 
@@ -1152,8 +1155,8 @@ voxelImageT<T> medianz(const voxelImageT<T>& vImage)  {
 
 
 template<typename T>
-void voxelImageT<T>::shrinkPore()  {
-  voxelImageT<T> vxls=*this;
+void VoxelImageT<T>::shrinkPore()  {
+  VoxelImageT<T> vxls=*this;
 
   forAllkji_1_(vxls)  {
     T* vp = &vxls(i,j,k);
@@ -1209,10 +1212,10 @@ void voxelImageT<T>::shrinkPore()  {
 
 
 template<typename T>
-long long mode(voxelImageT<T>& vImg, short minDif, bool verbose)  {
+long long mode(VoxelImageT<T>& vImg, short minDif, bool verbose)  {
   short nSameSkip=3-(minDif/2);
   long long nChanges = 0;
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   forAllkji_1_sum_(vxls, reduction(+:nChanges))  {
     T* vp = &vxls(i,j,k);
     const T pID = *vp;
@@ -1241,9 +1244,9 @@ long long mode(voxelImageT<T>& vImg, short minDif, bool verbose)  {
 }
 
 template<typename T>
-long long modeNSames(voxelImageT<T>& vImage, const short nSameNei, bool verbose=false)  {
+long long modeNSames(VoxelImageT<T>& vImage, const short nSameNei, bool verbose=false)  {
   long long nChanges = 0;
-  voxelImageT<T> vxls=vImage;
+  VoxelImageT<T> vxls=vImage;
   forAllkji_1_sum_(vxls, reduction(+:nChanges))  {
     T* vp = &(vxls(i,j,k));
     const T pID = *vp;
@@ -1277,9 +1280,9 @@ long long modeNSames(voxelImageT<T>& vImage, const short nSameNei, bool verbose=
 
 
 template<typename T>
-void voxelImageT<T>::growPore()  {// optimized function, should be further optimized as it is frequently used, buggy for nz=1
+void VoxelImageT<T>::growPore()  {// optimized function, should be further optimized as it is frequently used, buggy for nz=1
 
-  voxelImageT<T> vxls=*this;
+  VoxelImageT<T> vxls=*this;
 
 
   forAllkji_1_(vxls)  {
@@ -1340,41 +1343,41 @@ void voxelImageT<T>::growPore()  {// optimized function, should be further optim
 
 
 
-template<typename T>  void voxelImageT<T>::NOT(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::NOT(const VoxelImageT& data2)  {
   forAlliii_((*this))  (*this)(iii)= (*this)(iii) && !data2(iii);
 }
-template<typename T>  void voxelImageT<T>::AND(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::AND(const VoxelImageT& data2)  {
   forAlliii_((*this))
         (*this)(iii)= (*this)(iii) && data2(iii);
 }
-template<typename T>  void voxelImageT<T>::OR(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::OR(const VoxelImageT& data2)  {
   forAlliii_((*this))
         (*this)(iii)= (*this)(iii) || data2(iii);
 }
 
-template<typename T>  void voxelImageT<T>::XOR(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::XOR(const VoxelImageT& data2)  {
   forAlliii_((*this))
     (*this)(iii)= (*this)(iii) != data2(iii);
 }
 
-template<typename T>  void voxelImageT<T>::maxEq(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::maxEq(const VoxelImageT& data2)  {
   forAlliii_((*this))
         (*this)(iii)= max((*this)(iii), data2(iii));
 }
 
-template<typename T>  void voxelImageT<T>::minEq(const voxelImageT& data2)  {
+template<typename T>  void VoxelImageT<T>::minEq(const VoxelImageT& data2)  {
   forAlliii_((*this))
         (*this)(iii)= min((*this)(iii), data2(iii));
 }
 
 
 template<typename T>
-void voxelImageT<T>::threshold101(T Bgn,T  End)  {
+void VoxelImageT<T>::threshold101(T Bgn,T  End)  {
   forAllvp_((*this))  {  T vv = *vp;   *vp= vv<Bgn || End<vv;  }
 }
 
 template<typename T,  std::enable_if_t<std::is_arithmetic<T>::value, int> = 0>
-void rescaleValues(voxelImageT<T>& img, T newMin,T  newMax)  {
+void rescaleValues(VoxelImageT<T>& img, T newMin,T  newMax)  {
   T vmin = std::numeric_limits<T>::max();
   T vmax = std::numeric_limits<T>::min();
   int deltaT = newMax - newMin;
@@ -1390,9 +1393,9 @@ void rescaleValues(voxelImageT<T>& img, T newMin,T  newMax)  {
 
 
 template<typename T>
-void voxelImageT<T>::fillHoles(int maxHoleRadius)  { // TODO optimize
+void VoxelImageT<T>::fillHoles(int maxHoleRadius)  { // TODO optimize
   std::cout<<"  filling small isolated parts: "<<std::flush;
-  voxelImageT<T> dataTmp=*this;
+  VoxelImageT<T> dataTmp=*this;
   std::cout<<"-"<<std::flush;
 
   dataTmp.shrinkPore(); std::cout<<".";std::cout.flush();
@@ -1427,10 +1430,10 @@ void voxelImageT<T>::fillHoles(int maxHoleRadius)  { // TODO optimize
 }
 
 template<typename T>
-void voxelImageT<T>::writeAConnectedPoreVoxel(std::string fnam) const  {
+void VoxelImageT<T>::writeAConnectedPoreVoxel(std::string fnam) const  {
   std::cout<<" finding a connected pore voxel:";
   for (int nShrink=4; nShrink>=0  ; nShrink--)  {
-    voxelImageT<T> dataTmp=*this;
+    VoxelImageT<T> dataTmp=*this;
     for (int iShrink=1; iShrink<=nShrink ; iShrink++)  {
       dataTmp.shrinkPore();
     }
@@ -1466,7 +1469,7 @@ void voxelImageT<T>::writeAConnectedPoreVoxel(std::string fnam) const  {
 }
 
 template<typename T>
-void replaceRange(voxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)  {
+void replaceRange(VoxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)  {
   (std::cout<<"  "<<Tint(minvi)<<":"<<Tint(maxvi)<<"->"<<Tint(midvi)<<"  ").flush();
   const T minv=minvi,   maxv=maxvi,  midv=midvi;
   forAllvp_(vImage)  if (minv<=*vp && *vp<=maxv)  *vp=midv;
@@ -1476,10 +1479,10 @@ void replaceRange(voxelImageT<T>& vImage, T minvi, T  maxvi, T midvi)  {
 
 
 template<typename T, std::enable_if_t<!std::is_arithmetic<T>::value, int> = 0 >
-void printInfo(const voxelImageT<T>&){}
+void printInfo(const VoxelImageT<T>&){}
 
 template<typename T, std::enable_if_t<std::is_arithmetic<T>::value, int> = 0 >
-void printInfo(const voxelImageT<T>& vImage)  {
+void printInfo(const VoxelImageT<T>& vImage)  {
   int3 nnn=vImage.size3();
   if constexpr (std::is_integral<T>::value)  {
     unsigned long long nPores=0;
@@ -1508,11 +1511,11 @@ void printInfo(const voxelImageT<T>& vImage)  {
 
 }
 
-template<typename T>  void voxelImageT<T>::printInfo() const   {  ::printInfo(*this);  }
+template<typename T>  void VoxelImageT<T>::printInfo() const   {  ::printInfo(*this);  }
 
 
 template<typename T>
-double voxelImageT<T>::volFraction(T vv1, T vv2) const {
+double VoxelImageT<T>::volFraction(T vv1, T vv2) const {
   unsigned long long nPores=0;
   int3 nnn=(*this).size3();
   OMPFor(reduction(+:nPores))
@@ -1523,10 +1526,10 @@ double voxelImageT<T>::volFraction(T vv1, T vv2) const {
 
 
 template<typename T>
-voxelImageT<T> median(const voxelImageT<T>& vImage)  {
+VoxelImageT<T> median(const VoxelImageT<T>& vImage)  {
   //unsigned long nChanges(0);
   (std::cout<<"  median ").flush();
-  voxelImageT<T> vxls=vImage;
+  VoxelImageT<T> vxls=vImage;
   forAllkji_1_(vImage)  {  const T* vp=&vImage(i,j,k);
     std::array<T,7> vvs={{ *vp,
                 vImage.v_i(-1,vp), vImage.v_i( 1,vp),
@@ -1545,7 +1548,7 @@ voxelImageT<T> median(const voxelImageT<T>& vImage)  {
 
 
 template<typename T>
-void circleOut(voxelImageT<T>& vImage, int X0,int Y0,int R, char dir='z', T outVal=maxT(T))  {
+void circleOut(VoxelImageT<T>& vImage, int X0,int Y0,int R, char dir='z', T outVal=maxT(T))  {
   int rlim = R*R;
   if (dir=='z')  {
    forAllkji_(vImage)
@@ -1564,9 +1567,9 @@ void circleOut(voxelImageT<T>& vImage, int X0,int Y0,int R, char dir='z', T outV
 
 
 template<typename T>
-void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string fnam, unsigned char maskvv, T minIelm, T maxIelm) {
+void maskWriteFraction(VoxelImageT<T>& vImage, std::string maskname, std::string fnam, unsigned char maskvv, T minIelm, T maxIelm) {
   //  TODO to be tested
-  voxelImageT<unsigned char> mask(maskname, readOpt::procAndConvert);
+  VoxelImageT<unsigned char> mask(maskname, readOpt::procAndConvert);
   T maxvv = std::min(maxIelm, accumulate(vImage, [](T a, T b){ return std::max(a,b); }, T(0)));
   std::cout<<"  maxvv:"<<maxvv<<std::endl;
   std::vector<int> nMasked(maxvv+3,0);
@@ -1590,7 +1593,7 @@ void maskWriteFraction(voxelImageT<T>& vImage, std::string maskname, std::string
 
 
 template<typename T>
-void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimg2, T vmin, T vmax, double scale=0, double shift=0.5)  { // no interpolation
+void mapToFrom(VoxelImageT<T>& vImage, const VoxelImageT<T>& vimg2, T vmin, T vmax, double scale=0, double shift=0.5)  { // no interpolation
   int3 N2=vImage.size3();
   size_t count=0;
   int3 N1;
@@ -1618,7 +1621,7 @@ void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimg2, T vmin, T vm
 }
 
 template<typename T>
-void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimg2)  { // no interpolation
+void mapToFrom(VoxelImageT<T>& vImage, const VoxelImageT<T>& vimg2)  { // no interpolation
   int3 N2=vImage.size3();
   //size_t count=0;
   int3 N1;
@@ -1646,7 +1649,7 @@ void mapToFrom(voxelImageT<T>& vImage, const voxelImageT<T>& vimg2)  { // no int
 
 template<typename T>
 typename std::enable_if<std::is_integral<T>::value,bool>::type
-operat( voxelImageT<T>& img1, char opr, const voxelImageT<T>& img2, std::stringstream& ins)  {
+operat( VoxelImageT<T>& img1, char opr, const VoxelImageT<T>& img2, std::stringstream& ins)  {
 
   double shift(0.);  if(!std::isalpha(opr)) ins>>shift;
   int shiftI=shift+0.5;
@@ -1679,7 +1682,7 @@ operat( voxelImageT<T>& img1, char opr, const voxelImageT<T>& img2, std::strings
           if(msk1Bgn<=v1 && v1<=msk1End)  v1=v2;  }  }
       break;
     }
-    default:   std::cout<<" !!!operation "<<opr<<" voxelImage not supported!!! ";
+    default:   std::cout<<" !!!operation "<<opr<<" VoxelImage not supported!!! ";
       return 1;
   }
   return 0;
@@ -1687,7 +1690,7 @@ operat( voxelImageT<T>& img1, char opr, const voxelImageT<T>& img2, std::strings
 
 template<typename T>
 typename std::enable_if<std::is_integral<T>::value,bool>::type
-operat( voxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream& ins)  {
+operat( VoxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream& ins)  {
 
   if(img2Nam.empty())  {
    std::cout<<"  image ="<<opr<<"image ";
@@ -1744,7 +1747,7 @@ operat( voxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream& 
 
 
 template<typename T> typename std::enable_if<!std::is_integral<T>::value,int>::type
-operat( voxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream & ins)  {
+operat( VoxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream & ins)  {
 
   double shift(0.);  ins>>shift;
   if(img2Nam.empty())  {
@@ -1802,7 +1805,7 @@ operat( voxelImageT<T>& vImg, char opr, std::string img2Nam, std::stringstream &
 
 
 
-template<typename T> bool _write8bit(voxelImageT<T>& vImg, std::string outName, double minv, double maxv)  {
+template<typename T> bool _write8bit(VoxelImageT<T>& vImg, std::string outName, double minv, double maxv)  {
   if (maxv<=minv)  {
     T mxl = 0;
     OMPragma("omp parallel for reduction(max:mxl)")
@@ -1811,7 +1814,7 @@ template<typename T> bool _write8bit(voxelImageT<T>& vImg, std::string outName, 
   }
   double delv=255.499999999/(maxv-minv);
   (std::cout<<minv<<" "<<maxv).flush();
-  voxelImageT<unsigned char> voxels(vImg.size3(), 255, vImg.dx(), vImg.X0());
+  VoxelImageT<unsigned char> voxels(vImg.size3(), 255, vImg.dx(), vImg.X0());
   forAlliii_(voxels) voxels(iii)=std::max(0,std::min(255,int(delv*(vImg(iii)-minv))));
   voxels.write(outName);
   (std::cout<<".").flush();
@@ -1820,11 +1823,11 @@ template<typename T> bool _write8bit(voxelImageT<T>& vImg, std::string outName, 
 
 
 // outdated ?
-template<typename T> bool _delense032(voxelImageT<T>& vImg, int nItrs, int nAdj0,  int nAdj1,    Tint lbl0, Tint lbl1)  {
+template<typename T> bool _delense032(VoxelImageT<T>& vImg, int nItrs, int nAdj0,  int nAdj1,    Tint lbl0, Tint lbl1)  {
   (std::cout<<"{ "<<" delense032 nItrs:"<<nItrs<<"; lbls: "<<lbl0<<" "<<lbl1<< "; nAdjThresholds: "<<nAdj0<<" "<<nAdj1<<";  ").flush();
 
   vImg.growBox(2); std::cout<<std::endl;
-  voxelImageT<T> vimgo=vImg;
+  VoxelImageT<T> vimgo=vImg;
   for (int i=0; i<nItrs; ++i)   vImg.PointMedian032(25,nAdj1,lbl0,lbl1);
   FaceMedGrowToFrom(vImg,T(lbl1),T(lbl0),1);
   FaceMedGrowToFrom(vImg,T(lbl0),T(lbl1),-1);

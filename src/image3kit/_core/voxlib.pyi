@@ -1,5 +1,5 @@
 """
-Auto-generated wrapper for voxelImageT template C++ classes.
+Auto-generated wrapper for VoxelImageT template C++ classes.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import numpy.typing
 import image3kit._core.sirun
 
 __all__: list[str] = [
+    "VoxelImagesBase",
     "VxlImgF32",
     "VxlImgI32",
     "VxlImgU8",
@@ -24,10 +25,13 @@ __all__: list[str] = [
     "shape",
     "sphere",
     "threshold01_otsu",
-    "voxelImageTBase",
 ]
 
-class VxlImgF32(voxelImageTBase):
+class VoxelImagesBase:
+    def print_info(self) -> None: ...
+    def write(self, filename: str) -> None: ...
+
+class VxlImgF32(VoxelImagesBase):
     def __add__(self, arg0: VxlImgF32) -> VxlImgF32: ...
     def __array__(self) -> numpy.typing.NDArray[numpy.float32]:
         """
@@ -37,11 +41,13 @@ class VxlImgF32(voxelImageTBase):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
-    def __getitem__(self, arg0: image3kit._core.sirun.int3) -> float: ...
+    def __getitem__(self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int]) -> float: ...
     def __iadd__(self, arg0: VxlImgF32) -> VxlImgF32: ...
     @typing.overload
     def __init__(
-        self, shape: image3kit._core.sirun.int3 = ..., value: typing.SupportsFloat | typing.SupportsIndex = 0
+        self,
+        shape: image3kit._core.sirun.int3 | tuple[int, int, int] = ...,
+        value: typing.SupportsFloat | typing.SupportsIndex = 0,
     ) -> None:
         """
         Initialize a new image of size (nx, ny, nz) with the fill value.
@@ -52,9 +58,9 @@ class VxlImgF32(voxelImageTBase):
         Initialize a new image of size (nx, ny, nz) with the fill value.
         """
     @typing.overload
-    def __init__(self, image: voxelImageTBase) -> None:
+    def __init__(self, image: VoxelImagesBase) -> None:
         """
-        Initialize (duplicate and convert) from another voxelImageT object
+        Initialize (duplicate and convert) from another VoxelImageT object
         """
     @typing.overload
     def __init__(
@@ -70,7 +76,7 @@ class VxlImgF32(voxelImageTBase):
         """
     def __repr__(self) -> str: ...
     def __setitem__(
-        self, arg0: image3kit._core.sirun.int3, arg1: typing.SupportsFloat | typing.SupportsIndex
+        self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int], arg1: typing.SupportsFloat | typing.SupportsIndex
     ) -> None: ...
     def __sub__(self, arg0: VxlImgF32) -> VxlImgF32: ...
     def add_surf_noise(
@@ -141,8 +147,8 @@ class VxlImgF32(voxelImageTBase):
         """
     def crop(
         self,
-        begin: image3kit._core.sirun.int3,
-        end: image3kit._core.sirun.int3,
+        begin: image3kit._core.sirun.int3 | tuple[int, int, int],
+        end: image3kit._core.sirun.int3 | tuple[int, int, int],
         emptyLayers: typing.SupportsInt | typing.SupportsIndex = 0,
         emptyLayersValue: typing.SupportsFloat | typing.SupportsIndex = 1,
         verbose: bool = False,
@@ -347,7 +353,7 @@ class VxlImgF32(voxelImageTBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgF32 = None,
+        alpha_image: VxlImgF32 | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -538,23 +544,23 @@ class VxlImgF32(voxelImageTBase):
     @property
     def nz(self) -> int: ...
     @property
-    def origin(self) -> tuple:
+    def origin(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the origin value (x0, y0, z0).
         """
     @origin.setter
-    def origin(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def origin(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
     @property
-    def shape(self) -> tuple: ...
+    def shape(self) -> image3kit._core.sirun.int3 | tuple[int, int, int]: ...
     @property
-    def spacing(self) -> tuple:
+    def spacing(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the voxel size (dx, dy, dz).
         """
     @spacing.setter
-    def spacing(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def spacing(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
 
-class VxlImgI32(voxelImageTBase):
+class VxlImgI32(VoxelImagesBase):
     def __add__(self, arg0: VxlImgI32) -> VxlImgI32: ...
     def __array__(self) -> numpy.typing.NDArray[numpy.int32]:
         """
@@ -564,11 +570,13 @@ class VxlImgI32(voxelImageTBase):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
-    def __getitem__(self, arg0: image3kit._core.sirun.int3) -> int: ...
+    def __getitem__(self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int]) -> int: ...
     def __iadd__(self, arg0: VxlImgI32) -> VxlImgI32: ...
     @typing.overload
     def __init__(
-        self, shape: image3kit._core.sirun.int3 = ..., value: typing.SupportsInt | typing.SupportsIndex = 0
+        self,
+        shape: image3kit._core.sirun.int3 | tuple[int, int, int] = ...,
+        value: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> None:
         """
         Initialize a new image of size (nx, ny, nz) with the fill value.
@@ -579,9 +587,9 @@ class VxlImgI32(voxelImageTBase):
         Initialize a new image of size (nx, ny, nz) with the fill value.
         """
     @typing.overload
-    def __init__(self, image: voxelImageTBase) -> None:
+    def __init__(self, image: VoxelImagesBase) -> None:
         """
-        Initialize (duplicate and convert) from another voxelImageT object
+        Initialize (duplicate and convert) from another VoxelImageT object
         """
     @typing.overload
     def __init__(
@@ -597,7 +605,7 @@ class VxlImgI32(voxelImageTBase):
         """
     def __repr__(self) -> str: ...
     def __setitem__(
-        self, arg0: image3kit._core.sirun.int3, arg1: typing.SupportsInt | typing.SupportsIndex
+        self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int], arg1: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
     def __sub__(self, arg0: VxlImgI32) -> VxlImgI32: ...
     def add_surf_noise(
@@ -668,8 +676,8 @@ class VxlImgI32(voxelImageTBase):
         """
     def crop(
         self,
-        begin: image3kit._core.sirun.int3,
-        end: image3kit._core.sirun.int3,
+        begin: image3kit._core.sirun.int3 | tuple[int, int, int],
+        end: image3kit._core.sirun.int3 | tuple[int, int, int],
         emptyLayers: typing.SupportsInt | typing.SupportsIndex = 0,
         emptyLayersValue: typing.SupportsInt | typing.SupportsIndex = 1,
         verbose: bool = False,
@@ -874,7 +882,7 @@ class VxlImgI32(voxelImageTBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgI32 = None,
+        alpha_image: VxlImgI32 | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -1065,23 +1073,23 @@ class VxlImgI32(voxelImageTBase):
     @property
     def nz(self) -> int: ...
     @property
-    def origin(self) -> tuple:
+    def origin(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the origin value (x0, y0, z0).
         """
     @origin.setter
-    def origin(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def origin(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
     @property
-    def shape(self) -> tuple: ...
+    def shape(self) -> image3kit._core.sirun.int3 | tuple[int, int, int]: ...
     @property
-    def spacing(self) -> tuple:
+    def spacing(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the voxel size (dx, dy, dz).
         """
     @spacing.setter
-    def spacing(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def spacing(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
 
-class VxlImgU16(voxelImageTBase):
+class VxlImgU16(VoxelImagesBase):
     def __add__(self, arg0: VxlImgU16) -> VxlImgU16: ...
     def __array__(self) -> numpy.typing.NDArray[numpy.uint16]:
         """
@@ -1091,11 +1099,13 @@ class VxlImgU16(voxelImageTBase):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
-    def __getitem__(self, arg0: image3kit._core.sirun.int3) -> int: ...
+    def __getitem__(self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int]) -> int: ...
     def __iadd__(self, arg0: VxlImgU16) -> VxlImgU16: ...
     @typing.overload
     def __init__(
-        self, shape: image3kit._core.sirun.int3 = ..., value: typing.SupportsInt | typing.SupportsIndex = 0
+        self,
+        shape: image3kit._core.sirun.int3 | tuple[int, int, int] = ...,
+        value: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> None:
         """
         Initialize a new image of size (nx, ny, nz) with the fill value.
@@ -1106,9 +1116,9 @@ class VxlImgU16(voxelImageTBase):
         Initialize a new image of size (nx, ny, nz) with the fill value.
         """
     @typing.overload
-    def __init__(self, image: voxelImageTBase) -> None:
+    def __init__(self, image: VoxelImagesBase) -> None:
         """
-        Initialize (duplicate and convert) from another voxelImageT object
+        Initialize (duplicate and convert) from another VoxelImageT object
         """
     @typing.overload
     def __init__(
@@ -1124,7 +1134,7 @@ class VxlImgU16(voxelImageTBase):
         """
     def __repr__(self) -> str: ...
     def __setitem__(
-        self, arg0: image3kit._core.sirun.int3, arg1: typing.SupportsInt | typing.SupportsIndex
+        self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int], arg1: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
     def __sub__(self, arg0: VxlImgU16) -> VxlImgU16: ...
     def add_surf_noise(
@@ -1207,8 +1217,8 @@ class VxlImgU16(voxelImageTBase):
         """
     def crop(
         self,
-        begin: image3kit._core.sirun.int3,
-        end: image3kit._core.sirun.int3,
+        begin: image3kit._core.sirun.int3 | tuple[int, int, int],
+        end: image3kit._core.sirun.int3 | tuple[int, int, int],
         emptyLayers: typing.SupportsInt | typing.SupportsIndex = 0,
         emptyLayersValue: typing.SupportsInt | typing.SupportsIndex = 1,
         verbose: bool = False,
@@ -1413,7 +1423,7 @@ class VxlImgU16(voxelImageTBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgU16 = None,
+        alpha_image: VxlImgU16 | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -1641,23 +1651,23 @@ class VxlImgU16(voxelImageTBase):
     @property
     def nz(self) -> int: ...
     @property
-    def origin(self) -> tuple:
+    def origin(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the origin value (x0, y0, z0).
         """
     @origin.setter
-    def origin(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def origin(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
     @property
-    def shape(self) -> tuple: ...
+    def shape(self) -> image3kit._core.sirun.int3 | tuple[int, int, int]: ...
     @property
-    def spacing(self) -> tuple:
+    def spacing(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the voxel size (dx, dy, dz).
         """
     @spacing.setter
-    def spacing(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def spacing(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
 
-class VxlImgU8(voxelImageTBase):
+class VxlImgU8(VoxelImagesBase):
     def __add__(self, arg0: VxlImgU8) -> VxlImgU8: ...
     def __array__(self) -> numpy.typing.NDArray[numpy.uint8]:
         """
@@ -1667,11 +1677,13 @@ class VxlImgU8(voxelImageTBase):
         """
         Return a buffer object that exposes the underlying memory of the object.
         """
-    def __getitem__(self, arg0: image3kit._core.sirun.int3) -> int: ...
+    def __getitem__(self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int]) -> int: ...
     def __iadd__(self, arg0: VxlImgU8) -> VxlImgU8: ...
     @typing.overload
     def __init__(
-        self, shape: image3kit._core.sirun.int3 = ..., value: typing.SupportsInt | typing.SupportsIndex = 0
+        self,
+        shape: image3kit._core.sirun.int3 | tuple[int, int, int] = ...,
+        value: typing.SupportsInt | typing.SupportsIndex = 0,
     ) -> None:
         """
         Initialize a new image of size (nx, ny, nz) with the fill value.
@@ -1682,9 +1694,9 @@ class VxlImgU8(voxelImageTBase):
         Initialize a new image of size (nx, ny, nz) with the fill value.
         """
     @typing.overload
-    def __init__(self, image: voxelImageTBase) -> None:
+    def __init__(self, image: VoxelImagesBase) -> None:
         """
-        Initialize (duplicate and convert) from another voxelImageT object
+        Initialize (duplicate and convert) from another VoxelImageT object
         """
     @typing.overload
     def __init__(
@@ -1700,7 +1712,7 @@ class VxlImgU8(voxelImageTBase):
         """
     def __repr__(self) -> str: ...
     def __setitem__(
-        self, arg0: image3kit._core.sirun.int3, arg1: typing.SupportsInt | typing.SupportsIndex
+        self, arg0: image3kit._core.sirun.int3 | tuple[int, int, int], arg1: typing.SupportsInt | typing.SupportsIndex
     ) -> None: ...
     def __sub__(self, arg0: VxlImgU8) -> VxlImgU8: ...
     def add_surf_noise(
@@ -1783,8 +1795,8 @@ class VxlImgU8(voxelImageTBase):
         """
     def crop(
         self,
-        begin: image3kit._core.sirun.int3,
-        end: image3kit._core.sirun.int3,
+        begin: image3kit._core.sirun.int3 | tuple[int, int, int],
+        end: image3kit._core.sirun.int3 | tuple[int, int, int],
         emptyLayers: typing.SupportsInt | typing.SupportsIndex = 0,
         emptyLayersValue: typing.SupportsInt | typing.SupportsIndex = 1,
         verbose: bool = False,
@@ -1999,7 +2011,7 @@ class VxlImgU8(voxelImageTBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgU8 = None,
+        alpha_image: VxlImgU8 | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -2183,12 +2195,17 @@ class VxlImgU8(voxelImageTBase):
         Convert image to OpenFOAM mesh
         """
     def to_foam_par(
-        self, n_par: image3kit._core.sirun.int3 = ..., reset_x0: bool = False, keep_bcs: bool = False
+        self,
+        n_par: image3kit._core.sirun.int3 | tuple[int, int, int] = ...,
+        reset_x0: bool = False,
+        keep_bcs: bool = False,
     ) -> None:
         """
         Convert image to a parallel OpenFOAM mesh
         """
-    def to_foam_par_incremental(self, n_par: image3kit._core.sirun.int3 = ..., reset_x0: bool = False) -> None:
+    def to_foam_par_incremental(
+        self, n_par: image3kit._core.sirun.int3 | tuple[int, int, int] = ..., reset_x0: bool = False
+    ) -> None:
         """
         Convert image to a parallel OpenFOAM mesh sequentially (one processor mesh at a time)
         """
@@ -2245,21 +2262,21 @@ class VxlImgU8(voxelImageTBase):
     @property
     def nz(self) -> int: ...
     @property
-    def origin(self) -> tuple:
+    def origin(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the origin value (x0, y0, z0).
         """
     @origin.setter
-    def origin(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def origin(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
     @property
-    def shape(self) -> tuple: ...
+    def shape(self) -> image3kit._core.sirun.int3 | tuple[int, int, int]: ...
     @property
-    def spacing(self) -> tuple:
+    def spacing(self) -> image3kit._core.sirun.dbl3 | tuple[float, float, float]:
         """
         Get/set the voxel size (dx, dy, dz).
         """
     @spacing.setter
-    def spacing(self, arg1: image3kit._core.sirun.dbl3) -> None: ...
+    def spacing(self, arg1: image3kit._core.sirun.dbl3 | tuple[float, float, float]) -> None: ...
 
 class cube(shape):
     def __init__(self, p1: tuple, size: tuple, val: typing.SupportsInt | typing.SupportsIndex) -> None:
@@ -2290,10 +2307,6 @@ class sphere(shape):
         arg2: typing.SupportsInt | typing.SupportsIndex,
     ) -> None: ...
 
-class voxelImageTBase:
-    def print_info(self) -> None: ...
-    def write(self, fileName: str) -> None: ...
-
 @typing.overload
 def connected_components(
     image: VxlImgU8,
@@ -2306,7 +2319,7 @@ def connected_components(
     min_val: typing.SupportsFloat | typing.SupportsIndex = 0,
     max_val: typing.SupportsFloat | typing.SupportsIndex = 65535,
 ) -> VxlImgI32: ...
-def read_image(filename: typing.Any, max_nz: typing.SupportsInt | typing.SupportsIndex = -1) -> voxelImageTBase:
+def read_image(filename: typing.Any, max_nz: typing.SupportsInt | typing.SupportsIndex = -1) -> VoxelImagesBase:
     """
     Global helper to read an image from a file, use VxlImg..() constructors if you know image type.
     """

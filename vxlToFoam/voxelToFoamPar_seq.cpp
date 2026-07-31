@@ -16,11 +16,11 @@
 
 using namespace std;
 
-void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0);
+void vxlToFoamPar_seq(VoxelImage& vimage, int3 nPar, bool resetX0);
 
 namespace {
-void fixImage(voxelImage& vimage);
-void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
+void fixImage(VoxelImage& vimage);
+void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
 } // namespace
 
 #ifndef IMAGE3KIT_PYTHON_BINDINGS
@@ -48,10 +48,8 @@ int main(int argc, char** argv)  {
   if (nPar[2]*nPar[1]*nPar[0]<1) {cout<<"\nError: nPar[2]*nPar[1]*nPar[0]<1\n"; return usage();}
   cout<<"voxelToFoamPar "<<headerName<<"  "<<nPar[0]<<" "<<nPar[0]<<" "<<nPar[0]<<endl;
 
-  voxelImage vimage(headerName, readOpt::procAndConvert);
+  VoxelImage vimage(headerName, readOpt::procAndConvert);
 
-  // end of main()
-  // TODO: refactor and convert to a Python function, in addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
   bool resetX0 = (resetX0_char=='T' || resetX0_char=='t');
   vxlToFoamPar_seq(vimage, nPar, resetX0);
 
@@ -59,7 +57,7 @@ int main(int argc, char** argv)  {
 }
 #endif
 
-void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0)  {
+void vxlToFoamPar_seq(VoxelImage& vimage, int3 nPar, bool resetX0)  {
   int3 n = vimage.size3();
 
   vimage.printInfo();
@@ -101,12 +99,12 @@ void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0)  {
     vimage.setSlice('k',n[2]+1,0+1*Front );
 
 
-  voxelField<int> procIsijk(nPar[0]+2,nPar[1]+2,nPar[2]+2,-1);
+  VoxelField<int> procIsijk(nPar[0]+2,nPar[1]+2,nPar[2]+2,-1);
   int iPrc=-1;
   if (nPar[2]*nPar[1]*nPar[0]==1)
     toFoam(vimage,nVVs, procIsijk, 1, 1, 1);
   else if (nPar[2]*nPar[1]*nPar[0]>1)  {
-    voxelField<voxelImage>  vimages({nPar[0],nPar[1],nPar[2]}, voxelImage());
+    VoxelField<VoxelImage>  vimages({nPar[0],nPar[1],nPar[2]}, VoxelImage());
 
     vector<int> iBs(nPar[0]+1,n[0]);
     vector<int> jBs(nPar[1]+1,n[1]);
@@ -144,7 +142,7 @@ void vxlToFoamPar_seq(voxelImage& vimage, int3 nPar, bool resetX0)  {
 
 
 namespace {
-void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc)  { //!- generate an openfaom (processor) mesh similar to voxelToFoamPar.cpp
+void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc)  { //!- generate an openfaom (processor) mesh similar to voxelToFoamPar.cpp
   int myprocI=procIsijk(iPrc,jPrc,kPrc);
   int3 n=vxlImg.size3();n[0]-=2;n[1]-=2;n[2]-=2;
   dbl3 X0=vxlImg.X0();
@@ -163,7 +161,7 @@ void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int 
 
 //=======================================================================
 
-  voxelField<int> point_mapper(n[0]+1,n[1]+1,n[2]+1,-1);
+  VoxelField<int> point_mapper(n[0]+1,n[1]+1,n[2]+1,-1);
 
 
 
@@ -420,7 +418,7 @@ void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int 
     fill(faces_bs[ib].begin(),faces_bs[ib].end(), array<int,6>{{-1,-1,-1,-1,-1,-1}});
   }
 
-  voxelField<int3> ownerMapper(n[0]+1,n[1]+1,n[2]+1,int3(-1,-1,-1));
+  VoxelField<int3> ownerMapper(n[0]+1,n[1]+1,n[2]+1,int3(-1,-1,-1));
 
 
   cout<<"collecting faces"<<endl;
@@ -610,7 +608,7 @@ void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int 
 
 
 
-void fixImage(voxelImage& voxels)  {
+void fixImage(VoxelImage& voxels)  {
   //voxels.write("dump1.mhd");
   int3 n = voxels.size3();
   const unsigned int bigN=255*255*255*127;
@@ -620,8 +618,8 @@ void fixImage(voxelImage& voxels)  {
   cout<<"removing disconnected parts of the image "<<endl;
   int nxmid=n[0]/2;
   unsigned int vmax=n[1]*n[2]+1;
-  voxelImageT<unsigned int> vxlsMids(int3(1,n[1], n[2]),bigN);
-  voxelImageT<unsigned int> vxlsMidMap(int3(1,n[1], n[2]),vmax);
+  VoxelImageT<unsigned int> vxlsMids(int3(1,n[1], n[2]),bigN);
+  VoxelImageT<unsigned int> vxlsMidMap(int3(1,n[1], n[2]),vmax);
   vector<unsigned int> vxlsMidCompresdReg(n[1]*n[2],bigN);
 
   for (int k=0; k<vxlsMidMap.nz(); ++k)
@@ -660,7 +658,7 @@ void fixImage(voxelImage& voxels)  {
     //else vxlsMidMap(0,j,k)=bigN+1;
   if (nRegs>bigN) {cout<<"Error: nRegs >bigN"<<endl; exit(-1);}
 
-  voxelImageT<unsigned int> vxlImg(n,bigN);
+  VoxelImageT<unsigned int> vxlImg(n,bigN);
 
 
   for (int k=0; k<vxlImg.nz(); ++k)

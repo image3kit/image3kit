@@ -30,6 +30,10 @@ all: setup_venv
 stubgen:
 	@[ -f $(VENV_BIN)/pybind11-stubgen ] || (set -x && $(PIP) install pybind11-stubgen)
 	$(VENV_BIN)/pybind11-stubgen image3kit --output-dir src
+	sed -i 's/sirun.dbl3/sirun.dbl3\|tuple\[float, float, float\]/g' src/image3kit/_core/voxlib.pyi
+	sed -i 's/sirun.int3/sirun.int3\|tuple\[int, int, int\]/g'       src/image3kit/_core/voxlib.pyi
+	sed -i 's/ = None,/\|None = None,/g'       src/image3kit/_core/voxlib.pyi
+
 
 install_global:
 	pip install .

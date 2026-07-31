@@ -15,7 +15,7 @@ namespace py = pybind11;
 
 
 template<typename T> inline var3<T> tov3(py::sequence v) { return var3<T>(v[0].cast<T>(), v[1].cast<T>(), v[2].cast<T>()); }
-template<typename T> inline py::tuple to3(var3<T> v) { return py::make_tuple(v.x, v.y, v.z); }
+template<typename T> inline py::tuple tot3(var3<T> v) { return py::make_tuple(v.x, v.y, v.z); }
 
 
 inline InputFile pyCastInput(py::dict dic) {

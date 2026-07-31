@@ -17,11 +17,11 @@
 #include "surfUtils.h"
 
 
-surfMsh createSurface(InputFile& inp,  const voxelImage & vxlImg, const int nVVs, const std::string& outputSurface);
+surfMsh createSurface(InputFile& inp,  const VoxelImage & vxlImg, const int nVVs, const std::string& outputSurface);
 
 using namespace std;
-void vxlToSurfMesh(InputFile& inp, voxelImage& vimage, std::string outputSurface)  {
-  // TODO: refactor and convert to a Python function, in addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
+void vxlToSurfMesh(InputFile& inp, VoxelImage& vimage, std::string outputSurface)  {
+
   int3 n = vimage.size3();
 
   vimage.cropD(int3(0,0,0),vimage.size3(),1,1);   //    XXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])  {
     std::string outputSurface = (argc>2) ? string(argv[2]) :
                   inp.getOr("outputSurface", basePath(fnam)+".obj");
 
-    voxelImage vimage(fnam);
+    VoxelImage vimage(fnam);
 
     vxlToSurfMesh(inp, vimage, outputSurface);
 

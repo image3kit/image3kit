@@ -43,7 +43,7 @@
 
 
 template <typename T>
-int slice2RGBAPng(const voxelImageT<T>& imgRGB, char axis, std::string fnam, int iSlice, T bgnv, T endv, const voxelImageT<T>& imgAlf, T bgna, T enda)  {
+int slice2RGBAPng(const VoxelImageT<T>& imgRGB, char axis, std::string fnam, int iSlice, T bgnv, T endv, const VoxelImageT<T>& imgAlf, T bgna, T enda)  {
   std::cout<<"Writing "<<fnam<<" \n";  // #WViz
 
   int width=0, height=0, CHANNEL_NUM=4;
@@ -88,7 +88,7 @@ int slice2RGBAPng(const voxelImageT<T>& imgRGB, char axis, std::string fnam, int
 
 
 template <typename T>
-int slice2RGBXPng(const voxelImageT<T>& imgRGB, char axis, std::string fnam, int iSlice, T bgnv, T endv, const voxelImageT<T>& imgAlf, T bgna, T enda, float wt)  {
+int slice2RGBXPng(const VoxelImageT<T>& imgRGB, char axis, std::string fnam, int iSlice, T bgnv, T endv, const VoxelImageT<T>& imgAlf, T bgna, T enda, float wt)  {
   std::cout<<"Writing "<<fnam<<" \n";  // #WViz
 
   int width, height, CHANNEL_NUM=3;
@@ -137,7 +137,7 @@ int slice2RGBXPng(const voxelImageT<T>& imgRGB, char axis, std::string fnam, int
 
 
 template <typename T>
-int slice2RGBPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int iSlice, T bgnv, T endv)  {
+int slice2RGBPng(const VoxelImageT<T>& vImage, char axis, std::string fnam, int iSlice, T bgnv, T endv)  {
 
   std::cout<<"Writing "<<fnam<<" \n";  // #WViz
   int code = 0;
@@ -182,7 +182,7 @@ int slice2RGBPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int 
 
 
 template <typename T>
-int slice2GrayPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int iSlice, T bgnv, T endv){
+int slice2GrayPng(const VoxelImageT<T>& vImage, char axis, std::string fnam, int iSlice, T bgnv, T endv){
 
   std::cout<<"Writing "<<fnam<<" \n";  // #WViz
   int code = 0;
@@ -223,7 +223,7 @@ int slice2GrayPng(const voxelImageT<T>& vImage, char axis, std::string fnam, int
 
 
 template <typename T>
-int sliceFromPng(voxelImageT<T>& vImage, std::string normalAxis, std::string fnam, int iSlice, int bgnv, int endv){
+int sliceFromPng(VoxelImageT<T>& vImage, std::string normalAxis, std::string fnam, int iSlice, int bgnv, int endv){
   // currently only supports 8bit int (?)
 
   std::cout<<"Reading "<<fnam<<" \n";
@@ -291,7 +291,7 @@ int sliceFromPng(voxelImageT<T>& vImage, std::string normalAxis, std::string fna
 
 
 template <typename T>
-static void fixData(const voxelImageT<T> &vImg, std::string& normalAxis,
+static void fixData(const VoxelImageT<T> &vImg, std::string& normalAxis,
                     std::string& fnam, int& iSlice, int& minv, int& maxv) {
   char axs = tolower(normalAxis[0]);
   normalAxis[0] = axs;
@@ -309,7 +309,7 @@ static void fixData(const voxelImageT<T> &vImg, std::string& normalAxis,
 }
 
 
-template<typename T>  bool sliceToPng(const voxelImageT<T> &vImg,
+template<typename T>  bool sliceToPng(const VoxelImageT<T> &vImg,
   std::string normalAxis, std::string fnam, int iSlice, int bgnv, int endv, std::string color="") {
 
   fixData(vImg, normalAxis, fnam, iSlice, bgnv, endv);
@@ -323,9 +323,9 @@ template<typename T>  bool sliceToPng(const voxelImageT<T> &vImg,
   return 0;
 }
 
-template<typename T>  bool sliceMergeToPng(const voxelImageT<T> &vImg,
+template<typename T>  bool sliceMergeToPng(const VoxelImageT<T> &vImg,
     std::string normalAxis, std::string fnam, int iSlice, int bgnv, int endv,
-    const voxelImageT<T> &aImg, int mina, int maxa, float weight, std::string color="")
+    const VoxelImageT<T> &aImg, int mina, int maxa, float weight, std::string color="")
  {
   fixData(vImg, normalAxis, fnam, iSlice, bgnv, endv);
   if(maxa==-1000001)  { mina = accumulate(vImg,(std::min<T>));   maxa = accumulate(vImg,(std::max<T>));  }
@@ -344,7 +344,7 @@ template<typename T>  bool sliceMergeToPng(const voxelImageT<T> &vImg,
 namespace MCTProcessing {
 
 
-template<typename T>  bool sliceToPng( std::stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool sliceToPng( std::stringstream& ins, VoxelImageT<T>& vImg)  {
   KeyHint("normalAxis(x/y/z) fileName iSlice  minv maxv  [al b e w]\n// if fileName starts with _, extra info are added as prefix otherwise as suffix to the filename");
   int minv(0); int maxv(-1000001); int iSlice(-1000000);
   std::string normalAxis("x");
@@ -370,7 +370,7 @@ template<typename T>  bool sliceToPng( std::stringstream& ins, voxelImageT<T>& v
 }
 
 
-template<typename T>  bool sliceToPngBW( std::stringstream& ins, voxelImageT<T>& vImg) {
+template<typename T>  bool sliceToPngBW( std::stringstream& ins, VoxelImageT<T>& vImg) {
   if(ins.peek()=='?') { ins.str("normalAxis fileName iSlice  minv maxv"); return true;}
   int minv(0); int maxv(-1000001); int iSlice(-1000000);
   std::string normalAxis("x");

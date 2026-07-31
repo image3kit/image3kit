@@ -10,7 +10,7 @@
 namespace VoxLib {
 
 template<typename VxT>
-void VxlDifShort(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
+void VxlDifShort(VoxelImageT<VxT>& img1, const VoxelImageT<VxT>& img2,
                  std::string scaletype, double shift3, double scale3,
                  double shift1, double scale1, double shift2, double scale2) {
     if(scaletype=="log")  {
@@ -19,8 +19,7 @@ void VxlDifShort(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
             img1(iii) = std::min(std::max(0., shift3 + scale3 * (exp(std::max(1e-6, (double(img1(iii)) + shift1)) * scale1) - exp(std::max(1e-6, (double(img2(iii)) + shift2)) * scale2))), dmaxT(VxT));
         }
     }
-    else
-    {
+    else {
         std::cout<<"lin:  ";
         forAlliii_(img1)  {
             img1(iii) = std::min(dmaxT(VxT), std::max(0., shift3 + scale3 * ((double(img1(iii)) + shift1) * scale1 - (double(img2(iii)) + shift2) * scale2)));
@@ -30,8 +29,8 @@ void VxlDifShort(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
 }
 
 template<typename VxT>
-void blendMinVariance(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
-                 int bgn, int end, double shift, double span, const voxelImage* mask) {
+void blendMinVariance(VoxelImageT<VxT>& img1, const VoxelImageT<VxT>& img2,
+                 int bgn, int end, double shift, double span, const VoxelImage* mask) {
     span = std::max(span - shift, 0.1);
     ensure(span > 0);
     std::cout << "blendMinVariance:  " << "img1" << " - " << "img2" << "  [" << bgn << " " << end << "]" << "  shift " << shift << "  span" << span << " {" << std::endl;
@@ -47,7 +46,7 @@ void blendMinVariance(voxelImageT<VxT>& img1, const voxelImageT<VxT>& img2,
     for_i_(0, 101)  {
         double scale1 = shift + span * i / 100.0;
         double scale2 = 1.0 - scale1;
-        voxelImageT<int> img3(img1.size3());
+        VoxelImageT<int> img3(img1.size3());
         forAlliii_(img1) {
             int vv1 = img1(iii);
             img3(iii) = (bgn <= vv1 && vv1 < end && (!mask || (*mask)(iii)))
@@ -84,10 +83,10 @@ void mergePlots(const std::string& outnam, const std::string& key, const std::ve
     fig.write(outnam);
 }
 
-template void VxlDifShort<unsigned char>(voxelImageT<unsigned char>&, const voxelImageT<unsigned char>&, std::string, double, double, double, double, double, double);
-template void VxlDifShort<unsigned short>(voxelImageT<unsigned short>&, const voxelImageT<unsigned short>&, std::string, double, double, double, double, double, double);
+template void VxlDifShort<unsigned char>(VoxelImageT<unsigned char>&, const VoxelImageT<unsigned char>&, std::string, double, double, double, double, double, double);
+template void VxlDifShort<unsigned short>(VoxelImageT<unsigned short>&, const VoxelImageT<unsigned short>&, std::string, double, double, double, double, double, double);
 
-template void blendMinVariance<unsigned char>(voxelImageT<unsigned char>&, const voxelImageT<unsigned char>&, int, int, double, double, const voxelImage* mask);
-template void blendMinVariance<unsigned short>(voxelImageT<unsigned short>&, const voxelImageT<unsigned short>&, int, int, double, double, const voxelImage* mask);
+template void blendMinVariance<unsigned char>(VoxelImageT<unsigned char>&, const VoxelImageT<unsigned char>&, int, int, double, double, const VoxelImage* mask);
+template void blendMinVariance<unsigned short>(VoxelImageT<unsigned short>&, const VoxelImageT<unsigned short>&, int, int, double, double, const VoxelImage* mask);
 
 } // namespace

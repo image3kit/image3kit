@@ -30,7 +30,7 @@ using namespace std;
 
 #ifndef IMAGE3KIT_PYTHON_BINDINGS
 
-void vxlToFoam(voxelImage& vxlImg);
+void vxlToFoam(VoxelImage& vxlImg);
 
 int usage()  {
   cout<<"convert micro-CT images to OpenFOAM mesh"<<endl;
@@ -46,7 +46,7 @@ int main(int argc, char** argv)  {
     std::string headerName(argv[1]);
     if(headerName.size()<4 || headerName.compare(headerName.size()-4,4,".mhd") != 0) return usage();
 
-    voxelImage vxlImg(headerName, readOpt::procAndConvert);
+    VoxelImage vxlImg(headerName, readOpt::procAndConvert);
 
     vxlToFoam(vxlImg);
 
@@ -55,12 +55,11 @@ int main(int argc, char** argv)  {
 #endif
 
 namespace {
-void fixImage(voxelImage& vxlImg);
+void fixImage(VoxelImage& vxlImg);
 } // namespace
 
-void vxlToFoam(voxelImage& vxlImg)  {
-  // end of main()
-  // TODO: refactor and convert to a Python function, in addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
+void vxlToFoam(VoxelImage& vxlImg)  {
+
   int3 n = vxlImg.size3();
   dbl3 X0=vxlImg.X0();
   dbl3 dx=vxlImg.dx();
@@ -110,7 +109,7 @@ void vxlToFoam(voxelImage& vxlImg)  {
 
 //=======================================================================
 
-  voxelField<int> point_mapper(n.x+1, n.y+1, n.z+1, -1);
+  VoxelField<int> point_mapper(n.x+1, n.y+1, n.z+1, -1);
 
  {
   int iPoints=-1;
@@ -312,7 +311,7 @@ void vxlToFoam(voxelImage& vxlImg)  {
     fill(faces_bs[ib].begin(),faces_bs[ib].end(), array<int,6>{{-1,-1,-1,-1,-1,-1}});
   }
 
-  voxelField<int3> ownerMapper(n.x+1, n.y+1, n.z+1, int3(-1,-1,-1));
+  VoxelField<int3> ownerMapper(n.x+1, n.y+1, n.z+1, int3(-1,-1,-1));
 
 
   cout<<"collecting faces"<<endl;
@@ -465,7 +464,7 @@ void vxlToFoam(voxelImage& vxlImg)  {
 
 
 namespace {
-void fixImage(voxelImage& voxels)  { /// keep largest connected region
+void fixImage(VoxelImage& voxels)  { /// keep largest connected region
 
   int3 n = voxels.size3();
   const unsigned int bigN=255*255*255*127;
@@ -475,8 +474,8 @@ void fixImage(voxelImage& voxels)  { /// keep largest connected region
   cout<<"removing disconnected parts of the image "<<endl;
   int nxmid=n.x/2;
   unsigned int vmax=n.y*n.z+1;
-  voxelField<unsigned int> vxlsMids(1,n.y, n.z,bigN);
-  voxelField<unsigned int> vxlsMidMap(1,n.y, n.z,vmax);
+  VoxelField<unsigned int> vxlsMids(1,n.y, n.z,bigN);
+  VoxelField<unsigned int> vxlsMidMap(1,n.y, n.z,vmax);
   vector<unsigned int> vxlsMidCompresdReg(n.y*n.z,bigN);
 
   for (int k=0; k<vxlsMidMap.nz(); ++k)
@@ -516,7 +515,7 @@ void fixImage(voxelImage& voxels)  { /// keep largest connected region
 
 
 
-  voxelField<unsigned int> vxlImg(n.x, n.y, n.z, bigN);
+  VoxelField<unsigned int> vxlImg(n.x, n.y, n.z, bigN);
 
 
   for (int k=0; k<vxlImg.nz(); ++k)

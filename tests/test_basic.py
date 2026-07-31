@@ -76,7 +76,7 @@ def test_read_image():
         # Read the image back
         rec = ik.read_image(img_path)
 
-        # Verify polymorphic downcasting: it should be VxlImgU8, not voxelImageTBase
+        # Verify polymorphic downcasting: it should be VxlImgU8, not VoxelImagesBase
         assert isinstance(rec, ik.VxlImgU8), f"Expected VxlImgU8, got {type(rec)}"
         assert rec.shape == (5, 5, 2)
         assert np.array_equal(rec.data, img.data)

@@ -23,7 +23,7 @@ template<typename T>  int3 toInt3(const Vctr<3,T>& d){   int3 n;   for(size_t i=
 template<typename T>
 class sumAbsDif {
  public:
-  sumAbsDif(voxelImageT<T>& vImageGrad, const voxelImageT<T>& toImageGrad, const voxelImageT<T>& wImage, Vctr3d nMin, Vctr3d nMax)
+  sumAbsDif(VoxelImageT<T>& vImageGrad, const VoxelImageT<T>& toImageGrad, const VoxelImageT<T>& wImage, Vctr3d nMin, Vctr3d nMax)
   :  vImage_(vImageGrad), toImage_(toImageGrad), wImage_(wImage), nMin_(toInt3(nMin)), nMax_(toInt3(nMax)), calls_count(0)
   {
     //maxTo=accumulate(toImage_, std::max<T>, minT(T));
@@ -78,9 +78,9 @@ class sumAbsDif {
     return res+0.1*(abs(rotat(0,2))+abs(rotat(2,0))+abs(rotat(1,2))+abs(rotat(2,1))+abs(rotat(2,2)-1.));
   };
  public:
-  const voxelImageT<T>& vImage_;
-  const voxelImageT<T>& toImage_;
-  const voxelImageT<T>& wImage_;
+  const VoxelImageT<T>& vImage_;
+  const VoxelImageT<T>& toImage_;
+  const VoxelImageT<T>& wImage_;
   const int3 nMin_;
   const int3 nMax_;
   //T maxTo;
@@ -94,7 +94,7 @@ class sumAbsDif {
 template<typename T>
 class sumAbsDif7DOF {
  public:
-  sumAbsDif7DOF(voxelImageT<T>& vImageGrad, const voxelImageT<T>& toImageGrad, const voxelImageT<T>& wImage, Vctr3d nMin, Vctr3d nMax)
+  sumAbsDif7DOF(VoxelImageT<T>& vImageGrad, const VoxelImageT<T>& toImageGrad, const VoxelImageT<T>& wImage, Vctr3d nMin, Vctr3d nMax)
   :  vImage_(vImageGrad), toImage_(toImageGrad), wImage_(wImage), nMin_(toInt3(nMin)), nMax_(toInt3(nMax)), calls_count(0)
   {  };
 
@@ -133,9 +133,9 @@ class sumAbsDif7DOF {
     return res;
   };
  public:
-  const voxelImageT<T>& vImage_;
-  const voxelImageT<T>& toImage_;
-  const voxelImageT<T>& wImage_;
+  const VoxelImageT<T>& vImage_;
+  const VoxelImageT<T>& toImage_;
+  const VoxelImageT<T>& wImage_;
   const int3 nMin_;
   const int3 nMax_;
   //T maxTo;
@@ -147,7 +147,7 @@ class sumAbsDif7DOF {
 
 
 template<typename T>
-inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0., int defaultV=-1)
+inline std::array<double,7>  registerToImageEMS7DOF(VoxelImageT<T>& origImage, VoxelImageT<T>& vxls, VoxelImageT<T>& origImage2, const VoxelImageT<T>& toVxls, const VoxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0., int defaultV=-1)
 {
 
   constexpr int nx = 7;
@@ -222,11 +222,11 @@ inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, v
 
 
 
-/*//inline voxelImage  registerToImageNewuoa(const voxelImage& vImage, const string& toImgName)
+/*//inline VoxelImage  registerToImageNewuoa(const VoxelImage& vImage, const string& toImgName)
 //{
-//  voxelImage toVxlsOrig(toImgName);
-//  voxelImage toVxls = (((mean(toVxlsOrig))));
-//  voxelImage vxls = (((mean(vImage))));
+//  VoxelImage toVxlsOrig(toImgName);
+//  VoxelImage toVxls = (((mean(toVxlsOrig))));
+//  VoxelImage vxls = (((mean(vImage))));
 //
 //  const size_t nx = 12;
 //  double xx[] = {0., 0., 0.,   1.,0., 0.,   0., 1., 0.,   0., 0., 1.};
@@ -286,7 +286,7 @@ inline std::array<double,7>  registerToImageEMS7DOF(voxelImageT<T>& origImage, v
 
 
 template<typename T>
-inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, voxelImageT<T>& vxls, voxelImageT<T>& origImage2, const voxelImageT<T>& toVxls, const voxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0.)
+inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(VoxelImageT<T>& origImage, VoxelImageT<T>& vxls, VoxelImageT<T>& origImage2, const VoxelImageT<T>& toVxls, const VoxelImageT<T>& wImage, dbl3 X1=dbl3(0.25,0.25,0.25), dbl3 X2=dbl3(0.75,0.75,0.75), dbl3 dX0=dbl3(0.,0.,0.), double thetaZ=0.)
 {
 
   const int nx = 12;
@@ -367,7 +367,7 @@ inline std::pair<Tnsr3d,Vctr3d>  registerToImageEMS(voxelImageT<T>& origImage, v
 
 namespace MCTProcessing {
 
-template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & vxlImage)  {
+template<typename T>  bool registerToImage(stringstream& ins, VoxelImageT<T> & vxlImage)  {
   KeyHint("toImgName maskNam  smooth   (bilateralX:nIters  kernRad , Xstp   sigmavv  sigmadd \\\n\t  sharpFact  smotOut toSmOut) bgnReg endReg dX0 thetaz nSkip defaultV");
 
   cout<<"registerToImage toImgName maskNam  smooth   (bilateralX:nIters  kernRad , Xstp   sigmavv  sigmadd sharpFact  smotOut toSmOut) bgnReg endReg X0 thetaz nSkip defaultV"<<endl;
@@ -395,7 +395,7 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
 
   cout<<"registerToImage:  "<<toImgName<<"  "<<maskNam<<"  bilateralX  "<<nIters<<"  "<<kernRad<<"  "<<Xstp<<"  "<<sigmavv<<"  "<<sigmadd<<"  "<<sharpFact<<"  "<<smotOut<<"  "<<toSmOut<<"  "<<bgnReg<<"  "<<endReg<<"  "<<dX0<<"  "<<thetaz<<"  "<<defaultV<<endl;
 
-  voxelImageT<T> vxlsmoot = resampleMean(vxlImage, CrsFctr);
+  VoxelImageT<T> vxlsmoot = resampleMean(vxlImage, CrsFctr);
   if(nIters) {
     cout<<"\n from bilateralX:   nIterations:"<<nIters <<", kernel:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<" -> "<<smooth<<endl;
     for (int i=0; i<nIters; ++i) {
@@ -403,11 +403,11 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
     if(smotOut.size()>4) vxlsmoot.write(smotOut);
   }
 
-  voxelImageT<T> vxlImage2=copyOrReadImgT<T>(toImgName);
+  VoxelImageT<T> vxlImage2=copyOrReadImgT<T>(toImgName);
 
 
   ensure(vxlImage2.nx(), "in register To Image: can not read image "+toImgName,-1);
-  voxelImageT<T> vxlsmot2 = resampleMean(vxlImage2, CrsFctr);
+  VoxelImageT<T> vxlsmot2 = resampleMean(vxlImage2, CrsFctr);
   if(nIters) {
     cout<<"\n  to bilateralX:   nIterations:"<<nIters <<", kernel:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<" -> "<<toSmOut<<endl;
     for (int i=0; i<nIters; ++i) {
@@ -415,8 +415,8 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
     if(toSmOut.size()>4) vxlsmot2.write(toSmOut);
   }
 
-  voxelImageT<T> wImage=vxlsmot2; // used as weight
-  voxelImage maskImg;
+  VoxelImageT<T> wImage=vxlsmot2; // used as weight
+  VoxelImage maskImg;
 
   if (maskNam!="otsu") {
     maskImg= resampleMode(copyOrReadImgT<unsigned char>(maskNam),CrsFctr);
@@ -456,7 +456,7 @@ template<typename T>  bool registerToImage(stringstream& ins, voxelImageT<T> & v
 
 
 
-template<typename T>  void resetTransform(voxelImageT<T>& vImg, const Vctr3d& trans, const Tnsr3d& rotat, const voxelImageT<T>& image2)
+template<typename T>  void resetTransform(VoxelImageT<T>& vImg, const Vctr3d& trans, const Tnsr3d& rotat, const VoxelImageT<T>& image2)
 {
   int3 nnn=image2.size3();
   (cout<<"nnn: "<<nnn<<" ").flush();
@@ -477,7 +477,7 @@ template<typename T>  void resetTransform(voxelImageT<T>& vImg, const Vctr3d& tr
 }
 
 
-template<typename T>  bool readTransFrom( stringstream& ins, voxelImageT<T>& vImg)  {
+template<typename T>  bool readTransFrom( stringstream& ins, VoxelImageT<T>& vImg)  {
   KeyHint("img2Nam translate3(0,0,0) rotate3x3(Unity)");
   string img2Nam;
   ins>>img2Nam;
@@ -488,7 +488,7 @@ template<typename T>  bool readTransFrom( stringstream& ins, voxelImageT<T>& vIm
   if(img2Nam.size()>4)
   {
     cout<<" trans: "<<trans<<",  rotat: "<< rotat<<endl;
-    voxelImageT<T> image2(img2Nam, readOpt::procAndConvert);
+    VoxelImageT<T> image2(img2Nam, readOpt::procAndConvert);
     cout<<" OrigInfo: "<<endl;  vImg.printInfo();
     cout<<" Img2Info: "<<endl;  image2.printInfo();
     resetTransform(vImg,trans,rotat,image2);

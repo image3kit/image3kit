@@ -31,7 +31,7 @@ struct shape {
   int isAfter(dbl3) const { return false; };
 
   template<typename T, class Shape>
-  static void setIn(voxelImageT<T>& vImg, const Shape& shp) {
+  static void setIn(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg) {
@@ -40,35 +40,35 @@ struct shape {
     }
   }
   template<typename T, class Shape>
-  static void addTo(voxelImageT<T>& vImg, const Shape& shp) {
+  static void addTo(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg)
       if(int vv = shp.value(dbl3(i+0.5,j+0.5,k+0.5)*dx+xmin); vv!=shape::invalidv) vImg(i,j,k) += vv;
   }
   template<typename T, class Shape>
-  static void setBefor(voxelImageT<T>& vImg, const Shape& shp) {
+  static void setBefor(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg)
       if(shp.isBefore(dbl3(i+0.5,j+0.5,k+0.5)*dx+xmin))  vImg(i,j,k)  = shp.insidev;
   }
   template<typename T, class Shape>
-  static void setAfter(voxelImageT<T>& vImg, const Shape& shp) {
+  static void setAfter(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg)
       if(shp.isAfter (dbl3(i+0.5,j+0.5,k+0.5)*dx+xmin))  vImg(i,j,k) = shp.insidev;
   }
   template<typename T, class Shape>
-  static void addBefor(voxelImageT<T>& vImg, const Shape& shp) {
+  static void addBefor(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg)
       if(shp.isBefore(dbl3(i+0.5,j+0.5,k+0.5)*dx+xmin))  vImg(i,j,k) += shp.insidev;
   }
   template<typename T, class Shape>
-  static void addAfter(voxelImageT<T>& vImg, const Shape& shp) {
+  static void addAfter(VoxelImageT<T>& vImg, const Shape& shp) {
     (cout <<__FUNCTION__<<'_'<<shp.polyType<<": "<<shp.insidev<<",  ").flush();
     dbl3 xmin = vImg.X0(),  dx = vImg.dx();
     forAllkji_(vImg)
@@ -236,14 +236,14 @@ class roughSphere : public shape {
 
   dbl3 p1; double rr, r2, r2min;
   int nXimg, nYimg; //< image sizes after cut to make image size the largest integer fraction of 2PI/2
-  voxelImageT<float> height;
+  VoxelImageT<float> height;
  public:
   roughSphere(stringstream & ins): shape(/*polyType*/'r') {
     string fnam;
     ins>>p1 >>rr >>fnam;   r2=rr*rr; r2min=0.1;
      ins>>insidev;
 
-    //voxelImageT<float> omg();
+    //VoxelImageT<float> omg();
 
     //dbl3 dx=omg.dx();
     //nXimg=omg.size3().x;  { int nResampl = max(1.,ceil(PI*rr/(nXimg*dx.x)))+0.01;  // nMirrors=2*nResampl
@@ -277,7 +277,7 @@ using namespace std;
 using namespace VoxLib;
 
 //template<typename T, typename _operate_>
-//void applyShapeOper(voxelImageT<T> & vImg, const shape& sh, _operate_& func) {
+//void applyShapeOper(VoxelImageT<T> & vImg, const shape& sh, _operate_& func) {
 #define _SHAPERATEPy(vImg, sh, _operate_)  \
   switch (sh.polyType) {                 \
     case 's':  shape::_operate_(vImg, static_cast<const      sphere&>(sh)); break;  \
@@ -307,32 +307,32 @@ using namespace VoxLib;
   else if (tmpc[0]=='t')  shape::_operate_(vImg, triangular( ins)); \
   else cout <<"\n unsupported shape type: "<<tmpc<<"\n"<<endl
 
-template<typename T>  bool Paint( stringstream& ins, voxelImageT<T> & vImg)  {
+template<typename T>  bool Paint( stringstream& ins, VoxelImageT<T> & vImg)  {
   _SHAPERATE(setIn);
   return true;
 }
 
-template<typename T>  bool PaintAdd( stringstream& ins, voxelImageT<T> & vImg) {
+template<typename T>  bool PaintAdd( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addTo);
   return true;
 }
 
-template<typename T>  bool PaintBefore( stringstream& ins, voxelImageT<T> & vImg) {
+template<typename T>  bool PaintBefore( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(setBefor);
   return true;
 }
 
-template<typename T>  bool PaintAfter( stringstream& ins, voxelImageT<T> & vImg) {
+template<typename T>  bool PaintAfter( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(setAfter);
   return true;
 }
 
-template<typename T>  bool PaintAddBefore( stringstream& ins, voxelImageT<T> & vImg) {
+template<typename T>  bool PaintAddBefore( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addBefor);
   return true;
 }
 
-template<typename T>  bool PaintAddAfter( stringstream& ins, voxelImageT<T> & vImg) {
+template<typename T>  bool PaintAddAfter( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addAfter);
   return true;
 }

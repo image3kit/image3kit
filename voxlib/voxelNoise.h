@@ -36,7 +36,7 @@ inline uint32_t xorshift128(struct xorshift128_state& st)
 }
 
 template<typename T>
-size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask2, int trsh, int randseed=-1)
+size_t addSurfNoise(VoxelImageT<T>& img, const int randMask1, const int randMask2, int trsh, int randseed=-1)
 { /// \param randMask1 randMask2: mask for rand to equal for changing vxels, adjust to get desired probability
   using namespace std;
 
@@ -47,7 +47,7 @@ size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask
 
   cout<<"seed"<<seed<<endl;
   {
-    voxelImageT<T> vxls=img;
+    VoxelImageT<T> vxls=img;
     vxls.growBox(2);
     const T* v0=&vxls(0,0,0);
     size_t nChanges(0);
@@ -77,7 +77,7 @@ size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask
   }
 
   {
-    voxelImageT<T> vxls=img;
+    VoxelImageT<T> vxls=img;
     vxls.growBox(2);
     const T* v0=&vxls(0,0,0);
     size_t nChanges(0);
@@ -113,7 +113,7 @@ size_t addSurfNoise(voxelImageT<T>& img, const int randMask1, const int randMask
 namespace MCTProcessing {
 
   template<typename T>
-  bool addSurfNoise( std::stringstream& ins, voxelImageT<T>& vImg)  {
+  bool addSurfNoise( std::stringstream& ins, VoxelImageT<T>& vImg)  {
     KeyHint("randMask1 randMask2 nSam40Trsh nItr randSeed");
     int randMask1=0x00000003; ins>>randMask1; //!< mask of random number controlling probability
     int randMask2=randMask1;     ins>>randMask2;

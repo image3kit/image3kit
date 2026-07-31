@@ -25,8 +25,8 @@ using namespace std;
 
 #ifndef IMAGE3KIT_PYTHON_BINDINGS
 
-void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
-void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
+void vxlToFoamPar(VoxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
+void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
 
 int usage() {
   cout<<
@@ -54,10 +54,8 @@ int main(int argc, char** argv)  {  //!- reads image, adds a boundary layers aro
   cout<<"voxelToFoamPar  header        nPar       resetX0   keepBCs "<<endl;
   cout<<"voxelToFoamPar "<<hdr<<"  "<<nPar<<"  "<<resetX0_char<<"    "<<keepBCs_char<<endl;
 
-  voxelImage vimage(hdr, readOpt::procAndConvert);
+  VoxelImage vimage(hdr, readOpt::procAndConvert);
 
-  // end of main()
-  // TODO: refactor and convert to a Python function, in addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
   bool resetX0 = (resetX0_char=='T' || resetX0_char=='t');
   bool keepBCs = (keepBCs_char=='T' || keepBCs_char=='t');
   vxlToFoamPar(vimage, nPar, resetX0, keepBCs);
@@ -68,12 +66,11 @@ int main(int argc, char** argv)  {  //!- reads image, adds a boundary layers aro
 
 
 namespace {
-void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
+void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
 } // namespace
 
-// TODO: refactor and convert to a Python function, in addDodgyFuncsU8(py::class_<voxelImageT<VxT>, voxelImageTBase> &m) requires(sizeof(VxT)<=1) {
 
-void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs)  {
+void vxlToFoamPar(VoxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs)  {
   int3 n = vimage.size3();
 
   if(resetX0)
@@ -120,11 +117,11 @@ void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs)  {
   vimage.setSlice('k',n.z+1,0+1*Front );
 
 
-  voxelField<int> procIsijk({nPar.x+2,nPar.y+2,nPar.z+2},-1);
+  VoxelField<int> procIsijk({nPar.x+2,nPar.y+2,nPar.z+2},-1);
   if (nPar.z*nPar.y*nPar.x==1)
     toFoam(vimage,nVVs, procIsijk, 1, 1, 1);
   else if (nPar.z*nPar.y*nPar.x>1)  {
-    voxelField<voxelImage>  vimages({nPar.x,nPar.y,nPar.z}, voxelImage());
+    VoxelField<VoxelImage>  vimages({nPar.x,nPar.y,nPar.z}, VoxelImage());
 
     vector<int> iBs(nPar.x+1,n.x);
     vector<int> jBs(nPar.y+1,n.y);
@@ -170,7 +167,7 @@ void vxlToFoamPar(voxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs)  {
 
 
 namespace {
-void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc)  { //!- generate an openfaom (processor) mesh similar to voxelToFoamPar.cpp
+void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc)  { //!- generate an openfaom (processor) mesh similar to voxelToFoamPar.cpp
   int myprocI=procIsijk(iPrc,jPrc,kPrc);
   int3 n=vxlImg.size3();n.x-=2;n.y-=2;n.z-=2;
   dbl3 X0=vxlImg.X0();
@@ -186,7 +183,7 @@ void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int 
 
 //=======================================================================
 
-  voxelField<int> point_mapper(n.x+1,n.y+1,n.z+1,-1);
+  VoxelField<int> point_mapper(n.x+1,n.y+1,n.z+1,-1);
 
  {
   int iPoints=-1;
@@ -427,7 +424,7 @@ void toFoam(voxelImage& vxlImg, int nVVs, const voxelField<int>& procIsijk, int 
     fill(faces_bs[ib].begin(),faces_bs[ib].end(), array<int,6>{{-1,-1,-1,-1,-1,-1}});
   }
 
-  voxelField<int3> ownerMapper(n.x+1,n.y+1,n.z+1,int3(-1,-1,-1));
+  VoxelField<int3> ownerMapper(n.x+1,n.y+1,n.z+1,int3(-1,-1,-1));
 
 
   cout<<"collecting faces"<<endl;

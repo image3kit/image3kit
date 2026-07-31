@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from . import _core
 from ._core import __doc__, __version__
 from ._core.sirun import Input, dbl3, int3
 from ._core.voxlib import (
@@ -23,6 +24,7 @@ __all__ = [
     "VxlImgU16",
     "__doc__",
     "__version__",
+    "_core",
     "connected_components",
     "cube",
     "cylinder",

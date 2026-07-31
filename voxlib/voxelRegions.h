@@ -25,7 +25,7 @@ using namespace std;
 
 
 template<typename T>
-voxelImageT<int> labelImage(const voxelImageT<T>& vImage, const T minvv=0, const T maxvv=std::numeric_limits<T>::max())  {//  TODO to be tested
+VoxelImageT<int> labelImage(const VoxelImageT<T>& vImage, const T minvv=0, const T maxvv=std::numeric_limits<T>::max())  {//  TODO to be tested
 
   //voxels.write("dump1.mhd");
   int3 n_2 = vImage.size3();
@@ -33,7 +33,7 @@ voxelImageT<int> labelImage(const voxelImageT<T>& vImage, const T minvv=0, const
 
   cout<<" labeling Image between "<<int(minvv)<<"  "<<int(maxvv)<<endl;
 
-  voxelImageT<int> lbls({n_2[0]+2, n_2[1]+2, n_2[2]+2}, bigN); //+2 is needed for min5Nei
+  VoxelImageT<int> lbls({n_2[0]+2, n_2[1]+2, n_2[2]+2}, bigN); //+2 is needed for min5Nei
   lbls.X0Ch()=vImage.X0();
   lbls.dxCh()=vImage.dx();
   forAllkji_(vImage) if(minvv<=vImage(i,j,k) && vImage(i,j,k)<=maxvv) lbls(i+1,j+1,k+1)= i+j*n_2[0]+2; ///. int won't work for large images, go slice by slice
@@ -165,8 +165,8 @@ voxelImageT<int> labelImage(const voxelImageT<T>& vImage, const T minvv=0, const
 
 
 template<typename T>
-void keepLargestvv(voxelImageT<T>& vImage, const T minvv=0, const T maxvv=0)  {
-  const voxelImageT<int> lbls = labelImage(vImage,minvv,maxvv);
+void keepLargestvv(VoxelImageT<T>& vImage, const T minvv=0, const T maxvv=0)  {
+  const VoxelImageT<int> lbls = labelImage(vImage,minvv,maxvv);
   const auto* lbl0=&lbls(0);
   int mxl = 0;
   OMPragma("omp parallel for reduction(max:mxl)")
@@ -184,9 +184,9 @@ void keepLargestvv(voxelImageT<T>& vImage, const T minvv=0, const T maxvv=0)  {
 
 
 template<typename T>
-void keepLargest(voxelImageT<T>& vImage, const voxelImageT<T>& grad, const T minvv=0, const T maxvv=std::numeric_limits<T>::max(), const T minvg=0, const T maxvg=std::numeric_limits<T>::max())//  TODO to be tested
+void keepLargest(VoxelImageT<T>& vImage, const VoxelImageT<T>& grad, const T minvv=0, const T maxvv=std::numeric_limits<T>::max(), const T minvg=0, const T maxvg=std::numeric_limits<T>::max())//  TODO to be tested
 {
-  voxelImageT<int> lbls = labelImage(grad,minvg,maxvg);
+  VoxelImageT<int> lbls = labelImage(grad,minvg,maxvg);
   int mxl = 0;
   OMPragma("omp parallel for reduction(max:mxl)")
   forAllcp(lbls) if(*cp>=0) mxl = max(mxl,*cp);
@@ -204,9 +204,9 @@ void keepLargest(voxelImageT<T>& vImage, const voxelImageT<T>& grad, const T min
 
 
 template<typename T>
-voxelImageT<int> decomposeLargest(const voxelImageT<T>& vImage, int3 npxyz, const T minvv=0, const T maxvv=0)
+VoxelImageT<int> decomposeLargest(const VoxelImageT<T>& vImage, int3 npxyz, const T minvv=0, const T maxvv=0)
 {
-  voxelImageT<int> lbls = labelImage(vImage,minvv,maxvv);
+  VoxelImageT<int> lbls = labelImage(vImage,minvv,maxvv);
   int mxl = 0;
   OMPragma("omp parallel for reduction(max:mxl)")
   forAllcp(lbls) if(*cp>=0) mxl = max(mxl,*cp);
@@ -245,7 +245,7 @@ struct cmp_pair{
 }  };
 
 template<typename T=int>
-void compressLabelImage(voxelImageT<T>& lbls) {
+void compressLabelImage(VoxelImageT<T>& lbls) {
   int mxl = 0;
   OMPragma("omp parallel for reduction(max:mxl)")
   forAllcp(lbls) if((*cp)>=0) mxl = max(mxl,(*cp));

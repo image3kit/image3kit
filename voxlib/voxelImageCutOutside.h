@@ -10,9 +10,9 @@ constexpr double _PI = 3.141592653589793;
 
 template<typename T>
 struct sumAbsDif_XYR {
-  sumAbsDif_XYR(const voxelImageT<T>& vImage,T treshold, bool cuthighs=false)    {
+  sumAbsDif_XYR(const VoxelImageT<T>& vImage, T treshold, bool cuthighs=false)    {
     int3 nnn=vImage.size3();
-    voxelImageT<T> voxels = median(vImage);
+    VoxelImageT<T> voxels = median(vImage);
 
     xAvg.resize(nnn[2],0.);
     yAvg.resize(nnn[2],0.);
@@ -80,7 +80,8 @@ struct sumAbsDif_XYR {
 
 
 template<typename T>
-void cutOutside(voxelImageT<T>& vImage, char dir='z', int nExtraOut=1, int threshold=-1, bool cuthighs=false, int shiftX=0, int shiftY=0, T outVal=maxT(T)) { // TODO yet to be tested
+void cutOutside(VoxelImageT<T>& vImage, char dir='z', int nExtraOut=1, int threshold=-1, bool cuthighs=false, int shiftX=0, int shiftY=0, T outVal=maxT(T)) {
+  // TODO yet to be tested
 
   int3 nnn=vImage.size3();
   ensure(dir=='z');

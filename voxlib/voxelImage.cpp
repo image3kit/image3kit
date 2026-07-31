@@ -39,7 +39,7 @@ string plotAll_normalAxis="xyz";
 int    plotAll_colrGrey=15;
 
 template<typename T>
-void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int maxNz)  {
+void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int maxNz)  {
   //! read image from file header, format detected based on image extension
 
   maxNz = maxNz>0 ? std::min(maxNzGlobal, maxNz) : maxNzGlobal;
@@ -126,23 +126,23 @@ void voxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
 }
 
 template<class T>
-std::unique_ptr<voxelImageTBase> readToUnique(const string& hdrNam, int procesKeys, int maxNz) {
-  // NB! this is also called from voxelImage read constructor, please avoid syclic dependency
-  voxelImageT<T> vImg;
+std::unique_ptr<VoxelImagesBase> readToUnique(const string& hdrNam, int procesKeys, int maxNz) {
+  // NB! this is also called from VoxelImage read constructor, please avoid syclic dependency
+  VoxelImageT<T> vImg;
   vImg.readFromHeader(hdrNam, procesKeys, maxNz);
-  return make_unique<voxelImageT<T>>(std::move(vImg));
+  return make_unique<VoxelImageT<T>>(std::move(vImg));
 }
 
 
-std::unique_ptr<voxelImageTBase> readImage(string hdrNam,  int procesKeys, int maxNz)  {
+std::unique_ptr<VoxelImagesBase> readImage(string hdrNam,  int procesKeys, int maxNz)  {
   //! read or create image
   using namespace std;
-  (cout<<"voxelImage \""<<hdrNam<<"\": ").flush();
+  (cout<<"VoxelImage \""<<hdrNam<<"\": ").flush();
 
   if (hasExt(hdrNam, ".png")) { // grey-scale atm
-    voxelImage VImage;
+    VoxelImage VImage;
     sliceFromPng(VImage, "z", hdrNam, 0, 0,255);
-    return make_unique<voxelImageT<unsigned char>>(std::move(VImage));
+    return make_unique<VoxelImageT<unsigned char>>(std::move(VImage));
   }
 
   if (hasExt(hdrNam,".am")) {

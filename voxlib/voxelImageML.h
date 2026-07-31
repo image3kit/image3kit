@@ -23,7 +23,7 @@ using namespace std;
 
 namespace MCTProcessing {
 
-template<typename T>  bool variance(stringstream& ins, voxelImageT<T> & img)  {
+template<typename T>  bool variance(stringstream& ins, VoxelImageT<T> & img)  {
   KeyHint("minV maxV ");
   int bgn(0),end(maxT(T)); ins>>bgn>>end;
   cout<<" "<<bgn<<" "<<end<<": var = "<<varianceDbl(img,bgn,end);
@@ -72,9 +72,9 @@ template<typename T> void sumNei3IIf(int& nNeis,Tint& sumNeis, const T* vp,T l, 
   if (*(++neiPID) != pID  )    ++(neis.insert(std::pair<T,short>(*neiPID,0)).first->second);
 
 template<typename T>
-void mode26(voxelImageT<T>& vImg, short minDif)  {
+void mode26(VoxelImageT<T>& vImg, short minDif)  {
   const short minDifp2=minDif/2;
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
     forAllkji_1_(vxls)
   {
     T* vp = &(vxls(i,j,k));
@@ -120,8 +120,8 @@ void mode26(voxelImageT<T>& vImg, short minDif)  {
 
 
 template<typename T>
-void mode26(voxelImageT<T>& vImg, T minv,T maxv, short minDif)  {
-  voxelImageT<T> vxls=vImg;
+void mode26(VoxelImageT<T>& vImg, T minv,T maxv, short minDif)  {
+  VoxelImageT<T> vxls=vImg;
   forAllkji_1_(vxls)  {
    T* vp = &(vxls(i,j,k));
    const T pID = *vp;
@@ -165,7 +165,7 @@ void mode26(voxelImageT<T>& vImg, T minv,T maxv, short minDif)  {
 
 
 template<typename T>
-void curtail(voxelImageT<T>& vImg, T mint, T minv, T maxt, T maxv) {
+void curtail(VoxelImageT<T>& vImg, T mint, T minv, T maxt, T maxv) {
   forAllkji_(vImg)
   {
     if (vImg(i,j,k)<mint) vImg(i,j,k) = minv;
@@ -177,16 +177,16 @@ void curtail(voxelImageT<T>& vImg, T mint, T minv, T maxt, T maxv) {
 
 
 template<typename T>
-void growingThreshold(  voxelImageT<T>& vImg,
+void growingThreshold(  VoxelImageT<T>& vImg,
   T StartThreshold1,
   T StartThreshold2,
   T finalThreshold1,
   T finalThreshold2,
   const int nIter  ) {
-  voxelImageT<T> tmpFinal=vImg;
+  VoxelImageT<T> tmpFinal=vImg;
   vImg.threshold101(StartThreshold1, StartThreshold2);
   vImg.fillHoles(2);
-  voxelImageT<T> tmpStart=vImg;
+  VoxelImageT<T> tmpStart=vImg;
 
   tmpFinal.threshold101(finalThreshold1, finalThreshold2);
   tmpFinal.FaceMedian06(1,5);
@@ -200,13 +200,13 @@ void growingThreshold(  voxelImageT<T>& vImg,
 
 
 template<typename T>
-void replaceRangeByImage(voxelImageT<T>& vImg, T minv,T  maxv, const voxelImageT<T>& vxls) {
+void replaceRangeByImage(VoxelImageT<T>& vImg, T minv,T  maxv, const VoxelImageT<T>& vxls) {
   ensure(vImg.size3()==vxls.size3());
   forAllkji_(vImg)  if (T vv=vImg(i,j,k);  minv<=vv && vv<=maxv)  vImg(i,j,k)=vxls(i,j,k);
 }
 
 template<typename T>
-void replaceByImageRange(voxelImageT<T>& vImg, T minv,T  maxv, const voxelImageT<T>& vxls) {
+void replaceByImageRange(VoxelImageT<T>& vImg, T minv,T  maxv, const VoxelImageT<T>& vxls) {
   ensure(vImg.size3()==vxls.size3());
   forAllkji_(vImg)  if (T vv=vxls(i,j,k);  minv<=vv && vv<=maxv)  vImg(i,j,k)=vv;
 }
@@ -216,11 +216,11 @@ void replaceByImageRange(voxelImageT<T>& vImg, T minv,T  maxv, const voxelImageT
 
 
 template<typename T>
-voxelImageT<T> magGradient(const voxelImageT<T>& vImg, double diffuseLSqr) {
+VoxelImageT<T> magGradient(const VoxelImageT<T>& vImg, double diffuseLSqr) {
   cout<<" magGrad ";
-  voxelImageT<T> grad=vImg;
+  VoxelImageT<T> grad=vImg;
 
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   vxls.growBox(1);
 
   forAllkji_1_(vxls)  {
@@ -240,7 +240,7 @@ voxelImageT<T> magGradient(const voxelImageT<T>& vImg, double diffuseLSqr) {
 
 
 template<typename T>
-void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp,
+void bilateralX(VoxelImageT<T>& vImg, int kernRad, int Xstp,
                 float sigmaSqr=16, float sharpFact=0.05, float sigmaGaussSqr=2.,
                 float capmin=0, float capmax=fmaxT(T)) {
     (std::cout<<" bilateralX  ").flush();
@@ -248,7 +248,7 @@ void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp,
 
   float p1rSigma=1./sigmaSqr;
   float p1rGSigma=1./sigmaGaussSqr;
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
 
   OMPFor()
   for (int k=kernRad; k<vxls.nz()-kernRad; ++k)
@@ -292,7 +292,7 @@ void bilateralX(voxelImageT<T>& vImg, int kernRad, int Xstp,
   }
 }
 
-template<typename T>  bool _bilateralX(voxelImageT<T>& vImg, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
+template<typename T>  bool _bilateralX(VoxelImageT<T>& vImg, int nItrs, int kernRad, int Xstp, double sigmavv, double sharpFact, double sigmadd) {
   cout<<"\n bilateralX    nIterations  kernRad, Xstp/2   sigmavv,   sharpFact,  sigmadd  \n";
   cout<<"\n bilateralX    "<<nItrs <<"  "<<kernRad<<" "<<Xstp<<"  "<<sigmavv <<" "<<sharpFact<<" "<<sigmadd<<"\n";
   vImg.growBox(kernRad*Xstp+4);
@@ -310,7 +310,7 @@ template<typename T>  bool _bilateralX(voxelImageT<T>& vImg, int nItrs, int kern
 
 
 template<typename T>
-void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float sharpFact=0.05,
+void bilateralGauss(VoxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float sharpFact=0.05,
                     float sigmaGaussSqr=2., float capmin=0, float capmax=fmaxT(T))
 {
     (std::cout<<" bilateralGauss  ").flush();
@@ -318,7 +318,7 @@ void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float 
 
   float p1rSigma=1./sigmaSqr;
   float p1rGSigma=1./sigmaGaussSqr;
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
 
   OMPFor()
   for (int k=kernRad; k<vxls.nz()-kernRad; ++k)
@@ -354,7 +354,7 @@ void bilateralGauss(voxelImageT<T>& vImg, int kernRad, float sigmaSqr=16, float 
   }
 }
 
-template<typename T>  bool _bilateralGauss(voxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
+template<typename T>  bool _bilateralGauss(VoxelImageT<T>& vImg, int nItrs, int kernRad, double sigmavv, double sharpFact, double sigmadd) {
   cout<<"\nsmoothing:   nIterations:"<<nItrs <<", kernRad:"<<kernRad<<"  sigmavv:"<<sigmavv <<", sharpFact:"<<sharpFact<<", sigmadd:"<<sigmadd<<"\n";
   vImg.growBox(kernRad+2);
   for (int i=0; i<nItrs; ++i)  {
@@ -369,10 +369,10 @@ template<typename T>  bool _bilateralGauss(voxelImageT<T>& vImg, int nItrs, int 
 
 
 template<typename T>
-void biLateral(voxelImageT<T>& vImg, int kernRad, double sigmad, double sharpFact) {
+void biLateral(VoxelImageT<T>& vImg, int kernRad, double sigmad, double sharpFact) {
     (std::cout<<"  bilat ").flush();
 
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   double  sigma = sigmad;
   for (int k=kernRad; k<vxls.nz()-kernRad; ++k)
   {
@@ -409,15 +409,15 @@ void biLateral(voxelImageT<T>& vImg, int kernRad, double sigmad, double sharpFac
 }
 
 template<typename T>
-void biLateralIterative(voxelImageT<T>& vImg, const int kernRad, const double sigmad, const double sharpFact) {
+void biLateralIterative(VoxelImageT<T>& vImg, const int kernRad, const double sigmad, const double sharpFact) {
     (std::cout<<"  bilat ").flush();
 
-  const voxelImageT<T> vxlsO=vImg;
+  const VoxelImageT<T> vxlsO=vImg;
   const double  sigma = sigmad;
   for(int iKer=0; iKer<kernRad; ++iKer)
   {
    (std::cout<<":").flush();
-   const voxelImageT<T> vxls=vImg;
+   const VoxelImageT<T> vxls=vImg;
    for (int k=1; k<vxls.nz()-1; ++k)
     {
     if (k%(vxls.nz()/10) == 0) (std::cout<<".").flush();
@@ -481,10 +481,10 @@ void biLateralIterative(voxelImageT<T>& vImg, const int kernRad, const double si
 
 
 template<typename T>
-void shrink(voxelImageT<T>& seged, T min,  T maks, const voxelImageT<T>& vImg) {
+void shrink(VoxelImageT<T>& seged, T min,  T maks, const VoxelImageT<T>& vImg) {
 
     (std::cout<<"  shrink:"<<int(min)<<"-"<<int(maks)<<" ").flush();
-    const voxelImageT<T> vxls=seged;
+    const VoxelImageT<T> vxls=seged;
 
 
   OMPragma("omp parallel for")
@@ -517,10 +517,10 @@ void shrink(voxelImageT<T>& seged, T min,  T maks, const voxelImageT<T>& vImg) {
 
 
 template<typename T>
-void grow(voxelImageT<T>& vImg, T midv, T minv,  T maxv,  voxelImageT<T>& later) {
+void grow(VoxelImageT<T>& vImg, T midv, T minv,  T maxv,  VoxelImageT<T>& later) {
   (std::cout<<int(minv)<<":"<<int(maxv)<<"<-"<<int(midv)<<"  | ").flush();
 
-  voxelImageT<T> vxls = vImg;
+  VoxelImageT<T> vxls = vImg;
   forAllkji_1_(vxls) {
     T vv = vxls(i,j,k);
     if (vv!=midv && minv<=vv && vv<=maxv && !later(i,j,k)) {
@@ -534,10 +534,10 @@ void grow(voxelImageT<T>& vImg, T midv, T minv,  T maxv,  voxelImageT<T>& later)
 }
 
 template<typename T>
-void grow(voxelImageT<T>& vImg, T midv, T minv,  T maxv) {
+void grow(VoxelImageT<T>& vImg, T midv, T minv,  T maxv) {
   (std::cout<<int(minv)<<":"<<int(maxv)<<"<-"<<int(midv)<<"   ").flush();
 
-  voxelImageT<T> vxls = vImg;
+  VoxelImageT<T> vxls = vImg;
   forAllkji_1_(vxls)
   {
   T vv = vxls(i,j,k);
@@ -555,8 +555,8 @@ void grow(voxelImageT<T>& vImg, T midv, T minv,  T maxv) {
 }
 
 template<typename T>
-void mode(voxelImageT<T>& vImg, T min,  T max,  short nNeist=2,  T midv=maxT(T)) {
-  const voxelImageT<T> vxls = vImg;
+void mode(VoxelImageT<T>& vImg, T min,  T max,  short nNeist=2,  T midv=maxT(T)) {
+  const VoxelImageT<T> vxls = vImg;
   //long long nChanges = 0;
   forAllkji_1_(vxls) {
     const T* vp = &vxls(i,j,k);
@@ -593,9 +593,9 @@ void mode(voxelImageT<T>& vImg, T min,  T max,  short nNeist=2,  T midv=maxT(T))
 }
 
 template<typename T>
-void medGrow(voxelImageT<T>& vImg, T min,  T max, int dist=1,  short nNeist=2) { // grow values  in range [min max]
+void medGrow(VoxelImageT<T>& vImg, T min,  T max, int dist=1,  short nNeist=2) { // grow values  in range [min max]
   (std::cout<<"  medGrow ").flush();
-  const voxelImageT<T> vxls = vImg;
+  const VoxelImageT<T> vxls = vImg;
   //long long nChanges = 0;
   forAllkji_m_(dist,vxls) {
     const T* vp = &vxls(i,j,k);
@@ -633,9 +633,9 @@ void medGrow(voxelImageT<T>& vImg, T min,  T max, int dist=1,  short nNeist=2) {
 }
 
 template<typename T>
-voxelImageT<T> mean(const voxelImageT<T>& vImg) {
+VoxelImageT<T> mean(const VoxelImageT<T>& vImg) {
   (std::cout<<"  mean ").flush();
-  voxelImageT<T>  smooth=vImg;
+  VoxelImageT<T>  smooth=vImg;
   forAllkji_1_(vImg) {
     int neiSum=0;
     forAllNei(-1,1) {
@@ -649,9 +649,9 @@ voxelImageT<T> mean(const voxelImageT<T>& vImg) {
 
 
 template<typename T>
-voxelImageT<T> maxWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB) {
+VoxelImageT<T> maxWide(const VoxelImageT<T>& vImg, int nW, T lowerB, T upperB) {
   (std::cout<<"  maxWide ").flush();
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   forAllkji_m_(nW,vImg) {
     if(const T* vp=&vImg(i,j,k); *vp<lowerB)
     vxls(i,j,k) =
@@ -663,9 +663,9 @@ voxelImageT<T> maxWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB) {
 }
 
 template<typename T>
-voxelImageT<T> meanWide(const voxelImageT<T>& vImg, int nW, T lowerB, T upperB, voxelImageT<T>& grad, T gradthresh) {
+VoxelImageT<T> meanWide(const VoxelImageT<T>& vImg, int nW, T lowerB, T upperB, VoxelImageT<T>& grad, T gradthresh) {
   (std::cout<<"  meanWide ").flush();
-  voxelImageT<T> vxls=vImg;
+  VoxelImageT<T> vxls=vImg;
   forAllkji_m_(nW, vImg) {
     const T* vp=&vImg(i,j,k);
     if( (*vp<lowerB || upperB<*vp) && grad(i,j,k)<=gradthresh)
@@ -692,7 +692,7 @@ dbls convertToDbls(piece<T> hist) {
 
 
 template<typename T>
-array<double,5> otsu_minAvgThresholdAvgMax(const voxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, double skipFrac=0.)
+array<double,5> otsu_minAvgThresholdAvgMax(const VoxelImageT<T>& vImg, Tint  minvi, Tint  maxvi, double skipFrac=0.)
 {//! Warning doesn't work for negatives
   int3 nnn1=skipFrac*vImg.size3();
   int3 nnn2=(1.000000000001-skipFrac)*vImg.size3();
@@ -714,18 +714,18 @@ array<double,5> otsu_minAvgThresholdAvgMax(const voxelImageT<T>& vImg, Tint  min
 }
 
 template<typename T>
-voxelImageT<uint8_t> threshold01_otsu(const voxelImageT<T>& vImg, int  minvi=0, int  maxvi=maxT(T), double skipFrac=0.)
+VoxelImageT<uint8_t> threshold01_otsu(const VoxelImageT<T>& vImg, int  minvi=0, int  maxvi=maxT(T), double skipFrac=0.)
 {//! Warning doesn't work for negatives
   // TODO expose this as image3kit.otsu_threshold01
   T otst2 = otsu_minAvgThresholdAvgMax(vImg, minvi, maxvi, skipFrac)[2];
-  voxelImageT<uint8_t> msk(vImg.size3(), 1, vImg.dx(),vImg.X0());
+  VoxelImageT<uint8_t> msk(vImg.size3(), 1, vImg.dx(),vImg.X0());
   forAlliii_(vImg)  if(vImg(iii)<otst2) msk(iii)=0;
   return msk;
 }
 
 
 template<typename T>
-int average2p(const voxelImageT<T>& vm, T minV=2) {
+int average2p(const VoxelImageT<T>& vm, T minV=2) {
   long long sum(128);
   long long nsum(1);
   forAllvv_seq(vm)  if(vv>=minV)  {    sum+=vv;    ++nsum;  }
@@ -733,13 +733,13 @@ int average2p(const voxelImageT<T>& vm, T minV=2) {
 }
 
 template<typename T>
-void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
+void deringImg(VoxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
   int X0,int Y0,int X1,int Y1, int nGrowBox, double scaleDifV=1, double sharpenRings=0.05, bool writeDumps=false) {// deringImg TODO to be tested
 
   cout<<"\n  dering:  { range:"<<minV <<"-"<<maxV<<"  XY0: "<<X0 <<" "<<Y0 <<"   XY1: "<<X1 <<" "<<Y1
       <<"  nr:"<<nr<<"  ntheta:"<<nth<<"  nz:"<<nz <<"  nGrowBox:"<<nGrowBox <<endl;
 
-  const voxelImageT<T> vxls0 = vImg;
+  const VoxelImageT<T> vxls0 = vImg;
   if (nGrowBox) vImg.growBox(nGrowBox);
   X0+= nGrowBox; Y0+= nGrowBox; X1+= nGrowBox; Y1+= nGrowBox;
   nz += nGrowBox*(nz/vImg.nz());
@@ -752,7 +752,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
   nr = n1/nrCrs+1;
 
 
-  const voxelImageT<T> vxls = vImg;
+  const VoxelImageT<T> vxls = vImg;
 
   if (maxV==maxT(T)) maxV -= 1;
 
@@ -806,7 +806,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
   if (writeDumps) vImg.write("dumpDringMeGrow1.tif");
 
 
-  voxelImageT<T> radimag({nr, nth+6, nz}, 0);
+  VoxelImageT<T> radimag({nr, nth+6, nz}, 0);
   for (int z=0; z<int(radimag.nz()) ; z++)
   {
     int k = z*nzCrs;
@@ -865,7 +865,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
   if (writeDumps) radimag.write("dumpDringRad.tif");
   avg = average2p(radimag, minVr);
   replaceRange(radimag, T(0), T(minVr-1), T(avg));
-  voxelImageT<T> smoothRad = mean(radimag);//GaussHalf
+  VoxelImageT<T> smoothRad = mean(radimag);//GaussHalf
 
   //biLateral(smoothRad, 2., 1., 0.5);
   avg = average2p(smoothRad, minVr);
@@ -921,7 +921,7 @@ void deringImg(voxelImageT<T>& vImg, int nr,int nth,int nz,  T minV,T maxV,
 
 
 template<typename T>
-void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSizs, double resolutionSqr, double noisVSqr, bool writeDumps, std::string smoot) {
+void  multiSegment(VoxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSizs, double resolutionSqr, double noisVSqr, bool writeDumps, std::string smoot) {
 
 
   const int nSegs=minSizs.size();
@@ -935,7 +935,7 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
   if(writeDumps)   vImg.write("dumpImage3_bilateral.tif");
   vector<int> meds(nSegs,-2);
   {
-    voxelImageT<T> vxls = median(median(vImg));
+    VoxelImageT<T> vxls = median(median(vImg));
     array<double,256> histi{{0}};
     forAllvv_seq(vxls)  { if (1<=vv && vv<maxT(T)) { histi[vv]+=1.;} }
     double myu[256], cdf[256];   // mean value for separation, omega is CDF
@@ -952,11 +952,11 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
     replaceRange(vImg, T(meds[tt]),T(meds[tt]), T(meds[tt]-1)); ///! -1 is to make the voxels anasyned
   cout<<endl;
 
-  voxelImageT<T> origimg = vImg;
+  VoxelImageT<T> origimg = vImg;
 
   if(writeDumps)   origimg.write("dumpImage4_replaceRange.tif");
 
-  voxelImageT<T> grad;
+  VoxelImageT<T> grad;
 
   if (hasExt(smoot,".mhd")) {
     vImg.readFromHeader(smoot);
@@ -992,7 +992,7 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
 
 
 
-  // voxelImageT<T> segmented=vImg;
+  // VoxelImageT<T> segmented=vImg;
   for (size_t tt=0;tt<meds.size(); ++tt) {
     cout<<tt<<": m"<<meds[tt]<<"  t"<<trshlds[tt]<<"     m"<<meds[tt]<<"  t"<<trshlds[tt+1]<<"    ";
     cout<< "    "<<0.5*(1.*meds[tt]+1.*trshlds[tt])+0.5<<"  "<<0.5*(meds[tt]+1.*trshlds[tt+1])-0.5<<"  "<<meds[tt]<<endl;
@@ -1146,7 +1146,7 @@ void  multiSegment(voxelImageT<T>& vImg, vector<int> trshlds, vector<int> minSiz
 
 
 template<typename T>
-void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs, double resolutionSqr, double noisv, double localF, int krnl, double flatnes, double gradFactor, int nItrs, bool writeDumps)
+void  multiSegment2(VoxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs, double resolutionSqr, double noisv, double localF, int krnl, double flatnes, double gradFactor, int nItrs, bool writeDumps)
 {
 
 
@@ -1161,7 +1161,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
 
   vars<T> meds(nSegs,-2);
   {
-    voxelImageT<T> vxls = median(median(vImg));
+    VoxelImageT<T> vxls = median(median(vImg));
     array<double,maxT(T)> histi{{0}};
     forAllvv_seq(vxls)  { if (1<=vv && vv<maxT(T)) { histi[vv]+=1.;} }
     double myu[imaxT(T)+1], cdf[imaxT(T)+1];   // mean value for separation, omega is CDF
@@ -1175,7 +1175,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
   ensure(meds.back()>0,"meds:"+_s(meds),-1);
 
 
-  voxelImageT<T> origimg = vImg;
+  VoxelImageT<T> origimg = vImg;
 
 
   ints midIs(size_t(maxT(T))+1, -1);
@@ -1185,7 +1185,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
   vImg = median(vImg);
 
 
-  voxelImageT<T> grad;
+  VoxelImageT<T> grad;
   grad=magGradient(origimg, resolutionSqr*(dmaxT(T)/(meds.back()-meds[0])));
 
   bilateralX(grad, 1,1, noisv*noisv, 0.05, 12);
@@ -1221,7 +1221,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
 
 
   if(writeDumps)   vImg.write("dumpseg1.tif");
-  //voxelImageT<T> meanimg = origimg;
+  //VoxelImageT<T> meanimg = origimg;
 
   //const int noisv=sqrt(noisVSqr+1)+1;
 
@@ -1248,7 +1248,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
     vImg.zeroGrad(2);
     //if(writeDumps)  meanimg.write("dumpmean"+to_string(2+iter)+".tif");
 
-    voxelImageT<T> vxls = vImg;
+    VoxelImageT<T> vxls = vImg;
 
     (std::cout<<"-").flush();
     size_t nChange=0,  nAll=0;
@@ -1308,7 +1308,7 @@ void  multiSegment2(voxelImageT<T>& vImg, vars<Tint> trshlds, vars<int> minSizs,
 }
 
 
-template<typename T>  bool segment2(voxelImageT<T>& vImg, int nSegs, vars<Tint> th, vars<int> minSizs,
+template<typename T>  bool segment2(VoxelImageT<T>& vImg, int nSegs, vars<Tint> th, vars<int> minSizs,
 double noisev, double localF, double flatnes, double resolution, double gradFactor, int krnl, int nItrs, int writedumps
 ) {
   cout<<"{ \n  segmenting";
@@ -1341,11 +1341,11 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
     dbls hist(nHist+1, 0.);
     {
       cout<<"  calculating histogram: ";
-      voxelImageT<T> voxls = vImg;
+      VoxelImageT<T> voxls = vImg;
       //bilateralGauss(voxls, 2, noisev, 0.00, (resolution+1.), 1,254);
       voxls = median(median(median(median(median(vImg)))));
       //voxls.write("dumpmedian.mhd");
-      voxelImageT<T> grad=magGradient(voxls, resolution);
+      VoxelImageT<T> grad=magGradient(voxls, resolution);
       //grad.write("dumpGrad5.mhd");
       array<double,5> otst = otsu_minAvgThresholdAvgMax(grad,0,maxT(T)-1);
 
@@ -1381,7 +1381,7 @@ double noisev, double localF, double flatnes, double resolution, double gradFact
   return true;
 }
 
-    /*{//     //voxelImageT<T> avgimg = meanimg;
+    /*{//     //VoxelImageT<T> avgimg = meanimg;
      //forAllkji_m_(1,origimg)
      //{
       //size_t iii = origimg.index(i,j,k);

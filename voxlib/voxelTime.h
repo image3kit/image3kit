@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 using namespace std;
 
 
-template<typename T>  bool voxelTimeMedian( std::stringstream & ins, voxelImageT<T>& vImage)
+template<typename T>  bool voxelTimeMedian( std::stringstream & ins, VoxelImageT<T>& vImage)
 {
   string inDir;     ins>>inDir;
   string sfx;       ins>>sfx;
@@ -34,7 +34,7 @@ template<typename T>  bool voxelTimeMedian( std::stringstream & ins, voxelImageT
 
   ensure(kernelN==3);
   size_t mid = kernelN/2;
-  vector<voxelImageT<T> > imgs(kernelN);
+  vector<VoxelImageT<T> > imgs(kernelN);
   imgs[0]=vImage;
   imgs[0].readBin(*imgNams.begin());
   for(int i=1; i<imgs.size(); ++i) imgs[i]=imgs[0];

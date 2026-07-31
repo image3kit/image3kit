@@ -77,12 +77,12 @@ inline void setTifTags(const dbl3& X0_, const dbl3& dx_, TIFF *tif) {
   (std::cout<<" tag: \""<<ostrim.str()<<"\" ").flush();
   TIFFSetField(tif, TIFFTAG_IMAGEDESCRIPTION, ostrim.str().c_str());
 
-  TIFFSetField(tif, TIFFTAG_SOFTWARE, "voxelImage+libtiff");
+  TIFFSetField(tif, TIFFTAG_SOFTWARE, "VoxelImage+libtiff");
 }
 
 
 template<typename T>
-int readTif(voxelField<T>&  aa, std::string fnam, int maxNz=-1) {
+int readTif(VoxelField<T>&  aa, std::string fnam, int maxNz=-1) {
   (std::cout<<  " reading tif file "<<fnam<<" ").flush();
 
   uint32_t nx, ny;
@@ -97,7 +97,7 @@ int readTif(voxelField<T>&  aa, std::string fnam, int maxNz=-1) {
   if (npages > 1.1*maxNzVal+2)  npages=maxNzVal;
 
   (std::cout<<"size: ("<<nx<<", "<<ny<<", "<<npages<<") * "<<sizeof(T)).flush();
-  if (voxelImageT<T>* vxls = dynamic_cast<voxelImageT<T>*>(&aa)) {
+  if (VoxelImageT<T>* vxls = dynamic_cast<VoxelImageT<T>*>(&aa)) {
     getTifTags(vxls->X0Ch(),vxls->dxCh(),tif);
     (std::cout<<",  X0:"<<vxls->X0()<<",  dx:"<<vxls->dx()).flush(); }
 
@@ -120,7 +120,7 @@ int readTif(voxelField<T>&  aa, std::string fnam, int maxNz=-1) {
 
 
 template<typename T>
-int writeTif(const voxelField<T>&  aa, std::string fnam) {
+int writeTif(const VoxelField<T>&  aa, std::string fnam) {
 
   uint32_t nx=aa.nx(), ny=aa.ny();
   int pn=0, npages=aa.nz();
@@ -129,7 +129,7 @@ int writeTif(const voxelField<T>&  aa, std::string fnam) {
   TIFF * tif = (TIFF *) NULL;
   tif = TIFFOpen(fnam.c_str(), "w8");    if (tif == NULL)  return -2;
 
-  const voxelImageT<T>* vxls = dynamic_cast<const voxelImageT<T>*>(&aa);
+  const VoxelImageT<T>* vxls = dynamic_cast<const VoxelImageT<T>*>(&aa);
   if(vxls) setTifTags(vxls->X0(),vxls->dx(),tif);
   else std::cout<<"dxXo not set"<<std::endl;
 
@@ -162,13 +162,13 @@ int writeTif(const voxelField<T>&  aa, std::string fnam) {
 
 
 template<typename T>
-int writeTif(const voxelField<T>&  aa, std::string fnam, int iStart,int iEnd , int jStart,int jEnd , int kStart,int kEnd ) {
+int writeTif(const VoxelField<T>&  aa, std::string fnam, int iStart,int iEnd , int jStart,int jEnd , int kStart,int kEnd ) {
 
-  voxelImageT<T>  bb;
+  VoxelImageT<T>  bb;
   bb.reset({iEnd-iStart, jEnd-jStart, kEnd-kStart});
-  const voxelImageT<T>* vxls = dynamic_cast<const voxelImageT<T>*>(&aa);
+  const VoxelImageT<T>* vxls = dynamic_cast<const VoxelImageT<T>*>(&aa);
   if(vxls)  bb.setFrom(*vxls, iStart, jStart, kStart);
-  else      bb.voxelField<T>::setFrom(aa, iStart, jStart, kStart);
+  else      bb.VoxelField<T>::setFrom(aa, iStart, jStart, kStart);
 
   return writeTif(bb, fnam);
 
@@ -179,16 +179,16 @@ int writeTif(const voxelField<T>&  aa, std::string fnam, int iStart,int iEnd , i
 }
 
 template<class T>
-std::unique_ptr<voxelImageTBase> _readTiffToPtr(const std::string& fnam, int maxNz=-1) {
-  voxelImageT<T> vImg;
+std::unique_ptr<VoxelImagesBase> _readTiffToPtr(const std::string& fnam, int maxNz=-1) {
+  VoxelImageT<T> vImg;
   readTif(vImg, fnam, maxNz);
-  return std::make_unique<voxelImageT<T>>(std::move(vImg));
+  return std::make_unique<VoxelImageT<T>>(std::move(vImg));
 }
 
-inline std::unique_ptr<voxelImageTBase>  readTifAnyT(std::string fnam, int maxNz=-1) {
+inline std::unique_ptr<VoxelImagesBase>  readTifAnyT(std::string fnam, int maxNz=-1) {
   TIFF *tif = (TIFF *) NULL;
   tif = TIFFOpen(fnam.c_str(), "r");
-  if (tif == NULL)  return std::unique_ptr<voxelImageTBase>(nullptr);
+  if (tif == NULL)  return std::unique_ptr<VoxelImagesBase>(nullptr);
   uint16_t frmt = SAMPLEFORMAT_UINT,   nbits = 8;
   TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT, &frmt);
   TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &nbits);

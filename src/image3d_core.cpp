@@ -38,6 +38,16 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     .def("__setitem__", [](var3<int> &v, int i, int val) { v[i] = val; })
     .def("__len__", [](const var3<int> &) { return 3; })
     .def("__repr__", [](const var3<int> &v) { return "int3(" + _s(v.x) + ", " + _s(v.y) + ", " + _s(v.z) + ")"; })
+    .def("__eq__", [](const var3<int> &v, py::object other) {
+        try {
+            py::sequence s = other.cast<py::sequence>();
+            if (py::len(s) != 3) return false;
+            auto o = tov3<int>(s);
+            return v.x == o.x && v.y == o.y && v.z == o.z;
+        } catch (const std::exception &) {
+            return false;
+        }
+    })
     ;
     py::implicitly_convertible<py::tuple, var3<int>>();
     py::implicitly_convertible<py::list, var3<int>>();
@@ -58,6 +68,16 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
     .def("__setitem__", [](var3<double> &v, int i, double val) { v[i] = val; })
     .def("__len__", [](const var3<double> &) { return 3; })
     .def("__repr__", [](const var3<double> &v) { return "dbl3(" + _s(v.x) + ", " + _s(v.y) + ", " + _s(v.z) + ")"; })
+    .def("__eq__", [](const var3<double> &v, py::object other) {
+        try {
+            py::sequence s = other.cast<py::sequence>();
+            if (py::len(s) != 3) return false;
+            auto o = tov3<double>(s);
+            return v.x == o.x && v.y == o.y && v.z == o.z;
+        } catch (const std::exception &) {
+            return false;
+        }
+    })
     ;
     py::implicitly_convertible<py::tuple, var3<double>>();
     py::implicitly_convertible<py::list, var3<double>>();
@@ -76,11 +96,11 @@ PYBIND11_MODULE(_core, mod, py::mod_gil_not_used()) {
 
     // **************** sirun submodule ***************
 
-    auto voxlib = mod.def_submodule("voxlib", "Auto-generated wrapper for voxelImageT template C++ classes.");
+    auto voxlib = mod.def_submodule("voxlib", "Auto-generated wrapper for VoxelImageT template C++ classes.");
 
-    auto _voxelImageTBase = py::class_<voxelImageTBase>(voxlib, "voxelImageTBase")
-    .def("write", &voxelImageTBase::write, py::arg("fileName"))
-    .def("print_info", &voxelImageTBase::printInfo)
+    auto _VoxelImagesBase = py::class_<VoxelImagesBase>(voxlib, "VoxelImagesBase")
+    .def("write", &VoxelImagesBase::write, py::arg("filename"))
+    .def("print_info", &VoxelImagesBase::printInfo)
     ;
 
     auto _shape = py::class_<shape>(voxlib, "shape");

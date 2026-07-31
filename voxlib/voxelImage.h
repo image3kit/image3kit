@@ -33,7 +33,7 @@ enum class readOpt {
 
 //! 3D voxel data, on Cartesian uniform grids, with efficient access functions, and I/O into  .tif, .raw.gz .am, .raw, .dat file formats.
 template <typename T>
-class voxelField {
+class VoxelField {
  public:
 
   long long nij_;
@@ -41,11 +41,11 @@ class voxelField {
   vars<T>   data_;
 
 
-  voxelField(): nij_(0), nnn_(0,0,0) {}
-  voxelField(int3 n)          {  reset(n);  }
-  voxelField(int3 n, T value) {  reset(n, value);  }
-  voxelField(int n1, int n2, int n3, T value) {  reset(int3(n1,n2,n3), value);  }
-  virtual ~voxelField() {}
+  VoxelField(): nij_(0), nnn_(0,0,0) {}
+  VoxelField(int3 n)          {  reset(n);  }
+  VoxelField(int3 n, T value) {  reset(n, value);  }
+  VoxelField(int n1, int n2, int n3, T value) {  reset(int3(n1,n2,n3), value);  }
+  virtual ~VoxelField() {}
 
   void reset(int3 n);
   void reset(int3 n, T value);
@@ -68,8 +68,8 @@ class voxelField {
   void replacezLayer(int j, int fromj);
   void replaceyLayer(int j, int fromj);
   void replacexLayer(int i, int fromi);
-  void setBlock(int n1, int n2, int n3, const voxelField<T>&Values);
-  void setFrom(const voxelField<T>&Values, int n1, int n2, int n3);
+  void setBlock(int n1, int n2, int n3, const VoxelField<T>& Values);
+  void setFrom(const VoxelField<T>& Values, int n1, int n2, int n3);
 
 
   const T& operator()(int i, int j, size_t k) const { return data_[k*nij_+j*nnn_.x+i]; }
@@ -110,12 +110,12 @@ class voxelField {
 
 
 //! Base class handling image files with different data types (float, char, int...)
-class voxelImageTBase {
+class VoxelImagesBase {
  public:
-  virtual ~voxelImageTBase() {}
+  virtual ~VoxelImagesBase() {}
   virtual void write(std::string fileName) const = 0;
   virtual void printInfo() const {}
-  virtual std::unique_ptr<voxelImageTBase> copy() const = 0;
+  virtual std::unique_ptr<VoxelImagesBase> copy() const = 0;
   virtual const int3& size3() const = 0;
   virtual const dbl3& dx() const = 0;
   virtual const dbl3& X0() const = 0;
@@ -124,33 +124,33 @@ class voxelImageTBase {
 
 //!  3D image data of different types (T = float, uchar, int...)
 template <typename T>
-class voxelImageT: public voxelImageTBase, public voxelField<T>  {
+class VoxelImageT: public VoxelImagesBase, public VoxelField<T>  {
 
   dbl3  X0_;   //!< origin
   dbl3  dx_;   //!< voxel size
 
  public:
 
-  voxelImageT(): X0_(0.,0.,0.), dx_(1,1,1) {}
+  VoxelImageT(): X0_(0.,0.,0.), dx_(1,1,1) {}
 
 
-  voxelImageT(int3 n, T value=0, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.))
-  : voxelField<T>( n,  value), X0_(xmin),dx_(dx) {}
+  VoxelImageT(int3 n, T value=0, dbl3 dx=dbl3(1.,1.,1.), dbl3 xmin=dbl3(0.,0.,0.))
+  : VoxelField<T>( n,  value), X0_(xmin),dx_(dx) {}
 
-  voxelImageT(const std::string& fileName, readOpt procConvert, int maxNz=-1); // readConvertFromHeader
+  VoxelImageT(const std::string& fileName, readOpt procConvert, int maxNz=-1); // readConvertFromHeader
 
   void readFromHeader(const std::string& fileName, int processKeys=1, int maxNz=-1);
 
-  template<typename T2> void resetFrom(const voxelImageT<T2>&Values);
-  void setFrom(const voxelImageT<T>&Values, int n1, int n2, int n3);
+  template<typename T2> void resetFrom(const VoxelImageT<T2>& Values);
+  void setFrom(const VoxelImageT<T>&Values, int n1, int n2, int n3);
   bool readAscii(std::string fileName, int nSkipBytes=0);
 
-  std::unique_ptr<voxelImageTBase> copy() const { return std::make_unique<voxelImageT<T>>(*this); }
+  std::unique_ptr<VoxelImagesBase> copy() const { return std::make_unique<VoxelImageT<T>>(*this); }
 
   void cropD(int3 frm,  int3 to,int emptylyrs=0, T eLyrsValue=1, bool verbose=false) ;
 
   void writeHeader(std::string fileName) const;
-  void writeHeader(std::string fileName, int3 iBgn, int3 iEnd) const { voxelField<T>::writeHeader(fileName,iBgn,iEnd,dx_,X0_); }
+  void writeHeader(std::string fileName, int3 iBgn, int3 iEnd) const { VoxelField<T>::writeHeader(fileName,iBgn,iEnd,dx_,X0_); }
   void writeNoHdr(std::string fileName) const;
   void write(std::string fileName) const;
 
@@ -161,12 +161,12 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
   size_t FaceMedian06(int nAdj0,int nAdj1); // obsolete
   void zeroGrad(int nlyr);
 
-  void AND(const voxelImageT& data2);
-  void NOT(const voxelImageT& data2);
-  void OR(const voxelImageT& data2);
-  void XOR(const voxelImageT& data2);
-  void maxEq(const voxelImageT& data2);
-  void minEq(const voxelImageT& data2);
+  void AND(const VoxelImageT& data2);
+  void NOT(const VoxelImageT& data2);
+  void OR(const VoxelImageT& data2);
+  void XOR(const VoxelImageT& data2);
+  void maxEq(const VoxelImageT& data2);
+  void minEq(const VoxelImageT& data2);
 
   void fillHoles(int maxHoleRadius);
 
@@ -187,7 +187,7 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
   dbl3&       X0Ch()        { return X0_; }
   const dbl3& dx  ()  const { return dx_; }
   dbl3&       dxCh()        { return dx_; }
-  const int3& size3() const { return voxelField<T>::size3(); }
+  const int3& size3() const { return VoxelField<T>::size3(); }
 
   double vv_mp5(double i, double j, double k) const { /// linear interpolation
     ///set i,j,k -=0.5 (=_mp5) before passing them here, assuming vxl centres are at +0.5
@@ -202,6 +202,7 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
     return (v00*ld + dd*v10) *(1.-k)+k* (v01*ld + dd*v11);
   }
 };
+
 
 #ifdef _ExtraVxlTypes
 #  define SupportedVoxTyps  unsigned char,unsigned short,int,float,short,unsigned int,double,float3,dbl3
@@ -221,15 +222,15 @@ class voxelImageT: public voxelImageTBase, public voxelField<T>  {
 #endif
 
 
-std::unique_ptr<voxelImageTBase> readImage(std::string hdrNam /*headername or image type*/, int procesKeys = 1, int maxNz = -1);
+std::unique_ptr<VoxelImagesBase> readImage(std::string hdrNam /*headername or image type*/, int procesKeys = 1, int maxNz = -1);
 
 
-template<class T> voxelImageT<T>*
-vxlCast(void* imgPtr) { return dynamic_cast<voxelImageT<T>*>(static_cast<voxelImageTBase*>(imgPtr)); }
+template<class T> VoxelImageT<T>*
+vxlCast(void* imgPtr) { return dynamic_cast<VoxelImageT<T>*>(static_cast<VoxelImagesBase*>(imgPtr)); }
 
 
 template<typename T>
-voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
+VoxelImageT<T> copyOrReadImgT(std::string hdrNam) {
   #ifdef _STOR_PUB
   if (void* ptr = dbget(_STOR,hdrNam,0)) {
     auto imgPtr = vxlCast<T>(ptr); ensure(imgPtr, "wrong image type", -1);
@@ -237,31 +238,31 @@ voxelImageT<T> copyOrReadImgT(std::string hdrNam) {
   }
   else
   #endif
-    return  voxelImageT<T>(hdrNam, readOpt::procOnly);
+    return  VoxelImageT<T>(hdrNam, readOpt::procOnly);
 }
 
 #ifdef _STOR_PUB
   #define _dbgetOrReadImg(_T,_img,_hdrNam)  \
-      voxelImageT<_T>* _img##Ptr;   std::unique_ptr<voxelImageTBase> _img##Read;  \
+      VoxelImageT<_T>* _img##Ptr;   std::unique_ptr<VoxelImagesBase> _img##Read;  \
       if (void* ptr = dbget(_STOR,_hdrNam,0)) { _img##Ptr = vxlCast<_T>(ptr); }  \
       else       { _img##Read = readImage(_hdrNam,1); _img##Ptr=vxlCast<_T>(_img##Read.get()); }  \
       ensure(_img##Ptr, "wrong image type", -1);  \
-      const voxelImageT<_T>& _img = *_img##Ptr;
+      const VoxelImageT<_T>& _img = *_img##Ptr;
 #else
-  #define _dbgetOrReadImg(_T, _img,_hdrNam) voxelImageT<_T> _img(_hdrNam, readOpt::procOnly)
+  #define _dbgetOrReadImg(_T, _img,_hdrNam) VoxelImageT<_T> _img(_hdrNam, readOpt::procOnly)
 #endif
 
-typedef voxelImageT<unsigned char> voxelImage;   //! default image type
+typedef VoxelImageT<unsigned char> VoxelImage;   //! default image type
 
 // moved here / inlined to avoid  mysterious link errors
-template<typename T> inline  void voxelField<T>::reset(int3 nnn)  {
+template<typename T> inline  void VoxelField<T>::reset(int3 nnn)  {
   nij_=(long long)(nnn.x)*nnn.y;
   this->data_.resize((long long)(nnn.z)*nij_+128); // 128 extra memory for readRLE, sync: XADSDAS
   this->data_.resize((long long)(nnn.z)*nij_);
   nnn_=nnn;
 }
 
-template<typename T> inline  void voxelField<T>::reset(int3 nnn, T value)  {
+template<typename T> inline  void VoxelField<T>::reset(int3 nnn, T value)  {
   nij_=(long long)(nnn.x)*nnn.y;
   this->data_.resize((long long)(nnn.z)*nij_+128,value); // 128 extra memory for readRLE, sync: XADSDAS
   this->data_.resize((long long)(nnn.z)*nij_);
