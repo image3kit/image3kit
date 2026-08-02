@@ -109,7 +109,7 @@ void writeSurfaceFiles(const facePieceList& facezsz, const piece<point> pointsAl
     ensure(fil.good());
 
     fil << "# vtk DataFile Version 2.0\n"
-        << "written by voxelImage library by Ali Q. Raeini ...\n"
+        << "Generated using image3kit...\n"
         << "ASCII\n\n"
         << "DATASET POLYDATA"<<endl;
 
@@ -232,7 +232,7 @@ void writeMergeSurfaceFile(const facePieceList& facezsz, const piece<point> poin
     ensure(fil.good());
 
     fil << "# vtk DataFile Version 2.0\n"
-        << "written by voxelImage library by Ali Q. Raeini ...\n"
+        << "Generated using image3kit ...\n"
         << "ASCII\n\n"
         << "DATASET POLYDATA"<<endl;
 

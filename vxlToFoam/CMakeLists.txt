@@ -25,7 +25,7 @@ target_compile_definitions(
           ZLIB
           OpenMP
           VMMLIB
-          IMAGE3KIT_PYTHON_BINDINGS)
+          NO_MAIN)
 
 target_link_libraries(vxlToFoam PRIVATE voxlib ZLIB::ZLIB TIFF::tiff
                                         OpenMP::OpenMP_CXX)

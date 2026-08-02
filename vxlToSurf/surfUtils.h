@@ -44,7 +44,7 @@ struct surfMsh {
 
 
 
-int  smoothSurf(InputFile& inp, facePieceList& facezs, piece<point> points);
+int  smoothSurf(const InputFile& inp, facePieceList& facezs, piece<point> points);
 void writeSurfaceFiles(const facePieceList& facezsz, const piece<point> pointsAll, const std::string& fnams);
 void writeMergeSurfaceFile(const facePieceList& facezsz, const piece<point> pointsAll, const std::string& fnams);
 

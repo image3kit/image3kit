@@ -23,7 +23,7 @@ void fixImage(VoxelImage& vimage);
 void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
 } // namespace
 
-#ifndef IMAGE3KIT_PYTHON_BINDINGS
+#ifndef NO_MAIN
 
 int usage()  {
   cout<<"converts micro-CT images to OpenFOAM serial or simple parallel meshes"<<endl;
@@ -39,7 +39,7 @@ int main(int argc, char** argv)  {
   std::string headerName(argv[++irg]);
   if(headerName.size()<4 || ( headerName.compare(headerName.size()-4,4,".mhd") != 0 && headerName.compare(headerName.size()-4,4,".tif") != 0))
     return usage();
-  int3 nPar={{1,1,1}};
+  int3 nPar(1,1,1);
   nPar[0] = atoi(argv[++irg]);
   nPar[1] = atoi(argv[++irg]);
   nPar[2] = atoi(argv[++irg]);
@@ -55,7 +55,7 @@ int main(int argc, char** argv)  {
 
  return 0;
 }
-#endif
+#endif // NO_MAIN
 
 void vxlToFoamPar_seq(VoxelImage& vimage, int3 nPar, bool resetX0)  {
   int3 n = vimage.size3();
@@ -69,7 +69,7 @@ void vxlToFoamPar_seq(VoxelImage& vimage, int3 nPar, bool resetX0)  {
   vimage.growBox(1);
   vimage.FaceMedian06(1,5);
   vimage.FaceMedian06(1,5);
-  vimage.cropD({{1,1,1}},{{n[0]+1,n[1]+1,n[2]+1}},1,1);   //  XXXXXXXXXXXXXXXXXXXXXXX
+  vimage.cropD(int3(1,1,1), int3(n[0]+1,n[1]+1,n[2]+1), 1, 1);   //  XXXXXXXXXXXXXXXXXXXXXXX
 
   fixImage(vimage);
 

@@ -113,6 +113,10 @@ class triangular : public shape {
     LtInv = 1./LtInv;
     L1 *= -1;
   }
+  triangular(dbl3 _po, double _L1, double _L2, double _h, double _Lt, double _ch, int _insidev):
+      shape(/*polyType*/'t',_insidev),
+      po(_po), L1(-_L1), L2(_L2), h_(_h), hInv(1./_h), LtInv(1./_Lt), ch(_h*(1.-1./_ch))
+    {}
   int value(dbl3 ij) const {
     double dx = LtInv*(ij.x-po.x);
     if (ij.y<po.y-h_) return shape::invalidv;
@@ -309,32 +313,32 @@ using namespace VoxLib;
 
 template<typename T>  bool Paint( stringstream& ins, VoxelImageT<T> & vImg)  {
   _SHAPERATE(setIn);
-  return true;
+  return 0;
 }
 
 template<typename T>  bool PaintAdd( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addTo);
-  return true;
+  return 0;
 }
 
 template<typename T>  bool PaintBefore( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(setBefor);
-  return true;
+  return 0;
 }
 
 template<typename T>  bool PaintAfter( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(setAfter);
-  return true;
+  return 0;
 }
 
 template<typename T>  bool PaintAddBefore( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addBefor);
-  return true;
+  return 0;
 }
 
 template<typename T>  bool PaintAddAfter( stringstream& ins, VoxelImageT<T> & vImg) {
   _SHAPERATE(addAfter);
-  return true;
+  return 0;
 }
 
 } // namespace MCTProcessing

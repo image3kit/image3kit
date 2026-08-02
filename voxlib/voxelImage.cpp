@@ -21,12 +21,12 @@ Developed by:
 #include "voxelEndian.h"
 
 
-#ifdef _WBASM // work around CLang bugs complaining about undefined function
-#include "vxlPro1.cpp"
-#include "vxlPro.cpp"
-#endif
 #include "InputFile.h"
 #include "voxelImgUtils.h"
+
+#ifdef _POCKETPY
+namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
+#endif
 
 using namespace VoxLib;
 using namespace std; //cin cout endl string stringstream  istream istringstream regex*
@@ -64,7 +64,7 @@ void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
       fnam = hdrNam;
   }
   else if (hasExt(hdrNam,".mhd") || hasExt(hdrNam,".py")) {
-    getMhdHeaderData(hdrNam, fnam, nnn, vImg.X0_, vImg.dx_, nSkipBytes,
+    getMhdHeaderData(hdrNam, fnam, nnn, vImg.dx_, vImg.X0_, nSkipBytes,
                      BinaryData, flipSigByt, unit_, X0read, dxread, autoUnit,
                      maxNz, sizeof(T));
   }
@@ -111,17 +111,23 @@ void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
     cout<<"  flipEndian "<<endl;
     flipEndian(vImg);  }
 
-  if(autoUnit  && vImg.dx_[0]>1.0000001)  { //&& dxread, doggy
-    cout<<"\n\n\n  WARNING dx="<<vImg.dx_[0]<<"(>1 -> assuming unit is um),\n  please set Unit manually if needed ****\n\n\n";
+  if(autoUnit  && vImg.dx_[0]>1e-2)  {
+    cout<<"\n\n  WARNING dx="<<vImg.dx_[0]<<"(>1e-2 -> assuming unit is um),\n  please set Unit manually if needed ****\n\n";
     unit_ = 1e-6;
   }
-  if(abs(unit_-1.)>epsT(float)) {
+  if(abs(unit_-1.)>epsT(float) && (!autoUnit || vImg.dx_[0]>1e-2)) {
     vImg.dx_*=unit_;
     vImg.X0_*=unit_;
     cout<<"\n  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
   }
-  // static const voxelplugins<T> plagins;
-  // if (procesKeys) plagins.vxProcess(InputFile(fil,hdrNam),vImg);
+  if (procesKeys) {
+    #ifdef _POCKETPY
+    InputFile fil(hdrNam);
+    VxlPy::execHeaderScript(fil, &vImg, hdrNam);
+    #else
+      cout<<"\n  procesKeys is not added to cpython builds"<<endl;
+    #endif
+  }
   cout<<"."<<endl;
 }
 
@@ -149,10 +155,10 @@ std::unique_ptr<VoxelImagesBase> readImage(string hdrNam,  int procesKeys, int m
     string vtype = getAmiraDataType(hdrNam);
     cout<<"reading '"<<vtype<<"'s from .am file"<<endl;
 
-    IF_MACRO_NOT_VoxBasic8( // if consteval may instantiate the expensive template(?)
+    IF_MACRO_NOTVX8_ONLY( // if consteval may instantiate the expensive template(?)
     if (vtype=="int")       return readToUnique<int>(hdrNam, 0, maxNz);
     if (vtype=="ushort")    return readToUnique<unsigned short>(hdrNam, 0, maxNz);
-    ) // #ifndef _VoxBasic8
+    ) // #ifndef VX8_ONLY
     IF_MACRO__ExtraVxlTypes(
     if (vtype=="short")     return readToUnique<short>(hdrNam, 0, maxNz);
     ) // #ifdef _ExtraVxlTypes
@@ -179,7 +185,7 @@ std::unique_ptr<VoxelImagesBase> readImage(string hdrNam,  int procesKeys, int m
   fil.close();
 
   if (typ=="MET_UCHAR")        return readToUnique<unsigned char >(hdrNam, procesKeys, maxNz);
-  #ifndef _VoxBasic8
+  #ifndef VX8_ONLY
   if (typ=="MET_USHORT")       return readToUnique<unsigned short>(hdrNam, procesKeys, maxNz);
   if (typ=="MET_INT")          return readToUnique<int>           (hdrNam, procesKeys, maxNz);
   if (typ=="MET_FLOAT")        return readToUnique<float>         (hdrNam, procesKeys, maxNz);

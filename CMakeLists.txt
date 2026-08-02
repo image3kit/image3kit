@@ -169,7 +169,7 @@ target_compile_definitions(
           ZLIB
           OpenMP
           VMMLIB
-          IMAGE3KIT_PYTHON_BINDINGS
+          NO_MAIN
           DUMMY=1)
 
 target_link_libraries(_core PRIVATE pybind11::headers)

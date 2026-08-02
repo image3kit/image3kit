@@ -23,10 +23,13 @@ using namespace std;
 #include "voxelRegions.h"
 #include "globals.h"
 
-#ifndef IMAGE3KIT_PYTHON_BINDINGS
+#include "InputFile.h"
+
+namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
+
+#ifndef NO_MAIN
 
 void vxlToFoamPar(VoxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
-void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int iPrc, int jPrc, int kPrc);
 
 int usage() {
   cout<<
@@ -62,7 +65,7 @@ int main(int argc, char** argv)  {  //!- reads image, adds a boundary layers aro
 
  return 0;
 }
-#endif
+#endif // NO_MAIN
 
 
 namespace {
@@ -373,7 +376,7 @@ void toFoam(VoxelImage& vxlImg, int nVVs, const VoxelField<int>& procIsijk, int 
       "    nFaces      "<<nFaces[name]<<';'     <<endl<<         \
       "    startFace     "<<iLastFace<<';'   <<endl<<           \
       "    matchTolerance  0.0001;"    <<endl<<                 \
-      "    transform       unknown;"    <<endl<<                \
+      "    transform       noTransform;"    <<endl<<                \
       "    myProcNo        "<<myId<<";"    <<endl<<            \
       "    neighbProcNo    "<<neiId<<";"    <<endl<<           \
       "  }"                         <<endl;            \

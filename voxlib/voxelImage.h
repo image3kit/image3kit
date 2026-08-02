@@ -211,14 +211,14 @@ class VoxelImageT: public VoxelImagesBase, public VoxelField<T>  {
 #  define IF_MACRO__ExtraVxlTypes(...)
 #endif
 
-#ifdef _VoxBasic8
+#ifdef VX8_ONLY
 #  define SupportedVoxTyps  unsigned char
-#  define IF_MACRO_NOT_VoxBasic8(...)
+#  define IF_MACRO_NOTVX8_ONLY(...)
 #else
 #  ifndef _ExtraVxlTypes
 #    define SupportedVoxTyps  unsigned char,unsigned short,int,float
 #  endif
-#  define IF_MACRO_NOT_VoxBasic8(...) __VA_ARGS__
+#  define IF_MACRO_NOTVX8_ONLY(...) __VA_ARGS__
 #endif
 
 

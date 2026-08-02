@@ -17,7 +17,7 @@
 #include "surfUtils.h"
 
 
-surfMsh createSurface(InputFile& inp,  const VoxelImage & vxlImg, const int nVVs, const std::string& outputSurface);
+surfMsh createSurface(const InputFile& inp,  const VoxelImage & vxlImg, const int nVVs, const std::string& outputSurface);
 
 using namespace std;
 void vxlToSurfMesh(InputFile& inp, VoxelImage& vimage, std::string outputSurface)  {
@@ -103,27 +103,29 @@ void vxlToSurfMesh(InputFile& inp, VoxelImage& vimage, std::string outputSurface
 }
 
 
-#ifndef IMAGE3KIT_PYTHON_BINDINGS
+#ifndef NO_MAIN
+int usage()  {
+    std::cout<<"\nvoxelToSurfMesh:\n converting 3D image file to  surface format"
+             <<"\nusage: \n"
+             <<  "    voxelToSurfMesh inputMetaImage.mhd outPutFile.obj \n"
+             << std::endl;
+    return -1;
+}
+
 int main(int argc, char *argv[])  {
 
-    if(argc<2) {
-       std::cout<<"\nvoxelToSurfMesh:\n converting 3D image file to  surface format"
-                <<"\nusage: \n"
-                <<  "    voxelToSurfMesh inputMetaImage.mhd outPutFile.obj \n"
-                << std::endl;
-       return -1;
-    }
+    if(argc<2) return usage();
 
     std::string fnam(argv[1]); // .mhd header or image name
+    if(fnam.size()<4) return usage();
 
     InputFile inp(std::string(hasExt(fnam,".mhd")? fnam : ""), 0);
     inp.echoKeywords(cout);
 
-    if(fnam.size()<4) return usage();
     std::string outputSurface = (argc>2) ? string(argv[2]) :
                   inp.getOr("outputSurface", basePath(fnam)+".obj");
 
-    VoxelImage vimage(fnam);
+    VoxelImage vimage(fnam, readOpt::justRead);
 
     vxlToSurfMesh(inp, vimage, outputSurface);
 

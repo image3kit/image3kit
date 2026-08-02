@@ -10,7 +10,7 @@
 #include "surfUtils.h"
 
 using namespace std;
-int  smoothSurf(InputFile& inp, facePieceList& facezsZ, piece<point> pointsAll)  {
+int  smoothSurf(const InputFile& inp, facePieceList& facezsZ, piece<point> pointsAll)  {
   Info<<"\n... smoothing surface ..."<<endl<<endl ;
 
   //word surfFileName(inp.getOr("inputSurface"), std::string("Chomic251Cyl.vtk"));

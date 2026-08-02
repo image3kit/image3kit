@@ -28,7 +28,7 @@ using namespace std;
 
 
 
-#ifndef IMAGE3KIT_PYTHON_BINDINGS
+#ifndef NO_MAIN
 
 void vxlToFoam(VoxelImage& vxlImg);
 
@@ -40,6 +40,10 @@ int usage()  {
   return 1;
 }
 
+#include "InputFile.h"
+
+namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
+
 int main(int argc, char** argv)  {
 
     if(argc!=2)     return usage();
@@ -47,12 +51,13 @@ int main(int argc, char** argv)  {
     if(headerName.size()<4 || headerName.compare(headerName.size()-4,4,".mhd") != 0) return usage();
 
     VoxelImage vxlImg(headerName, readOpt::procAndConvert);
+    VxlPy::execHeaderScript(InputFile(headerName), &vxlImg, headerName);
 
     vxlToFoam(vxlImg);
 
     return 0;
 }
-#endif
+#endif // NO_MAIN
 
 namespace {
 void fixImage(VoxelImage& vxlImg);

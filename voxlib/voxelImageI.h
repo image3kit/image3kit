@@ -100,29 +100,32 @@ inline double covarianceDbl(const VoxelImageT<T1>& img1, const VoxelImageT<T2>& 
   double sum1=0., sum2=0.; size_t count=0;
   OMPFor(reduction(+:sum1) reduction(+:sum2) reduction(+:count))
   forAlliii_seq(img1) {   int v1=img1(iii), v2=img2(iii);
-   if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum1+=v1; sum2+=v2;  ++count; } }
+   if(bgn<=v1 && v1<=end && bgn<=v2 && v2<=end) { sum1+=v1; sum2+=v2;  ++count; } }
 
+  if (count <= 1) return 0.0;
   double mean1 = sum1/count;
   double mean2 = sum2/count;
 
   double sum12=0., sum11=0., sum22=0.;
   OMPFor(reduction(+:sum11) reduction(+:sum22) reduction(+:sum12))
   forAlliii_seq(img1) {   int v1=img1(iii), v2=img2(iii);
-   if(bgn<=v1 && v1<end && bgn<=v2 && v2<end) { sum11+=(v1-mean1)*(v1-mean1);  sum22+=(v2-mean2)*(v2-mean2); sum12+=(v1-mean1)*(v2-mean2); } }
-    //cout<<"cov: "<<sum12/std::sqrt(sum11*sum22)<<" "<<sum12<<" / "<<sum11<<"*"<<sum22<<" "<<count<<" xxx  ";
-  return sum12/std::sqrt(sum11*sum22);
+   if(bgn<=v1 && v1<=end && bgn<=v2 && v2<=end) { sum11+=(v1-mean1)*(v1-mean1);  sum22+=(v2-mean2)*(v2-mean2); sum12+=(v1-mean1)*(v2-mean2); } }
+  double denom = std::sqrt(sum11*sum22);
+  if (denom == 0.0) return 0.0;
+  return sum12/denom;
 }
 
 template<typename T> double varianceDbl(const VoxelImageT<T>& img, int bgn, int end, bool verbose=false) {
   double sum=0.; size_t count=0;
   OMPFor(reduction(+:sum) reduction(+:count))
-  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<end) { sum+=vv;  ++count; } }
+  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<=end) { sum+=vv;  ++count; } }
 
-  int mean = sum/count;
+  if (count <= 1) return 0.0;
+  double mean = sum/count;
 
   sum=0.;
   OMPFor(reduction(+:sum))
-  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<end) { sum+=(vv-mean)*(vv-mean); } }
+  forAllvp_seq(img) { int vv=*vp; if(bgn<=vv && vv<=end) { sum+=(vv-mean)*(vv-mean); } }
   if (verbose)  std::cout<<"stddv: "<<sum/(count-1)<<", count: "<<count<<", mean: "<<mean<<"  ";
   return sum/(count-1);
 }
@@ -706,7 +709,7 @@ template<typename T> inline // inline is needed for crap macOS clang++
 VoxelImageT<T>::VoxelImageT(const std::string& fname, readOpt procConvert, int maxNz)
 : X0_(0.,0.,0.),dx_(1,1,1)
 { //! read image and if needed convert its type // readConvertFromHeader
-  #ifdef _VoxBasic8
+  #ifdef VX8_ONLY
   static_assert(sizeof(T)<=1);
   #endif
 
