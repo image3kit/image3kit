@@ -1,5 +1,6 @@
+-include .env
 
-VENV_DIR := $(shell \
+VENV_DIR ?= $(shell \
 	if [ -d .venv ]; then echo .venv; \
 	elif [ -d ../.venv ]; then echo ../.venv; \
 	elif [ -d ../../.venv ]; then echo ../../.venv; \

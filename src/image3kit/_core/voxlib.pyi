@@ -84,7 +84,7 @@ class VxlImgF32(VoxelImagesBase):
         mask1: typing.SupportsInt | typing.SupportsIndex,
         mask2: typing.SupportsInt | typing.SupportsIndex,
         threshold: typing.SupportsInt | typing.SupportsIndex,
-        seed: typing.SupportsInt | typing.SupportsIndex,
+        seed: typing.SupportsInt | typing.SupportsIndex = -1,
     ) -> None:
         """
         Add surface noise.
@@ -313,7 +313,7 @@ class VxlImgF32(VoxelImagesBase):
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
         max_val: typing.SupportsInt | typing.SupportsIndex = 3.4028234663852886e38,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+    ) -> list[float]:
         """
         returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
         """
@@ -613,7 +613,7 @@ class VxlImgI32(VoxelImagesBase):
         mask1: typing.SupportsInt | typing.SupportsIndex,
         mask2: typing.SupportsInt | typing.SupportsIndex,
         threshold: typing.SupportsInt | typing.SupportsIndex,
-        seed: typing.SupportsInt | typing.SupportsIndex,
+        seed: typing.SupportsInt | typing.SupportsIndex = -1,
     ) -> None:
         """
         Add surface noise.
@@ -842,7 +842,7 @@ class VxlImgI32(VoxelImagesBase):
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
         max_val: typing.SupportsInt | typing.SupportsIndex = 2147483647,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+    ) -> list[float]:
         """
         returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
         """
@@ -1142,7 +1142,7 @@ class VxlImgU16(VoxelImagesBase):
         mask1: typing.SupportsInt | typing.SupportsIndex,
         mask2: typing.SupportsInt | typing.SupportsIndex,
         threshold: typing.SupportsInt | typing.SupportsIndex,
-        seed: typing.SupportsInt | typing.SupportsIndex,
+        seed: typing.SupportsInt | typing.SupportsIndex = -1,
     ) -> None:
         """
         Add surface noise.
@@ -1383,7 +1383,7 @@ class VxlImgU16(VoxelImagesBase):
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
         max_val: typing.SupportsInt | typing.SupportsIndex = 65535,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+    ) -> list[float]:
         """
         returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
         """
@@ -1720,7 +1720,7 @@ class VxlImgU8(VoxelImagesBase):
         mask1: typing.SupportsInt | typing.SupportsIndex,
         mask2: typing.SupportsInt | typing.SupportsIndex,
         threshold: typing.SupportsInt | typing.SupportsIndex,
-        seed: typing.SupportsInt | typing.SupportsIndex,
+        seed: typing.SupportsInt | typing.SupportsIndex = -1,
     ) -> None:
         """
         Add surface noise.
@@ -1971,7 +1971,7 @@ class VxlImgU8(VoxelImagesBase):
         self,
         min_val: typing.SupportsInt | typing.SupportsIndex = 0,
         max_val: typing.SupportsInt | typing.SupportsIndex = 255,
-    ) -> typing.Annotated[list[float], "FixedSize(5)"]:
+    ) -> list[float]:
         """
         returns an array containing [min, avg_0, threshold, avg_1, max] of voxel values
         """
