@@ -305,7 +305,7 @@ static void fixData(const VoxelImageT<T> &vImg, std::string& normalAxis,
   if (hasExt(fnam,".png"))  fnam = fnam.substr(0,fnam.size()-4);
   if (fnam[0]=='_') fnam=_s(axs)+_s(iSlice)+fnam+".png";
   else              fnam=fnam+"_"+_s(axs)+_s(iSlice)+".png";
-  if (fnam.find('/')==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
+  if (fnam.find_first_of("\\/")==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
 }
 
 

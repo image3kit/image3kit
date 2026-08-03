@@ -18,3 +18,22 @@ UTEST(Timing, DataCollection) {
     tim("Testing Timing");
     EXPECT_EQ(2u, tim.times.size());
 }
+
+UTEST(Typses, PathHelpersWindowsSeparators) {
+    // Windows absolute paths use only backslashes; these helpers must not
+    // treat such paths as bare filenames (regression for the CI failure
+    // where slice PNGs were not written on windows-latest runners).
+    std::string winPath = "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpXXXX\\Zcylinder.png";
+
+    std::string prepended = prepend("grey_", winPath);
+    std::string nameOfPrepended = nameOf(prepended);
+    std::string nameOfWinPath = nameOf(winPath);
+    std::string basePathOfWinPath = basePath(winPath);
+
+    EXPECT_STREQ("grey_Zcylinder", nameOfPrepended.c_str());
+    EXPECT_STREQ("C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpXXXX\\grey_Zcylinder.png",
+                 prepended.c_str());
+    EXPECT_STREQ("Zcylinder", nameOfWinPath.c_str());
+    EXPECT_STREQ("C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\tmpXXXX\\Zcylinder",
+                 basePathOfWinPath.c_str()); // strips ".png" suffix, keeps the backslash directory intact
+}

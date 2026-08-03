@@ -257,7 +257,7 @@ template<typename T>  bool plotAll(VoxelImageT<T>& vImg,  int minv=0, int maxv=-
   (cout<<"slice2: "<<fnam_<<"*, minmaxv: "<<minv<<" "<<maxv<<" ... "<<nBins).flush();
   ensure (maxv>minv, "error maxv shall be bigger than minv, hint: the image may be empty, or has a single value");
 
-    if (fnam_.find('/')==std::string::npos) { mkdirs("fig"); fnam_="fig/"+fnam_; }
+    if (fnam_.find_first_of("\\/")==std::string::npos) { mkdirs("fig"); fnam_="fig/"+fnam_; }
 
   if(colrGreyHistZprofile&4 && vImg.nz()>1) // FIXME: nz==1 breakes svgplot
     svgHistogram(vImg,fnam_+"Dist.svg",nBins,(minv),(maxv));
@@ -594,7 +594,7 @@ template<typename T>  bool svgHistogram( stringstream& ins, VoxelImageT<T>& vImg
   string fnam("aa.svg");
   ins >> fnam >> nBins >> minV >> maxV ;
   if(!hasExt(fnam,".svg"))  fnam+=".svg";
-  if (fnam.find('/')==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
+  if (fnam.find_first_of("\\/")==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
 
   cout<<" >=> "<<fnam<<", nBins: "<<nBins<<", range: "<<minV<<" "<<maxV<<", ";
   VoxLib::svgHistogram(vImg,fnam,nBins,minV,maxV);
@@ -606,7 +606,7 @@ template<typename T>  bool svgZProfile( stringstream& ins, VoxelImageT<T>& vImg)
   string fnam("aa.svg");  Tint minV(0), maxV(maxT(T));
   ins >> fnam >> minV >> maxV ;
   if(!hasExt(fnam,".svg"))  fnam+=".svg";
-  if (fnam.find('/')==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
+  if (fnam.find_first_of("\\/")==std::string::npos) { mkdirs("fig"); fnam="fig/"+fnam; }
   cout<<" >=> "<<fnam<<", range:"<<minV<<" "<<maxV<<"  ";
   VoxLib::svgZProfile(vImg,fnam,T(minV),T(maxV));
   return 0;

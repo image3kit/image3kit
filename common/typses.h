@@ -664,7 +664,7 @@ inline std::string replaceFromTo(const std::string& str, const std::string& frm,
 
 inline std::string basePath(const std::string& path) { /// removes file suffix
   if(auto dl=path.find_last_of('.'); dl != std::string::npos)    {
-     if(auto sl=path.find_last_of('/'); sl!=std::string::npos && sl>dl)
+     if(auto sl=path.find_last_of("\\/"); sl!=std::string::npos && sl>dl)
       return path;
     return path.substr(0,dl);
   }
@@ -673,7 +673,7 @@ inline std::string basePath(const std::string& path) { /// removes file suffix
 
 inline std::string nameOf(const std::string& path) { // removes root dir and file suffix
   auto dl=path.find_last_of('.');
-  auto sl=path.find_last_of('/');
+  auto sl=path.find_last_of("\\/");
   if( sl != std::string::npos) {
     if( dl!=std::string::npos && dl>sl) return path.substr(sl+1,dl-sl-1);
     return path.substr(sl+1);
@@ -682,7 +682,7 @@ inline std::string nameOf(const std::string& path) { // removes root dir and fil
   else return path;
 }
 inline std::string prepend(const std::string& prefix, const std::string& path) { // removes file suffix
-  auto sl=path.find_last_of('/');
+  auto sl=path.find_last_of("\\/");
   if (sl == std::string::npos) return prefix+path;
   return path.substr(0,sl+1)+prefix+path.substr(sl+1);
 }
