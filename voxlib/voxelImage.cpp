@@ -107,9 +107,14 @@ void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
   }
   ensure(readingImage==0, "cannot read image "+fnam,-1);
 
-  if(flipSigByt=="True") {
-    cout<<"  flipEndian "<<endl;
-    flipEndian(vImg);  }
+  if (procesKeys) {
+    #ifdef _POCKETPY
+    InputFile fil(hdrNam);
+    VxlPy::execScript(fil.kwrd("VxlPy"), &vImg, hdrNam);
+    #else
+      cout<<"\n  procesKeys is not added to cpython builds"<<endl;
+    #endif
+  }
 
   if(autoUnit  && vImg.dx_[0]>1e-2)  {
     cout<<"\n\n  WARNING dx="<<vImg.dx_[0]<<"(>1e-2 -> assuming unit is um),\n  please set Unit manually if needed ****\n\n";
@@ -119,14 +124,6 @@ void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
     vImg.dx_*=unit_;
     vImg.X0_*=unit_;
     cout<<"\n  unit= "<<unit_<<" => dx= "<<vImg.dx_<<", X0= "<<vImg.X0_<<endl;
-  }
-  if (procesKeys) {
-    #ifdef _POCKETPY
-    InputFile fil(hdrNam);
-    VxlPy::execScript(fil.kwrd("VxlPy"), &vImg, hdrNam);
-    #else
-      cout<<"\n  procesKeys is not added to cpython builds"<<endl;
-    #endif
   }
   cout<<"."<<endl;
 }

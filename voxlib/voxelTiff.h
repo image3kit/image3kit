@@ -103,16 +103,29 @@ int readTif(VoxelField<T>&  aa, std::string fnam, int maxNz=-1) {
 
   aa.reset(nx,ny,npages,T(0.));
 
+  uint16_t nbits = 8;
+  TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &nbits);
 
-  for (int pn=0;pn<npages;++pn) {
-    for (uint32_t row = 0; row < ny; row++) {
-      if (TIFFReadScanline(tif, &aa(0,row,pn), row, 0) < 0) {
-        break;
+  if (nbits == 8 && sizeof(T) != 1) {
+    std::vector<unsigned char> scanline(nx);
+    for (int pn=0; pn<npages; ++pn) {
+      for (uint32_t row = 0; row < ny; row++) {
+        if (TIFFReadScanline(tif, scanline.data(), row, 0) < 0) break;
+        for (uint32_t col = 0; col < nx; col++) {
+          aa(col, row, pn) = T(scanline[col]);
+        }
       }
+      TIFFReadDirectory(tif);
     }
-    TIFFReadDirectory(tif);
+  } else {
+    for (int pn=0; pn<npages; ++pn) {
+      for (uint32_t row = 0; row < ny; row++) {
+        if (TIFFReadScanline(tif, &aa(0,row,pn), row, 0) < 0) break;
+      }
+      TIFFReadDirectory(tif);
+    }
   }
-    TIFFClose(tif);
+  TIFFClose(tif);
 
   std::cout<<  " ."<<std::endl;
   return 0;
