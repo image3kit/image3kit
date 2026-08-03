@@ -195,7 +195,7 @@ class VxlImgF32(VoxelImagesBase):
     ) -> None: ...
     def direction(self, arg0: str) -> None:
         """
-        Get direction?
+        Swap X axis with the given axis (y or z).
         """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
@@ -353,7 +353,7 @@ class VxlImgF32(VoxelImagesBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgF32 | None = None,
+        alpha_image: typing.Any | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -724,7 +724,7 @@ class VxlImgI32(VoxelImagesBase):
     ) -> None: ...
     def direction(self, arg0: str) -> None:
         """
-        Get direction?
+        Swap X axis with the given axis (y or z).
         """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
@@ -882,7 +882,7 @@ class VxlImgI32(VoxelImagesBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgI32 | None = None,
+        alpha_image: typing.Any | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -1195,7 +1195,7 @@ class VxlImgU16(VoxelImagesBase):
         end: typing.SupportsInt | typing.SupportsIndex = 65535,
         shift: typing.SupportsFloat | typing.SupportsIndex = -1.0,
         span: typing.SupportsFloat | typing.SupportsIndex = 1.0,
-        mask: VxlImgU8 = None,
+        mask: typing.Any = None,
     ) -> None:
         """
         Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2
@@ -1265,7 +1265,7 @@ class VxlImgU16(VoxelImagesBase):
     ) -> None: ...
     def direction(self, arg0: str) -> None:
         """
-        Get direction?
+        Swap X axis with the given axis (y or z).
         """
     def fill_holes(self, maxHoleRadius: typing.SupportsInt | typing.SupportsIndex) -> None:
         """
@@ -1423,7 +1423,7 @@ class VxlImgU16(VoxelImagesBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgU16 | None = None,
+        alpha_image: typing.Any | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:
@@ -1773,7 +1773,7 @@ class VxlImgU8(VoxelImagesBase):
         end: typing.SupportsInt | typing.SupportsIndex = 255,
         shift: typing.SupportsFloat | typing.SupportsIndex = -1.0,
         span: typing.SupportsFloat | typing.SupportsIndex = 1.0,
-        mask: VxlImgU8 = None,
+        mask: typing.Any = None,
     ) -> None:
         """
         Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2
@@ -1843,7 +1843,7 @@ class VxlImgU8(VoxelImagesBase):
     ) -> None: ...
     def direction(self, arg0: str) -> None:
         """
-        Get direction?
+        Swap X axis with the given axis (y or z).
         """
     def extrude_dist_map(
         self,
@@ -2011,7 +2011,7 @@ class VxlImgU8(VoxelImagesBase):
         color: bool = True,
         histogram: bool = True,
         z_profile: bool = True,
-        alpha_image: VxlImgU8 | None = None,
+        alpha_image: typing.Any | None = None,
         alpha_min: typing.SupportsInt | typing.SupportsIndex = 0,
         alpha_max: typing.SupportsInt | typing.SupportsIndex = -1000001,
     ) -> None:

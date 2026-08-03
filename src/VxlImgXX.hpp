@@ -52,11 +52,12 @@ void addDodgyFuncsInt(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &m) requires
         arg("shift2") = 0.0, arg("scale2") = 1.0,
         "Calculate difference between two images, linear or logarithmic scale")
    .def("blend_min_variance",
-        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span, const VoxelImage* mask) {
-          VoxLib::blendMinVariance(m, img2, bgn, end, shift, span, mask);
+        [](SelfT &m, const SelfT &img2, int bgn, int end, double shift, double span, py::object mask) {
+          const VoxelImage* maskPtr = mask.is_none() ? nullptr : mask.cast<const VoxelImage*>();
+          VoxLib::blendMinVariance(m, img2, bgn, end, shift, span, maskPtr);
         },
         arg("image2"), arg("bgn") = 0, arg("end") = imaxT(VxT),
-        arg("shift") = -1.0, arg("span") = 1.0, arg("mask") = nullptr,
+        arg("shift") = -1.0, arg("span") = 1.0, arg("mask") = py::none(),
         "Search for an optimum weight, w, that minimizes variance of img1*w + (1-w)*img2");
 
   m.def("segment2",
@@ -304,7 +305,7 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     #ifndef VOX_BASIC
     .def("delense032", [](SelfT &m, int nItrs, int nAdj0,  int nAdj1, intOr<VxT> lbl0, intOr<VxT> lbl1) { _delense032(m, nItrs, nAdj0, nAdj1, lbl0, lbl1); }, arg("iterations"), arg("nAdj0"), arg("nAdj1"), arg("lbl0"), arg("lbl1"),
         "Delense operation.")
-    .def("circle_out", [](SelfT &m, int x, int y, int r, char d, VxT v) { circleOut(m, x, y, r, d, v); },
+    .def("circle_out", [](SelfT &m, int x, int y, int r, std::string d, VxT v) { circleOut(m, x, y, r, d[0], v); },
          arg("x"), arg("y"), arg("r"), arg("normal_axis"), arg("val"),
          "set values outside circular region centered at (x,y) of radius r along normal_axis to val")
 
@@ -316,13 +317,14 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     #ifdef SVG
     .def("plot_all", [](SelfT &m, std::string fnam_, int minv, int maxv, int iSlice_, int nBins,
                         std::string normalAxis, bool grey, bool color, bool histogram, bool zProfile,
-                        SelfT* img2Ptr, int mina, int maxa) {
+                        py::object alphaImage, int mina, int maxa) {
             int colrGreyHistZprofile = grey*1 + color*2 + histogram*4 + zProfile*8;
+            SelfT* img2Ptr = alphaImage.is_none() ? nullptr : alphaImage.cast<SelfT*>();
             VoxLib::plotAll(m, minv, maxv, iSlice_, nBins, normalAxis, fnam_, colrGreyHistZprofile, img2Ptr, mina, maxa);
         },
         arg("filename")="pltAll", arg("min_val")=0, arg("max_val")=-1000001, arg("slice_index")=-1000000, arg("histogram_bins")=128,
         arg("normal_axis")="xyz", arg("grey")=true, arg("color")=true, arg("histogram")=true, arg("z_profile")=true,
-        arg("alpha_image")=nullptr, arg("alpha_min")=0, arg("alpha_max")=-1000001,
+        arg("alpha_image")=py::none(), arg("alpha_min")=0, arg("alpha_max")=-1000001,
         "Plot all visualizations (Histogram, ZProfile, Slices) with various options, hackish for debugging")
     #endif // SVG
     .def("growing_threshold", [](SelfT &m, VxT t1, VxT t2, VxT t3, VxT t4, int nIter) { // outdated ?
@@ -382,9 +384,9 @@ void bind_VxlImg(py::module &mod, const char* VxTypS) {
     .def("adjust_slice_brightness", [](SelfT &m, VoxelImage& mskA, VoxelImage& mskB, SelfT& img2, int nSmoothItr, int nSmoothKrnl) {
          VoxLib::adjustSliceBrightness(m, mskA, mskB, img2, nSmoothItr, nSmoothKrnl);
     }, arg("mask_a"), arg("mask_b"), arg("ref_image"), arg("smooth_iter")=3, arg("smooth_kernel")=20)
-    .def("cut_outside", [](SelfT &m, char dir, int nExtraOut, int threshold, bool cuthighs, int nShiftX, int nShiftY, int outVal) {
-            VoxLib::cutOutside(m, dir, nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); },
-         arg("axis")='z', arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=false, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
+    .def("cut_outside", [](SelfT &m, std::string dir, int nExtraOut, int threshold, bool cuthighs, int nShiftX, int nShiftY, int outVal) {
+            VoxLib::cutOutside(m, dir[0], nExtraOut, threshold, cuthighs, nShiftX, nShiftY, VxT(outVal)); },
+         arg("axis")="z", arg("extra_out")=0, arg("threshold")=-1, arg("cut_highs")=false, arg("shift_x")=0, arg("shift_y")=0, arg("fill_val")=0)
     .def("variance", [](SelfT &m, int minV, int maxV) { return ::varianceDbl(m, minV, maxV); }, arg("min_val")=0, arg("max_val")=255,
     "Set outer tubing of a circular core-holder image to fill_val")
   #endif // VOX_BASIC

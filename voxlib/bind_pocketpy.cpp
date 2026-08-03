@@ -70,9 +70,9 @@ PYBIND11_EMBEDDED_MODULE(VxlPy, mod) {
     ;
 
     VxlPy::bind_VxlImg<unsigned char>(mod, "VxlImgU8");    VxlPy::bind_funcs<unsigned char>(mod);
-    VxlPy::bind_VxlImg<unsigned short>(mod, "VxlImgU16");  VxlPy::bind_funcs<unsigned short>(mod);
     VxlPy::bind_VxlImg<int>(mod, "VxlImgI32");             VxlPy::bind_funcs<int>(mod);
     VxlPy::bind_VxlImg<float>(mod, "VxlImgF32");           VxlPy::bind_funcs<float>(mod);
+    VxlPy::bind_VxlImg<unsigned short>(mod, "VxlImgU16");  VxlPy::bind_funcs<unsigned short>(mod);
 }
 
 namespace VxlPy {
@@ -135,13 +135,6 @@ void execScript(const std::string& rawScript, VoxelImagesBase* imgPtr, const std
             || execHeaderScriptT<int>(script, imgPtr)
             || execHeaderScriptT<float>(script, imgPtr);
     if (!ran) std::cout << "Unknown image type." << std::endl;
-}
-
-//! Finds the "VxlPy" keyword's raw (brace-captured, verbatim multi-line) text in a
-//! header's InputFile and executes it via execScript() - the direct replacement for
-//! readFromHeader()'s old vxlProcess<InputFile, SupportedVoxTyps>(...) call.
-void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam) {
-    execScript(inp.kwrd("VxlPy"), imgPtr, nam);
 }
 
 } // namespace VxlPy

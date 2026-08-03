@@ -42,7 +42,6 @@ int usage()  {
 
 #include "InputFile.h"
 
-namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
 
 int main(int argc, char** argv)  {
 
@@ -51,7 +50,6 @@ int main(int argc, char** argv)  {
     if(headerName.size()<4 || headerName.compare(headerName.size()-4,4,".mhd") != 0) return usage();
 
     VoxelImage vxlImg(headerName, readOpt::procAndConvert);
-    VxlPy::execHeaderScript(InputFile(headerName), &vxlImg, headerName);
 
     vxlToFoam(vxlImg);
 

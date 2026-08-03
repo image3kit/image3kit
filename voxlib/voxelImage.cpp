@@ -25,7 +25,7 @@ Developed by:
 #include "voxelImgUtils.h"
 
 #ifdef _POCKETPY
-namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
+namespace VxlPy { void execScript(const std::string& script, VoxelImagesBase* imgPtr, const std::string& nam); }
 #endif
 
 using namespace VoxLib;
@@ -123,7 +123,7 @@ void VoxelImageT<T>::readFromHeader(const string& hdrNam, int procesKeys, int ma
   if (procesKeys) {
     #ifdef _POCKETPY
     InputFile fil(hdrNam);
-    VxlPy::execHeaderScript(fil, &vImg, hdrNam);
+    VxlPy::execScript(fil.kwrd("VxlPy"), &vImg, hdrNam);
     #else
       cout<<"\n  procesKeys is not added to cpython builds"<<endl;
     #endif

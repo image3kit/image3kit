@@ -25,8 +25,6 @@ using namespace std;
 
 #include "InputFile.h"
 
-namespace VxlPy { void execHeaderScript(const InputFile& inp, VoxelImagesBase* imgPtr, const std::string& nam); }
-
 #ifndef NO_MAIN
 
 void vxlToFoamPar(VoxelImage& vimage, int3 nPar, bool resetX0, bool keepBCs);
