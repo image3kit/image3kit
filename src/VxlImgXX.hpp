@@ -82,7 +82,121 @@ void addDodgyFuncsInt(py::class_<VoxelImageT<VxT>, VoxelImagesBase> &m) requires
         arg("n_segments") = 2, arg("thresholds") = std::vector<int>(),
         arg("min_sizes") = std::vector<int>(), arg("smooth_image") = "",
         arg("noise_val") = 16.0, arg("resolution_sq") = 2.0,
-        arg("write_dumps") = 0);
+        arg("write_dumps") = 0)
+    .def("operate",
+        [](SelfT &m, std::string opr) {
+          if (opr.empty()) throw std::runtime_error("Empty operation string");
+          char op = opr[0];
+          if (op == '~') {
+            forAllvp_(m) { *vp = ~(*vp); }
+          } else if (op == '!') {
+            forAllvp_(m) { *vp = !(*vp); }
+          } else if (op == '-') {
+            forAllvp_(m) {
+              double v = -double(*vp);
+              *vp = VxT(std::max(0.0, std::min(v, double(maxT(VxT)))));
+            }
+          } else {
+            throw std::runtime_error("Unsupported unary operation: " + opr);
+          }
+        },
+        arg("opr"),
+        "Apply unary operation to image in-place ('~', '!', '-')")
+    .def("operate",
+        [](SelfT &m, std::string opr, const SelfT &img2, double shift) {
+          if (opr.empty()) throw std::runtime_error("Empty operation string");
+          if (m.size3() != img2.size3()) throw std::runtime_error("Image dimensions do not match for operate");
+          char op = opr[0];
+          double maxVal = double(maxT(VxT));
+          if (op == '+') {
+            forAlliii_(m) {
+              double v = double(m(iii)) + (double(img2(iii)) - shift);
+              m(iii) = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '-') {
+            forAlliii_(m) {
+              double v = double(m(iii)) - (double(img2(iii)) - shift);
+              m(iii) = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '*') {
+            double sFact = (shift != 0.0) ? (shift + 1.0) : 1.0;
+            forAlliii_(m) {
+              double v = double(m(iii)) * double(img2(iii)) * sFact;
+              m(iii) = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '/') {
+            double sFact = (shift != 0.0) ? (shift + 1.0) : 1.0;
+            forAlliii_(m) {
+              double d = double(img2(iii));
+              double v = (d != 0.0) ? (double(m(iii)) / d * sFact) : 0.0;
+              m(iii) = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '&') {
+            forAlliii_(m) { m(iii) = m(iii) & img2(iii); }
+          } else if (op == '|') {
+            forAlliii_(m) { m(iii) = m(iii) | img2(iii); }
+          } else if (op == '%') {
+            forAlliii_(m) {
+              VxT d = img2(iii);
+              m(iii) = (d != 0) ? (m(iii) % d) : 0;
+            }
+          } else {
+            throw std::runtime_error("Unsupported image binary operation: " + opr);
+          }
+        },
+        arg("opr"), arg("image2"), arg("shift") = 0.0,
+        "In-place binary pixel-wise operation with another image ('+', '-', '*', '/', '&', '|', '%') and optional shift")
+    .def("operate",
+        [](SelfT &m, std::string opr, double val) {
+          if (opr.empty()) throw std::runtime_error("Empty operation string");
+          char op = opr[0];
+          double maxVal = double(maxT(VxT));
+          if (op == '=') {
+            VxT fillV = VxT(std::max(0.0, std::min(val, maxVal)));
+            forAllvp_(m) { *vp = fillV; }
+          } else if (op == '+') {
+            forAllvp_(m) {
+              double v = double(*vp) + val;
+              *vp = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '-') {
+            forAllvp_(m) {
+              double v = double(*vp) - val;
+              *vp = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '*') {
+            forAllvp_(m) {
+              double v = double(*vp) * val;
+              *vp = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '/') {
+            forAllvp_(m) {
+              double v = (val != 0.0) ? (double(*vp) / val) : 0.0;
+              *vp = VxT(std::max(0.0, std::min(v, maxVal)));
+            }
+          } else if (op == '&') {
+            VxT valInt = VxT(std::max(0.0, std::min(val, maxVal)));
+            forAllvp_(m) { *vp = (*vp) & valInt; }
+          } else if (op == '|') {
+            VxT valInt = VxT(std::max(0.0, std::min(val, maxVal)));
+            forAllvp_(m) { *vp = (*vp) | valInt; }
+          } else if (op == '%') {
+            VxT valInt = VxT(std::max(0.0, std::min(val, maxVal)));
+            if (valInt != 0) {
+              forAllvp_(m) { *vp = (*vp) % valInt; }
+            }
+          } else if (op == 'b') {
+            VxT bgnV = VxT(std::max(0.0, std::min(val, maxVal)));
+            forAllvp_(m) { *vp = std::max(bgnV, *vp); }
+          } else if (op == 'e') {
+            VxT endV = VxT(std::max(0.0, std::min(val, maxVal)));
+            forAllvp_(m) { *vp = std::min(endV, *vp); }
+          } else {
+            throw std::runtime_error("Unsupported scalar operation: " + opr);
+          }
+        },
+        arg("opr"), arg("val"),
+        "In-place scalar operation on image ('=', '+', '-', '*', '/', '&', '|', '%', 'b', 'e')");
 
   #endif // VOX_BASIC
 }
